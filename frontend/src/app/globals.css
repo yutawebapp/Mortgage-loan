@@ -199,8 +199,8 @@ th.left, tbody th { text-align: left; }
 .chart-be-line { stroke: var(--interest); stroke-width: 1.5; stroke-dasharray: 3 3; }
 .chart-be-dot { fill: var(--interest); stroke: #fff; stroke-width: 2; }
 .chart-be-label { font-size: 12px; font-weight: 700; fill: var(--warn-ink); }
-.compare { width: 100%; margin: 8px 0; }
-.compare th, .compare td { text-align: right; white-space: normal; }
+.compare { width: 100%; min-width: max-content; margin: 8px 0; }
+.compare th, .compare td { text-align: right; white-space: nowrap; }
 .compare thead th { position: static; }
 .compare tbody th { font-weight: 600; text-align: left; }
 .compare td.diff { font-weight: 700; color: var(--teal-ink); }
