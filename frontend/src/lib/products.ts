@@ -62,7 +62,7 @@ export function isStale(iso: string, now: number = Date.now()): boolean {
   return (now - t) / 86_400_000 > STALE_DAYS;
 }
 
-export const formatRate = (n: number) => `${n.toFixed(3).replace(/0$/, "")}%`;
+export const formatRate = (n: number) => `${n.toFixed(3).replace(/\.?0+$/, "")}%`;
 
 export function safeUrl(u: string): string | null {
   try {
