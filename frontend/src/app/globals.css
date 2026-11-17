@@ -1,0 +1,168 @@
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background: #fafafa;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 20px;
+}
+
+a {
+  color: #0b5cad;
+}
+
+.category-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.category-list a {
+  display: block;
+  padding: 16px 20px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.category-list a:hover {
+  border-color: #0b5cad;
+}
+
+/* ---- 返済シミュレーター ---- */
+main.wide { max-width: 1040px; }
+.lead { color: #444; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sim { display: grid; gap: 24px; align-items: start; }
+@media (min-width: 880px) { .sim { grid-template-columns: 340px 1fr; } .sim .panel { position: sticky; top: 16px; } }
+.sim h2 { font-size: 1.15rem; margin: 0 0 12px; }
+.sim h3 { font-size: 1rem; margin: 28px 0 8px; }
+.panel, .results { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; min-width: 0; }
+.field { margin: 0 0 18px; padding: 0; border: 0; min-width: 0; }
+.field > label, legend { display: block; font-weight: 600; margin-bottom: 4px; padding: 0; }
+.input-row { display: flex; align-items: center; gap: 8px; }
+.input-row input { flex: 1; min-width: 0; font: inherit; font-size: 1rem; padding: 10px 12px; border: 1px solid #888; border-radius: 6px; background: #fff; }
+.unit { min-width: 2.5em; }
+.hint { font-size: 0.85rem; color: #555; margin: 4px 0 0; }
+.field-error { font-size: 0.875rem; color: #b00020; margin: 4px 0 0; font-weight: 600; }
+input[aria-invalid="true"] { border-color: #b00020; background: #fff6f7; }
+.radio, .check { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-weight: 400; cursor: pointer; }
+.field > label.check { font-weight: 600; }
+.radio input, .check input { width: 20px; height: 20px; }
+.bonus-field { margin-top: 12px; padding-left: 12px; border-left: 3px solid #cfe0f3; }
+:focus-visible { outline: 3px solid #0b5cad; outline-offset: 2px; }
+.status { min-height: 1.6em; font-size: 0.9rem; color: #555; }
+.alert { border: 1px solid #b00020; background: #fff6f7; border-radius: 6px; padding: 12px 16px; margin: 8px 0 16px; color: #7a0016; }
+.alert p { margin: 0 0 8px; }
+.alert button, .toggle button { font: inherit; padding: 8px 14px; border: 1px solid #0b5cad; background: #fff; color: #0b5cad; border-radius: 6px; cursor: pointer; }
+.stale { opacity: 0.55; transition: opacity 0.15s; }
+.summary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0; }
+.summary div { background: #f3f7fc; border-radius: 6px; padding: 12px; min-width: 0; }
+.summary dt { font-size: 0.8rem; color: #444; }
+.summary dd { margin: 2px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.summary .big { font-size: 1.3rem; color: #0b3f7a; }
+.chart { width: 100%; height: auto; display: block; }
+.chart-axis line { stroke: #e2e2e2; }
+.chart-axis text { font-size: 11px; fill: #555; }
+.chart-area { fill: #0b5cad; fill-opacity: 0.15; }
+.chart-line { stroke: #0b5cad; stroke-width: 2.5; }
+.bar-principal { fill: #0b5cad; }
+.bar-interest { fill: #e0902b; }
+.legend { font-size: 0.85rem; margin: 4px 0 0; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin: 0 4px 0 8px; vertical-align: -1px; }
+.sw-p { background: #0b5cad; margin-left: 0; } .sw-i { background: #e0902b; }
+.table-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; }
+.toggle { display: flex; margin-bottom: 8px; }
+.toggle button { border-radius: 0; }
+.toggle button:first-child { border-radius: 6px 0 0 6px; }
+.toggle button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+.toggle button[aria-pressed="true"] { background: #0b5cad; color: #fff; }
+.table-wrap { overflow: auto; max-height: 480px; border: 1px solid #ddd; border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid #eee; }
+thead th { position: sticky; top: 0; background: #f3f7fc; z-index: 1; }
+tbody th { text-align: left; font-weight: 600; }
+.disclaimer { margin: 24px 0 0; padding: 12px 14px; background: #fffbea; border: 1px solid #e6d58a; border-radius: 6px; font-size: 0.9rem; }
+@media (prefers-reduced-motion: reduce) { .stale { transition: none; } }
+
+/* ---- 金融機関・商品比較 ---- */
+.notice-sample { margin: 8px 0 16px; padding: 10px 14px; background: #eef3fb; border: 1px solid #b9cde8; border-left-width: 6px; border-radius: 6px; font-size: 0.9rem; }
+.notice-sample strong { display: inline-block; margin-right: 8px; padding: 0 8px; background: #0b3f7a; color: #fff; border-radius: 4px; font-size: 0.8rem; }
+.filters { display: grid; gap: 12px; margin: 16px 0 24px; }
+@media (min-width: 720px) { .filters { grid-template-columns: 1fr 1fr; } }
+.filter-title { font-size: 0.9rem; margin: 0 0 6px; color: #444; }
+.chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 14px; border: 1px solid #0b5cad; border-radius: 22px; background: #fff; color: #0b5cad; text-decoration: none; font-size: 0.95rem; }
+.chip:hover { background: #eef3fb; }
+.chip.active { background: #0b5cad; color: #fff; font-weight: 600; }
+.result-title { font-size: 1.15rem; margin: 0 0 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.result-meta { font-size: 0.85rem; font-weight: 400; color: #555; }
+.product-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.product-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+@media (min-width: 720px) { .product-card { grid-template-columns: 1fr 240px; } .product-actions { grid-column: 1 / -1; } }
+.product-card h3 { margin: 2px 0; font-size: 1.05rem; overflow-wrap: anywhere; }
+.inst { margin: 0; font-size: 0.85rem; color: #555; }
+.type { margin: 0; font-size: 0.9rem; }
+.product-rate p { margin: 0 0 4px; }
+.rate-label { display: block; font-size: 0.8rem; color: #444; }
+.rate strong { font-size: 1.5rem; color: #0b3f7a; font-variant-numeric: tabular-nums; }
+.meta { font-size: 0.85rem; color: #333; }
+.product-actions { margin: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 10px; border-top: 1px solid #eee; }
+.product-actions a { display: inline-flex; align-items: center; min-height: 44px; }
+.badge-stale { display: inline-block; margin: 2px 0 6px; padding: 2px 10px; background: #fff3e0; color: #7a3e00; border: 1px solid #e0902b; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 20px 0 0; }
+.pager a, .pager .disabled { min-height: 44px; display: inline-flex; align-items: center; padding: 0 8px; }
+.pager .disabled { color: #999; }
+.empty { color: #444; }
+.empty a { margin-left: 8px; }
+a.btn-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #0b5cad; border-radius: 6px; background: #fff; text-decoration: none; font-weight: 600; }
+a.btn-link:hover { background: #eef3fb; }
+.detail-title { margin-top: 2px; overflow-wrap: anywhere; }
+.card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 0 0 16px; min-width: 0; }
+.card h2 { font-size: 1.1rem; margin: 0 0 12px; }
+.info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 12px; }
+.info div { background: #f3f7fc; border-radius: 6px; padding: 12px; min-width: 0; }
+.info dt { font-size: 0.8rem; color: #444; }
+.info dd { margin: 2px 0 0; font-weight: 700; overflow-wrap: anywhere; }
+.info .big { font-size: 1.4rem; color: #0b3f7a; }
+@media (max-width: 480px) { .info { grid-template-columns: 1fr; } }
+.table-wrap.plain { max-height: none; }
+th.left, tbody th { text-align: left; }
+
+/* ---- 借り換え診断 ---- */
+.chart-zero { stroke: #555; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.chart-zero-label { font-size: 11px; fill: #555; }
+.chart-be-line { stroke: #e0902b; stroke-width: 1.5; stroke-dasharray: 3 3; }
+.chart-be-dot { fill: #e0902b; stroke: #fff; stroke-width: 2; }
+.chart-be-label { font-size: 12px; font-weight: 700; fill: #7a3e00; }
+.compare { width: 100%; margin: 8px 0; }
+.compare th, .compare td { text-align: right; white-space: normal; }
+.compare thead th { position: static; }
+.compare tbody th { font-weight: 600; text-align: left; }
+.compare td.diff { font-weight: 700; }
+.verdict { margin: 12px 0; padding: 14px 16px; background: #f3f7fc; border-left: 6px solid #0b5cad; border-radius: 6px; }
+.verdict p { margin: 0 0 4px; }
+.verdict .big { font-size: 1.15rem; font-weight: 700; color: #0b3f7a; overflow-wrap: anywhere; }
+.note { margin: 12px 0; padding: 10px 14px; background: #eef3fb; border: 1px solid #b9cde8; border-radius: 6px; font-size: 0.9rem; }
+
+/* ---- 借入可能額/審査目安 ---- */
+.advanced { margin: 0 0 8px; border: 1px solid #ddd; border-radius: 6px; padding: 0 12px; }
+.advanced summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.advanced[open] summary { margin-bottom: 4px; }
+.cta { margin: 20px 0 0; }
