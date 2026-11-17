@@ -10,7 +10,7 @@
 - 起動: `cp .env.example .env && docker compose up --build`(`.env` が無いと `DB_PASSWORD` 未設定で compose が失敗する)。リポジトリルートで実行。
 - DB を初期化して migration をやり直す: `docker compose down -v`(架空データのみなので消えて問題ない)。
 - Backend(`backend/`): `./mvnw test` / 単体: `./mvnw test -Dtest=RepaymentCalculatorTest`。`ProductMapperTest` は Testcontainers で Docker が必要(`disabledWithoutDocker=true` のため無ければスキップされ、緑でも未検証)。
-- Frontend(`frontend/`): `npm run lint && npm run build`。単体テストフレームワークは未導入。
+- Frontend(`frontend/`): `npm test && npm run lint && npm run build`。単体テストは Vitest(`src/**/*.test.ts`、`globals` 無効なので `describe/it/expect` は `vitest` から import)。単体実行: `npx vitest run src/lib/simulation.test.ts`。テスト対象は `src/lib/` の純粋ロジックのみ(コンポーネントテストは未導入)。
 - CI・opencode.json は無い。変更後は上記の test / lint / build を自分で実行して確認する。
 
 ## Next.js 16 に注意
