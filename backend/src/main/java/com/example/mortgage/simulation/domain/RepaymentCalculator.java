@@ -99,6 +99,30 @@ public final class RepaymentCalculator {
                 schedule);
     }
 
+    /**
+     * Month-by-month schedule of a single monthly loan (no bonus), e.g. the remaining loan after a
+     * prepayment. Delegates to the same amortization logic as {@link #calculate}.
+     *
+     * @param principal         balance in yen (>= 0)
+     * @param annualPercent     annual rate in percent, e.g. 1.2 means 1.2%
+     * @param months            number of monthly periods (>= 1)
+     * @param method            repayment method
+     * @return one row per month, month = 1..months, bonusPayment is always 0
+     */
+    public static List<ScheduleRow> singleLoanSchedule(BigDecimal principal,
+                                                       BigDecimal annualPercent,
+                                                       int months,
+                                                       RepaymentMethod method) {
+        List<Loan> loans = generate(principal, annualPercent, MONTHS_PER_YEAR, months, method);
+        List<ScheduleRow> rows = new ArrayList<>(months);
+        for (int i = 0; i < loans.size(); i++) {
+            Loan loan = loans.get(i);
+            rows.add(new ScheduleRow(i + 1, loan.payment(), BigDecimal.ZERO,
+                    loan.principal(), loan.interest(), loan.balance()));
+        }
+        return rows;
+    }
+
     /** One period of a single loan. All amounts are whole yen. */
     private record Loan(BigDecimal payment, BigDecimal principal, BigDecimal interest, BigDecimal balance) {
     }
