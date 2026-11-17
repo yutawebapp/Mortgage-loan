@@ -1,4 +1,7 @@
 import Link from "next/link";
+import JsonLd from "@/components/seo/JsonLd";
+import { pageMetadata, webSiteJsonLd } from "@/lib/seo";
+import { SITE_NAME } from "@/lib/site";
 
 const categories = [
   { href: "/simulation", label: "返済シミュレーター" },
@@ -7,9 +10,18 @@ const categories = [
   { href: "/eligibility", label: "借入可能額/審査目安" },
 ];
 
+export const metadata = pageMetadata({
+  title: `${SITE_NAME}｜返済シミュレーション・金利比較・借り換え診断`,
+  absoluteTitle: true,
+  description:
+    "住宅ローンの返済額をシミュレーションできる返済シミュレーター、金融機関・商品の金利を比較できる一覧、借り換えの効果を試算する借り換え診断、年収から借入可能額の目安を確認できる審査目安を、まとめて利用できます。",
+  path: "/",
+});
+
 export default function Home() {
   return (
     <main>
+      <JsonLd data={webSiteJsonLd()} />
       <h1>住宅ローン比較・シミュレーション</h1>
       <ul className="category-list">
         {categories.map((c) => (

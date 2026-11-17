@@ -12,6 +12,9 @@ COPY . .
 # Next.js rewrites are resolved at build time; override the backend address per environment.
 ARG API_BASE_URL=http://localhost:8080
 ENV API_BASE_URL=${API_BASE_URL}
+# Public site URL used for canonical, Open Graph and sitemap/robots. Inlined at build time.
+ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

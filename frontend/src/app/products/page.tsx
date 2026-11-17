@@ -13,16 +13,24 @@ import {
   parseSort,
   rateTypeLabel,
   refinanceHref,
+  SAMPLE_DATA_NOINDEX,
   simulateHref,
 } from "@/lib/products";
 import { Disclaimer, SampleNotice, StaleBadge } from "@/components/products/Notices";
 import SourceLink from "@/components/products/SourceLink";
+import JsonLd from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd, HOME_CRUMB, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
+// Canonical is always the clean /products: filter, sort and page variants are not separate documents.
+export const metadata = pageMetadata({
   title: "金融機関・商品比較",
-};
+  description:
+    "住宅ローンの金融機関・商品を金利タイプ（変動・全期間固定・固定期間選択型）や並び順で絞り込み、金利と金利更新日を比較できます。掲載データは開発用のサンプルです。",
+  path: "/products",
+  noindex: SAMPLE_DATA_NOINDEX,
+});
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
 
@@ -42,6 +50,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
 
   return (
     <main className="wide">
+      <JsonLd data={breadcrumbJsonLd([HOME_CRUMB, { name: "金融機関・商品比較", path: "/products" }])} />
       <p>
         <Link href="/">← トップへ戻る</Link>
       </p>

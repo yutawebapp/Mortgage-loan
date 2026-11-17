@@ -77,6 +77,13 @@ export const simulateHref = (rate: number) => `/simulation?rate=${encodeURICompo
 
 export const SAMPLE_NOTICE =
   "この画面の金融機関名・商品名・金利などは、開発用のサンプル（架空）データです。実在の金融機関の情報ではありません。";
+/**
+ * The product data shown on /products and /products/[id] is FICTIONAL sample data.
+ * While true, those pages are served with `noindex,follow` and left out of sitemap.xml.
+ * MUST be flipped to false only once the pages show real, verified product data
+ * (and SAMPLE_NOTICE is updated accordingly).
+ */
+export const SAMPLE_DATA_NOINDEX = true;
 export const DISCLAIMER =
   "掲載の金利は目安であり、適用金利・審査結果を保証するものではありません。最新情報は各金融機関の公式情報をご確認ください。";
 
