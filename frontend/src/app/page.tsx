@@ -16,10 +16,12 @@ export default function Home() {
   return (
     <main>
       <JsonLd data={webSiteJsonLd()} />
-      <h1>住宅ローン比較・シミュレーション</h1>
-      <p className="home-intro">
-        住宅ローンの返済額の試算、金融機関・商品の金利の確認、借り換えの効果の試算、借入可能額の目安の確認ができます。いずれも一般の方向けの簡易的なツールで、結果は目安です。
-      </p>
+      <div className="hero">
+        <h1>住宅ローン比較・シミュレーション</h1>
+        <p className="home-intro">
+          住宅ローンの返済額の試算、金融機関・商品の金利の確認、借り換えの効果の試算、借入可能額の目安の確認ができます。いずれも一般の方向けの簡易的なツールで、結果は目安です。
+        </p>
+      </div>
       <section aria-labelledby="tools-h">
         <h2 id="tools-h">ツール一覧</h2>
         <ul className="tool-cards">
