@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Breadcrumb from "@/components/layout/Breadcrumb";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ProductApiError, getProductDetail, type ProductDetail } from "@/lib/api/products";
@@ -13,8 +14,7 @@ import {
 } from "@/lib/products";
 import { Disclaimer, SampleNotice, StaleBadge } from "@/components/products/Notices";
 import SourceLink from "@/components/products/SourceLink";
-import JsonLd from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd, HOME_CRUMB, pageMetadata } from "@/lib/seo";
+import { HOME_CRUMB, pageMetadata } from "@/lib/seo";
 import { yen } from "@/lib/simulation";
 
 export const dynamic = "force-dynamic";
@@ -75,10 +75,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
 
   return (
     <main className="wide">
-      <JsonLd data={breadcrumbJsonLd(crumbs)} />
-      <p>
-        <Link href="/products">← 商品一覧へ戻る</Link>
-      </p>
+      <Breadcrumb crumbs={crumbs} />
       {!p ? (
         <>
           <h1>商品詳細</h1>

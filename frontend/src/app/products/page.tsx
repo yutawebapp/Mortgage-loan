@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Breadcrumb from "@/components/layout/Breadcrumb";
 import { fetchProducts, type ProductPage } from "@/lib/api/products";
 import {
   PAGE_SIZE,
@@ -18,8 +19,7 @@ import {
 } from "@/lib/products";
 import { Disclaimer, SampleNotice, StaleBadge } from "@/components/products/Notices";
 import SourceLink from "@/components/products/SourceLink";
-import JsonLd from "@/components/seo/JsonLd";
-import { breadcrumbJsonLd, HOME_CRUMB, pageMetadata } from "@/lib/seo";
+import { HOME_CRUMB, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +50,7 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
 
   return (
     <main className="wide">
-      <JsonLd data={breadcrumbJsonLd([HOME_CRUMB, { name: "金融機関・商品比較", path: "/products" }])} />
-      <p>
-        <Link href="/">← トップへ戻る</Link>
-      </p>
+      <Breadcrumb crumbs={[HOME_CRUMB, { name: "金融機関・商品比較", path: "/products" }]} />
       <h1>金融機関・商品比較</h1>
       <SampleNotice />
       <p className="lead">金利タイプで絞り込み、並び順を選んで商品を見比べられます。</p>
@@ -138,13 +135,19 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
                     <p className="meta">{`金利更新日: ${formatDate(p.rateEffectiveFrom)}`}</p>
                     {isStale(p.rateEffectiveFrom) && <StaleBadge />}
                     <p className="meta">
-                      <SourceLink url={p.rateSourceUrl} />
+                      <SourceLink url={p.rateSourceUrl} context={p.productName} />
                     </p>
                   </div>
                   <p className="product-actions">
-                    <Link href={`/products/${p.id}`}>詳細を見る</Link>
-                    <Link href={simulateHref(p.annualRatePercent)}>この金利で返済額を試算する</Link>
-                    <Link href={refinanceHref(p.annualRatePercent)}>この金利で借り換えを試算する</Link>
+                    <Link href={`/products/${p.id}`}>
+                      詳細を見る<span className="sr-only">（{p.productName}）</span>
+                    </Link>
+                    <Link href={simulateHref(p.annualRatePercent)}>
+                      この金利で返済額を試算する<span className="sr-only">（{p.productName}）</span>
+                    </Link>
+                    <Link href={refinanceHref(p.annualRatePercent)}>
+                      この金利で借り換えを試算する<span className="sr-only">（{p.productName}）</span>
+                    </Link>
                   </p>
                 </li>
               ))}

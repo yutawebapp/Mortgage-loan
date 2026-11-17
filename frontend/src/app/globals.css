@@ -166,3 +166,44 @@ th.left, tbody th { text-align: left; }
 .advanced summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
 .advanced[open] summary { margin-bottom: 4px; }
 .cta { margin: 20px 0 0; }
+
+/* ---- サイト共通（ヘッダー・フッター・パンくず） ---- */
+.site-header { background: #fff; border-bottom: 1px solid #ddd; }
+.site-header-inner, .site-footer-inner { max-width: 1040px; margin: 0 auto; padding: 12px 20px; }
+.site-name { display: inline-block; font-weight: 700; color: #0b3f7a; text-decoration: none; padding: 6px 0; overflow-wrap: anywhere; }
+.site-nav, .footer-nav { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 16px; }
+.site-nav a, .footer-nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 0.9rem; text-decoration: none; border-bottom: 2px solid transparent; }
+.site-nav a:hover, .footer-nav a:hover { text-decoration: underline; }
+.site-nav a[aria-current="page"] { font-weight: 700; color: #0b3f7a; border-bottom-color: #0b5cad; }
+@media (min-width: 880px) {
+  .site-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+}
+.site-footer { margin-top: 24px; background: #fff; border-top: 1px solid #ddd; }
+.site-footer-inner { padding-top: 24px; padding-bottom: 32px; }
+.footer-name { margin: 0 0 4px; font-weight: 700; }
+.footer-name a { color: #0b3f7a; text-decoration: none; }
+.footer-note { margin: 12px 0 0; font-size: 0.85rem; color: #444; }
+
+.breadcrumb { margin: 0 0 16px; font-size: 0.875rem; }
+.breadcrumb ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 0; }
+.breadcrumb li { display: inline-flex; align-items: center; min-width: 0; }
+.breadcrumb li + li::before { content: "›"; margin: 0 8px; color: #666; }
+.breadcrumb a { display: inline-flex; align-items: center; min-height: 32px; }
+.breadcrumb [aria-current="page"] { color: #444; overflow-wrap: anywhere; }
+
+/* ---- 解説コンテンツ ---- */
+.about { margin: 32px 0 0; padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px; }
+.about h2 { font-size: 1.15rem; margin: 0 0 12px; }
+.about h3 { font-size: 1rem; margin: 20px 0 8px; }
+.about p { margin: 0 0 8px; }
+.faq details { border: 1px solid #ddd; border-radius: 6px; padding: 0 12px; margin: 0 0 8px; }
+.faq summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.faq details[open] summary { margin-bottom: 4px; }
+.faq details p { margin: 0 0 12px; }
+.home-intro { color: #444; }
+.tool-cards { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 12px; }
+.tool-cards li { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px 20px; }
+.tool-cards li:hover, .tool-cards li:focus-within { border-color: #0b5cad; }
+.tool-cards h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.tool-cards p { margin: 0; color: #444; font-size: 0.95rem; }
+.tool-cards a { display: inline-block; padding: 4px 0; }
