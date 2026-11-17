@@ -266,3 +266,17 @@ th.left, tbody th { text-align: left; }
 .tool-cards p { margin: 0; color: var(--muted); font-size: 0.95rem; }
 .tool-cards a { display: inline-block; padding: 4px 0; font-weight: 700; color: var(--brand-dark); }
 @media (prefers-reduced-motion: reduce) { .product-card, .tool-cards li, .chip { transition: none; } .tool-cards li:hover { transform: none; } }
+
+/* ---- 繰上げ返済・金利上昇シミュレーション ---- */
+.unit-pre { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.chip-check { gap: 8px; cursor: pointer; }
+.chip-check input { width: 20px; height: 20px; accent-color: var(--brand); }
+.chip-check:has(input:checked) { background: var(--brand-tint); border-width: 2px; font-weight: 600; }
+.chip-check:has(input:focus-visible) { outline: 3px solid var(--brand); outline-offset: 2px; }
+.custom-rise { margin: 12px 0 8px; }
+.custom-rise > label { font-weight: 600; }
+.chart-fig { margin: 0; }
+.rs-legend { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.85rem; }
+.rs-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.timing-row { flex-wrap: wrap; }
+.timing-row input { flex: 0 0 5.5em; width: 5.5em; }

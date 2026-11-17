@@ -1,0 +1,288 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  ApiError,
+  calculateRateScenarios,
+  type RateScenarioRequest,
+  type RateScenarioResponse,
+} from "@/lib/api/rate-scenario";
+import {
+  RISE_PRESETS,
+  risePointLabel,
+  signedYen,
+  validateRateScenario,
+  type RateScenarioForm,
+} from "@/lib/rate-scenario";
+import { yen } from "@/lib/simulation";
+import RateScenarioChart, { seriesName } from "./RateScenarioChart";
+
+type Outcome = { key: string; data?: RateScenarioResponse; error?: string };
+
+const initial: RateScenarioForm = {
+  principalMan: "3000",
+  rate: "0.5",
+  years: "35",
+  method: "EQUAL_PAYMENT",
+  riseAfterYears: "5",
+  presets: [...RISE_PRESETS],
+  custom: "",
+};
+
+function errorMessage(e: unknown): string {
+  if (e instanceof ApiError) {
+    if (e.status === 400)
+      return `入力内容を確認してください。${e.message ? `（${e.message}）` : ""}`;
+    return "計算サーバーでエラーが発生しました。時間をおいて再度お試しください。";
+  }
+  return "通信に失敗しました。ネットワークの状態を確認して再度お試しください。";
+}
+
+const n = (v: number) => v.toLocaleString("ja-JP");
+
+export default function RateScenario({ initialValues }: { initialValues?: Partial<RateScenarioForm> }) {
+  const [form, setForm] = useState<RateScenarioForm>({ ...initial, ...initialValues });
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [retry, setRetry] = useState(0);
+
+  const { request, errors } = useMemo(() => validateRateScenario(form), [form]);
+  const key = request ? JSON.stringify(request) + retry : null;
+
+  useEffect(() => {
+    if (!request || !key) return;
+    const ctrl = new AbortController();
+    const body: RateScenarioRequest = request;
+    const timer = setTimeout(() => {
+      calculateRateScenarios(body, ctrl.signal)
+        .then((data) => setOutcome({ key, data }))
+        .catch((e: unknown) => {
+          if (ctrl.signal.aborted) return;
+          setOutcome({ key, error: errorMessage(e) });
+        });
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+    // request is fully captured by key
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  const set = <K extends keyof RateScenarioForm>(k: K, v: RateScenarioForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
+  const err = (k: keyof typeof errors) => (touched[k] || outcome ? errors[k] : undefined);
+
+  const current = outcome && outcome.key === key ? outcome : null;
+  const loading = !!request && !current;
+  const data = current?.data ?? (request ? outcome?.data : undefined);
+  const stale = !!data && loading;
+
+  function field(
+    id: "principalMan" | "rate" | "years" | "riseAfterYears",
+    label: string,
+    unit: string,
+    opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal"; pre?: string },
+  ) {
+    const e = err(id);
+    return (
+      <div className="field">
+        <label htmlFor={id}>{label}</label>
+        <div className="input-row">
+          {opts.pre && <span className="unit-pre">{opts.pre}</span>}
+          <input
+            id={id}
+            type="number"
+            inputMode={opts.inputMode ?? "decimal"}
+            step={opts.step}
+            min={0}
+            value={form[id]}
+            onChange={(ev) => set(id, ev.target.value)}
+            onBlur={blur(id)}
+            aria-invalid={e ? true : undefined}
+            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
+          />
+          <span className="unit">{unit}</span>
+        </div>
+        {opts.hint ? (
+          <p className="hint" id={`${id}-hint`}>
+            {opts.hint}
+          </p>
+        ) : (
+          <span id={`${id}-hint`} hidden />
+        )}
+        {e && (
+          <p className="field-error" id={`${id}-err`}>
+            {e}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  const toggle = (p: number) =>
+    set("presets", form.presets.includes(p) ? form.presets.filter((x) => x !== p) : [...form.presets, p]);
+  const pointsErr = err("risePoints");
+
+  const rows = data ? [data.baseline, ...data.scenarios] : [];
+
+  return (
+    <div className="sim">
+      <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利上昇シミュレーションの条件">
+        <h2>ローンの条件</h2>
+        {field("principalMan", "借入金額", "万円", { step: "any", hint: "例：3000万円 ＝ 30,000,000円" })}
+        {field("rate", "当初金利（年率）", "%", { step: "0.001", hint: "0〜20%で入力できます。変動金利型の現在の金利を想定します。" })}
+        {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年の整数で入力できます。" })}
+        <fieldset className="field">
+          <legend>返済方式</legend>
+          <label className="radio">
+            <input
+              type="radio"
+              name="rs-method"
+              checked={form.method === "EQUAL_PAYMENT"}
+              onChange={() => set("method", "EQUAL_PAYMENT")}
+            />
+            元利均等返済
+          </label>
+          <label className="radio">
+            <input
+              type="radio"
+              name="rs-method"
+              checked={form.method === "EQUAL_PRINCIPAL"}
+              onChange={() => set("method", "EQUAL_PRINCIPAL")}
+            />
+            元金均等返済
+          </label>
+          <p className="hint">
+            {form.method === "EQUAL_PAYMENT"
+              ? "毎月の返済額がほぼ一定になる方式です。"
+              : "毎月返す元金が一定で、返済額は少しずつ減っていく方式です。"}
+          </p>
+        </fieldset>
+
+        <h2>金利が上昇する場合</h2>
+        {field("riseAfterYears", "金利が上昇する時期", "年後", {
+          step: "1",
+          inputMode: "numeric",
+          pre: "返済開始から",
+          hint: "1年以上、返済期間より前の整数で入力できます。この時期に一度だけ金利が上昇する想定です。",
+        })}
+        <fieldset className="field" aria-describedby="rise-hint">
+          <legend>金利の上昇幅（%ポイント）</legend>
+          <ul className="chips" role="group" aria-label="上昇幅の選択">
+            {RISE_PRESETS.map((p) => (
+              <li key={p}>
+                <label className="chip chip-check">
+                  <input type="checkbox" checked={form.presets.includes(p)} onChange={() => toggle(p)} />
+                  {risePointLabel(p)}%
+                </label>
+              </li>
+            ))}
+          </ul>
+          <div className="field custom-rise">
+            <label htmlFor="custom">上昇幅を自分で指定する（任意）</label>
+            <div className="input-row">
+              <span className="unit-pre">+</span>
+              <input
+                id="custom"
+                type="number"
+                inputMode="decimal"
+                step="0.1"
+                min={0}
+                value={form.custom}
+                onChange={(ev) => set("custom", ev.target.value)}
+                onBlur={blur("risePoints")}
+                aria-invalid={pointsErr ? true : undefined}
+                aria-describedby={pointsErr ? "rise-hint rise-err" : "rise-hint"}
+              />
+              <span className="unit">%</span>
+            </div>
+          </div>
+          <p className="hint" id="rise-hint">
+            1つ以上選んでください（最大5つ）。自分で指定する場合は、0より大きく10以下で入力できます。
+          </p>
+          {pointsErr && (
+            <p className="field-error" id="rise-err">
+              {pointsErr}
+            </p>
+          )}
+        </fieldset>
+      </form>
+
+      <section className="results" aria-labelledby="result-h" aria-busy={loading}>
+        <h2 id="result-h">試算結果</h2>
+        <p className="note" role="note">
+          本試算は金利が一度だけ上昇する簡易モデルです。実際の変動金利型ローンには、返済額の見直し時期（5年ルール）や上昇幅の上限（125%ルール）などの仕組みがあり、本試算には反映していません。
+        </p>
+        <div aria-live="polite" role="status" className="status">
+          {!request && "入力内容に誤りがあります。左（上）のエラーを確認してください。"}
+          {request && loading && "計算しています…"}
+          {request && !loading && current?.data && "計算結果を更新しました。"}
+        </div>
+
+        {current?.error && (
+          <div className="alert" role="alert">
+            <p>{current.error}</p>
+            <button type="button" onClick={() => setRetry((r) => r + 1)}>
+              再計算する
+            </button>
+          </div>
+        )}
+
+        {data && request && (
+          <div className={stale ? "stale" : undefined}>
+            <p className="hint">
+              返済開始から{request.riseAfterYears}年後に金利が上昇し、その後は残りの期間で同じ返済方式のまま返済する場合の比較です。
+            </p>
+            <div className="table-wrap plain" tabIndex={0} role="region" aria-label="金利上昇シナリオの比較表（横にスクロールできます）">
+              <table className="compare">
+                <caption className="sr-only">金利上昇シナリオ別の返済額の比較</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">シナリオ</th>
+                    <th scope="col">上昇後の金利</th>
+                    <th scope="col">毎月の返済額（上昇前 → 上昇後）</th>
+                    <th scope="col">毎月の増加額</th>
+                    <th scope="col">総返済額</th>
+                    <th scope="col">追加の利息</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr key={i}>
+                      <th scope="row">{seriesName(r, i === 0)}</th>
+                      <td>{r.rateAfterPercent}%</td>
+                      <td>
+                        {n(r.monthlyPaymentBefore)}円 → {n(r.monthlyPaymentAfter)}円
+                      </td>
+                      <td className="diff">{i === 0 ? "―" : signedYen(r.monthlyPaymentIncrease)}</td>
+                      <td>{yen(r.totalPayment)}</td>
+                      <td className="diff">{i === 0 ? "―" : signedYen(r.extraInterestVsBaseline)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="hint">
+              「毎月の増加額」「追加の利息」は、現在の金利のままの場合との差です。
+              {request.method === "EQUAL_PRINCIPAL" &&
+                "元金均等返済では毎月の返済額が少しずつ減るため、上昇後の金額が上昇前より小さく表示されることがあります。"}
+            </p>
+
+            <h3>毎月の返済額の推移</h3>
+            <RateScenarioChart
+              baseline={data.baseline}
+              scenarios={data.scenarios}
+              riseAfterYears={request.riseAfterYears}
+            />
+            <p className="hint">点線の縦線は、金利が上昇する時期です。</p>
+          </div>
+        )}
+
+        <p className="disclaimer">
+          試算結果は目安であり、将来の金利や返済額を予測・保証するものではありません。実際の条件は、お借入れの金融機関にご確認ください。
+        </p>
+      </section>
+    </div>
+  );
+}

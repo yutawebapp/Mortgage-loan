@@ -1,4 +1,4 @@
-// The four tools, shared by the header, footer and home page.
+// The tools, shared by the header, footer and home page.
 export const TOOLS = [
   {
     href: "/simulation",
@@ -19,5 +19,15 @@ export const TOOLS = [
     href: "/eligibility",
     label: "借入可能額/審査目安",
     description: "年収や他の借入の返済額から、借入可能額の目安を確認できます。",
+  },
+  {
+    href: "/prepayment",
+    label: "繰上げ返済シミュレーター",
+    description: "繰上げ返済をする時期と金額から、利息の軽減額や短縮される期間の目安を試算します。",
+  },
+  {
+    href: "/rate-scenario",
+    label: "金利上昇シミュレーション",
+    description: "変動金利で金利が上昇した場合の、毎月の返済額と総返済額の変化を上昇幅ごとに比べられます。",
   },
 ] as const;
