@@ -1,6 +1,7 @@
 package com.example.mortgage;
 
 import com.example.mortgage.product.ProductMapper;
+import com.example.mortgage.taxdeduction.TaxDeductionMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -35,6 +36,10 @@ class HealthEndpointTest {
     /** MyBatis is excluded above, so the product mapper bean needed by ProductService is stubbed. */
     @MockitoBean
     private ProductMapper productMapper;
+
+    /** Same for the tax deduction mapper (TaxDeductionService needs it at context load). */
+    @MockitoBean
+    private TaxDeductionMapper taxDeductionMapper;
 
     @Test
     void actuatorHealthIsUp() throws Exception {

@@ -39,6 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absUrl("/eligibility"), changeFrequency: "monthly", priority: 0.8 },
     { url: absUrl("/budget"), changeFrequency: "monthly", priority: 0.8 },
     { url: absUrl("/prepayment"), changeFrequency: "monthly", priority: 0.8 },
+    { url: absUrl("/tax-deduction"), changeFrequency: "monthly", priority: 0.8 },
     { url: absUrl("/rate-scenario"), changeFrequency: "monthly", priority: 0.8 },
   ];
 

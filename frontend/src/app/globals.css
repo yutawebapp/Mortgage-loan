@@ -292,3 +292,34 @@ th.left, tbody th { text-align: left; }
 .cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 a.btn-link.secondary { background: var(--surface); color: var(--brand); }
 a.btn-link.secondary:hover { background: var(--brand-tint); }
+
+/* ---- 住宅ローン控除シミュレーター ---- */
+.fs-group { margin: 0 0 22px; padding: 0; border: 0; min-width: 0; }
+.fs-group > legend { font-size: 1.15rem; font-weight: 700; color: var(--brand-dark); margin: 0 0 12px; }
+.fs-group .field > legend, .fs-group fieldset.field > legend { font-size: 1rem; }
+.radio-block { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; cursor: pointer; }
+.radio-block input { width: 20px; height: 20px; margin-top: 3px; flex: none; accent-color: var(--brand); }
+.radio-block .rb-label { font-weight: 600; display: block; }
+.radio-block .rb-desc { display: block; font-size: 0.85rem; color: var(--muted); font-weight: 400; }
+.field select { width: 100%; font: inherit; font-size: 1rem; padding: 10px 12px; border: 1px solid var(--field-border); border-radius: 8px; background: var(--surface); min-height: 44px; }
+.field select:focus { border-color: var(--brand); outline: 3px solid var(--brand-line); outline-offset: 0; }
+.field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 18px; }
+.field-pair .field { margin: 0; }
+.check-hint { margin: 0 0 14px 28px; }
+.info-msg { margin: 6px 0 0; padding: 8px 12px; background: var(--brand-tint); border: 1px solid var(--brand-line); border-radius: 8px; font-size: 0.875rem; }
+.ineligible { margin: 12px 0; padding: 14px 16px; background: var(--notice-bg); border: 1px solid var(--notice-line); border-left: 6px solid var(--interest); border-radius: 8px; }
+.ineligible p { margin: 0 0 6px; }
+.ineligible p:last-child { margin: 0; }
+.td-sw-it { background: #0f5a96; }
+.td-sw-rt { background: radial-gradient(circle, #0b7a75 1.8px, #e2f4f2 2px); background-size: 7px 7px; border: 1px solid #0b7a75; }
+.td-sw-un { background: repeating-linear-gradient(45deg, #e0902b 0 3px, #fbe9cf 3px 8px); border: 1px solid #e0902b; }
+.td-table .compare, table.td-table { min-width: max-content; }
+.td-table td.unclaimed { color: var(--warn-ink); font-weight: 600; }
+.assume { margin: 8px 0; padding: 12px 16px 12px 32px; background: var(--brand-soft); border: 1px solid var(--brand-line); border-radius: 8px; font-size: 0.9rem; }
+.assume li { margin: 4px 0; }
+.src-list { margin: 8px 0; padding-left: 1.4em; font-size: 0.9rem; overflow-wrap: anywhere; }
+.src-list li { margin: 4px 0; }
+.panel-block { margin: 20px 0 0; }
+.panel-block h3 { margin-top: 0; }
+@media (max-width: 480px) { .field-pair { grid-template-columns: 1fr; } }
+.field > label.radio-block { display: flex; font-weight: 400; margin: 0; }

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  Deduction rules and tax parameters (seeded by Flyway V4/V5). Rule lookup uses the move-in year range.
+  Tax-year rows use year_from <= taxYear <= year_to. No ${} anywhere.
+-->
+<mapper namespace="com.example.mortgage.taxdeduction.TaxDeductionMapper">
+
+    <resultMap id="deductionRuleMap" type="com.example.mortgage.taxdeduction.domain.DeductionRule">
+        <constructor>
+            <arg column="housing_type" javaType="com.example.mortgage.taxdeduction.domain.HousingType"/>
+            <arg column="energy_class" javaType="com.example.mortgage.taxdeduction.domain.EnergyClass"/>
+            <arg column="condition_code" javaType="com.example.mortgage.taxdeduction.domain.ConditionCode"/>
+            <arg column="move_in_year_from" javaType="java.lang.Integer"/>
+            <arg column="move_in_year_to" javaType="java.lang.Integer"/>
+            <arg column="limit_amount" javaType="java.math.BigDecimal"/>
+            <arg column="limit_amount_childcare" javaType="java.math.BigDecimal"/>
+            <arg column="deduction_years" javaType="java.lang.Integer"/>
+            <arg column="rate_percent" javaType="java.math.BigDecimal"/>
+            <arg column="source_url" javaType="java.lang.String"/>
+            <arg column="verified_on" javaType="java.time.LocalDate"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="taxBracketMap" type="com.example.mortgage.taxdeduction.TaxBracketRow">
+        <constructor>
+            <arg column="table_code" javaType="java.lang.String"/>
+            <arg column="upper_limit" javaType="java.math.BigDecimal"/>
+            <arg column="rate_percent" javaType="java.math.BigDecimal"/>
+            <arg column="amount" javaType="java.math.BigDecimal"/>
+            <arg column="source_url" javaType="java.lang.String"/>
+            <arg column="verified_on" javaType="java.time.LocalDate"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="taxScalarMap" type="com.example.mortgage.taxdeduction.TaxScalarRow">
+        <constructor>
+            <arg column="param_key" javaType="java.lang.String"/>
+            <arg column="param_value" javaType="java.math.BigDecimal"/>
+            <arg column="source_url" javaType="java.lang.String"/>
+            <arg column="verified_on" javaType="java.time.LocalDate"/>
+        </constructor>
+    </resultMap>
+
+    <select id="findDeductionRule" resultMap="deductionRuleMap">
+        SELECT housing_type, energy_class, condition_code, move_in_year_from, move_in_year_to,
+               limit_amount, limit_amount_childcare, deduction_years, rate_percent, source_url, verified_on
+        FROM housing_loan_deduction_rules
+        WHERE housing_type = #{housingType}
+          AND energy_class = #{energyClass}
+          AND condition_code = #{conditionCode}
+          AND move_in_year_from &lt;= #{moveInYear}
+          AND #{moveInYear} &lt;= move_in_year_to
+        ORDER BY id ASC
+        LIMIT 1
+    </select>
+
+    <select id="findTaxBrackets" resultMap="taxBracketMap">
+        SELECT table_code, upper_limit, rate_percent, amount, source_url, verified_on
+        FROM tax_brackets
+        WHERE year_from &lt;= #{taxYear}
+          AND #{taxYear} &lt;= year_to
+        ORDER BY table_code ASC, sort_order ASC
+    </select>
+
+    <select id="findTaxScalars" resultMap="taxScalarMap">
+        SELECT param_key, param_value, source_url, verified_on
+        FROM tax_scalar_parameters
+        WHERE year_from &lt;= #{taxYear}
+          AND #{taxYear} &lt;= year_to
+        ORDER BY param_key ASC
+    </select>
+
+</mapper>
