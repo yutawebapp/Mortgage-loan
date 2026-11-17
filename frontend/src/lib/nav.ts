@@ -21,6 +21,11 @@ export const TOOLS = [
     description: "年収や他の借入の返済額から、借入可能額の目安を確認できます。",
   },
   {
+    href: "/budget",
+    label: "購入予算の逆算",
+    description: "毎月の返済額と頭金から、購入できる物件価格の目安を調べられます。",
+  },
+  {
     href: "/prepayment",
     label: "繰上げ返済シミュレーター",
     description: "繰上げ返済をする時期と金額から、利息の軽減額や短縮される期間の目安を試算します。",

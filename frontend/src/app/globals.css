@@ -280,3 +280,15 @@ th.left, tbody th { text-align: left; }
 .rs-legend li { display: inline-flex; align-items: center; gap: 6px; }
 .timing-row { flex-wrap: wrap; }
 .timing-row input { flex: 0 0 5.5em; width: 5.5em; }
+
+/* 購入予算の逆算：予算内訳の凡例（色＋模様で区別） */
+.rs-legend .sw { margin: 0; }
+.bd-sw-pp { background: #0f5a96; }
+.bd-sw-ln { background: #0a2f55; }
+.bd-sw-cc { background: repeating-linear-gradient(45deg, #e0902b 0 3px, #fbe9cf 3px 8px); border: 1px solid #e0902b; }
+.bd-sw-dp { background: radial-gradient(circle, #0b7a75 1.8px, #e2f4f2 2px); background-size: 8px 8px; border: 1px solid #0b7a75; }
+.budget-flow { margin: 8px 0; padding-left: 1.4em; font-variant-numeric: tabular-nums; }
+.budget-flow li { margin: 4px 0; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+a.btn-link.secondary { background: var(--surface); color: var(--brand); }
+a.btn-link.secondary:hover { background: var(--brand-tint); }
