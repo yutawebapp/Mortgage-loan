@@ -323,3 +323,19 @@ a.btn-link.secondary:hover { background: var(--brand-tint); }
 .panel-block h3 { margin-top: 0; }
 @media (max-width: 480px) { .field-pair { grid-template-columns: 1fr; } }
 .field > label.radio-block { display: flex; font-weight: 400; margin: 0; }
+
+/* ---- 住居費の総額シミュレーター ---- */
+.tc-sw-loan, .tc-sw-init { background: #0f5a96; }
+.tc-sw-int { background: #0a2f55; }
+.tc-sw-own { background: repeating-linear-gradient(45deg, #e0902b 0 3px, #fbe9cf 3px 8px); border: 1px solid #e0902b; }
+.tc-sw-init { background: radial-gradient(circle, #0b7a75 1.8px, #e2f4f2 2px); background-size: 8px 8px; border: 1px solid #0b7a75; }
+.tc-share { list-style: none; margin: 8px 0 0; padding: 0; }
+.tc-share li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border-soft); font-variant-numeric: tabular-nums; }
+.tc-share li:first-child { border-top: 0; }
+.tc-share .tc-name { flex: 1 1 auto; min-width: 0; }
+.tc-share .tc-val { font-weight: 700; text-align: right; }
+.tc-excluded { margin: 8px 0; padding-left: 1.4em; }
+.tc-excluded li { margin: 4px 0; }
+.tc-year-table { min-width: max-content; }
+.tc-year-table tbody th { text-align: right; }
+.tc-loan-line { margin: 4px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
