@@ -1,5 +1,6 @@
 import type { EnergyClass, HousingType, TaxDeductionRequest } from "./api/taxDeduction";
 import type { RepaymentMethod } from "./api/simulation";
+import type { BorrowerMode } from "./borrowerMode";
 
 export type TaxDeductionForm = {
   housingType: HousingType;
@@ -15,7 +16,16 @@ export type TaxDeductionForm = {
   method: RepaymentMethod;
   incomeMan: string;
   socialInsuranceRate: string;
+  mode: BorrowerMode;
+  partnerIncomeMan: string;
+  partnerSocialInsuranceRate: string;
+  /** あなたの負担割合（%）。ペアローン・連帯債務のみ。 */
+  shareAPercent: string;
+  partnerChildcare: boolean;
 };
+
+/** 債務者が二人になる借り方（ペアローン・連帯債務）。連帯保証の保証人は債務者ではない。 */
+export const hasTwoDebtors = (m: BorrowerMode) => m === "PAIR_LOAN" || m === "JOINT_DEBT";
 
 export type TaxDeductionErrors = Partial<Record<keyof TaxDeductionForm, string>>;
 
@@ -77,25 +87,58 @@ export function validateTaxDeduction(v: TaxDeductionForm): {
   if (!Number.isFinite(si)) errors.socialInsuranceRate = "社会保険料率を入力してください。";
   else if (si < 0 || si > 30) errors.socialInsuranceRate = "社会保険料率は0%以上30%以下で入力してください。";
 
+  const two = hasTwoDebtors(v.mode);
+  let partnerIncome = 0;
+  let partnerSi = 0;
+  let share = 0;
+  if (two) {
+    const pMan = num(v.partnerIncomeMan);
+    partnerIncome = toYen(pMan);
+    if (!Number.isFinite(pMan)) errors.partnerIncomeMan = "配偶者・パートナーの年収（額面）を入力してください。";
+    else if (partnerIncome < 1 || partnerIncome > 1_000_000_000)
+      errors.partnerIncomeMan = "配偶者・パートナーの年収は10億円以下で、1円以上になるよう入力してください。";
+
+    partnerSi = num(v.partnerSocialInsuranceRate);
+    if (!Number.isFinite(partnerSi))
+      errors.partnerSocialInsuranceRate = "配偶者・パートナーの社会保険料率を入力してください。";
+    else if (partnerSi < 0 || partnerSi > 30)
+      errors.partnerSocialInsuranceRate = "配偶者・パートナーの社会保険料率は0%以上30%以下で入力してください。";
+
+    share = num(v.shareAPercent);
+    if (!Number.isFinite(share)) errors.shareAPercent = "あなたの負担割合を入力してください。";
+    else if (share < 1 || share > 99) errors.shareAPercent = "あなたの負担割合は1%以上99%以下で入力してください。";
+  }
+
   if (Object.keys(errors).length > 0) return { request: null, errors };
-  return {
-    request: {
-      housingType: v.housingType,
-      energyClass: v.energyClass,
-      moveInYear: my,
-      moveInMonth: mm,
-      childcareHousehold: v.childcare,
-      floorAreaOver50: v.floorAreaOver50,
-      legacyException: legacyExceptionKind(v) !== null && v.legacyException,
-      principal,
-      annualRatePercent: rate,
-      years,
-      method: v.method,
-      annualIncome: income,
-      socialInsuranceRatePercent: si,
-    },
-    errors,
+  const request: TaxDeductionRequest = {
+    housingType: v.housingType,
+    energyClass: v.energyClass,
+    moveInYear: my,
+    moveInMonth: mm,
+    childcareHousehold: v.childcare,
+    floorAreaOver50: v.floorAreaOver50,
+    legacyException: legacyExceptionKind(v) !== null && v.legacyException,
+    principal,
+    annualRatePercent: rate,
+    years,
+    method: v.method,
+    annualIncome: income,
+    socialInsuranceRatePercent: si,
+    mode: v.mode,
   };
+  if (two) {
+    request.partnerAnnualIncome = partnerIncome;
+    request.partnerSocialInsuranceRatePercent = partnerSi;
+    request.shareAPercent = share;
+    request.partnerChildcareHousehold = v.partnerChildcare;
+  }
+  return { request, errors };
+}
+
+/** 借入金額（円）を負担割合で分けた目安。A は四捨五入、B は残り。 */
+export function splitPrincipal(totalYen: number, shareAPercent: number): { a: number; b: number } {
+  const a = Math.round((totalYen * shareAPercent) / 100);
+  return { a, b: totalYen - a };
 }
 
 /** 返済期間が10年未満のときに出す案内（エラーではない）。 */
@@ -152,3 +195,19 @@ export function isHttpUrl(s: string): boolean {
 }
 
 export { simulationHref } from "./eligibility";
+
+/** 連帯保証のときに、結果の上に必ず出す説明。 */
+export const GUARANTOR_NOTE =
+  "保証人は借入金の債務者ではないため、住宅ローン控除は主たる借入人のみ（配偶者・パートナーの分は対象外）として試算しています。";
+
+const TWO_PERSON_NOTES: Record<string, string> = {
+  PAIR_OR_JOINT_SHARE_EQUALS_OWNERSHIP: "借入の負担割合は、住宅の持分割合と同じ前提で計算しています。",
+  LIMIT_APPLIED_PER_PERSON: "借入限度額は、一人ずつに当てはめて計算しています。",
+  PARTNER_NOT_DEBTOR_NO_DEDUCTION: GUARANTOR_NOTE,
+  HOUSEHOLD_FLAGS_PER_PERSON: "子育て世帯・若者夫婦世帯の区分は、控除を受ける人ごとに判定しています。",
+};
+
+/** 注記コードを短い文にする。未知のコードは出さない。 */
+export function twoPersonNoteTexts(codes: readonly string[] | null | undefined): string[] {
+  return (codes ?? []).flatMap((c) => (TWO_PERSON_NOTES[c] ? [TWO_PERSON_NOTES[c]] : []));
+}

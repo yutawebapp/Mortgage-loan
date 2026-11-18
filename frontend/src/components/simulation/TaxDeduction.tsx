@@ -7,11 +7,13 @@ import {
   calculateTaxDeduction,
   type EnergyClass,
   type HousingType,
+  type TaxDeductionPerson,
   type TaxDeductionRequest,
   type TaxDeductionResponse,
 } from "@/lib/api/taxDeduction";
 import {
   DEFAULT_SOCIAL_INSURANCE_RATE,
+  GUARANTOR_NOTE,
   MOVE_IN_YEARS,
   dateLabel,
   ineligibleMessage,
@@ -20,14 +22,19 @@ import {
   legacyExceptionKind,
   legacyExceptionLabel,
   manOrYen,
+  hasTwoDebtors,
   simulationHref,
+  splitPrincipal,
+  twoPersonNoteTexts,
   validateTaxDeduction,
   type TaxDeductionForm,
 } from "@/lib/taxDeduction";
 import { yen } from "@/lib/simulation";
 import TaxDeductionChart from "./TaxDeductionChart";
-import { STEP_MAN_LARGE, STEP_PERCENT, STEP_RATE } from "@/lib/inputSteps";
+import { STEP_MAN_LARGE, STEP_PERCENT, STEP_PERCENT_WHOLE, STEP_RATE } from "@/lib/inputSteps";
+import { PERSON_LABEL } from "@/lib/borrowerMode";
 import { NumberField } from "./NumberField";
+import { BorrowerModeSelector } from "./BorrowerModeFields";
 
 type Outcome = { key: string; data?: TaxDeductionResponse; error?: string };
 
@@ -45,6 +52,11 @@ const initial: TaxDeductionForm = {
   method: "EQUAL_PAYMENT",
   incomeMan: "600",
   socialInsuranceRate: DEFAULT_SOCIAL_INSURANCE_RATE,
+  mode: "SINGLE",
+  partnerIncomeMan: "400",
+  partnerSocialInsuranceRate: DEFAULT_SOCIAL_INSURANCE_RATE,
+  shareAPercent: "50",
+  partnerChildcare: false,
 };
 
 const HOUSING: { value: HousingType; label: string }[] = [
@@ -73,6 +85,34 @@ function errorMessage(e: unknown): string {
 }
 
 const yenCell = (n: number) => n.toLocaleString("ja-JP");
+
+function PersonCard({ p }: { p: TaxDeductionPerson }) {
+  return (
+    <section className="person-card" aria-label={PERSON_LABEL[p.role]}>
+      <h4>{PERSON_LABEL[p.role]}</h4>
+      <dl>
+        <dt>借入額</dt>
+        <dd>{yen(p.principal)}</dd>
+        {p.eligible && p.totals ? (
+          <>
+            <dt>借入限度額</dt>
+            <dd>{p.limitAmount !== null ? yen(p.limitAmount) : "―"}</dd>
+            <dt>控除額の合計</dt>
+            <dd className="big">約{manOrYen(p.totals.totalDeduction)}</dd>
+            <dt>控除しきれない額</dt>
+            <dd>{p.totals.totalUnclaimed > 0 ? `約${manOrYen(p.totals.totalUnclaimed)}` : "なし"}</dd>
+          </>
+        ) : null}
+      </dl>
+      {!(p.eligible && p.totals) && (
+        <p role="note">
+          <strong>対象外となる可能性があります。</strong>
+          {ineligibleMessage(p.ineligibleReason)}
+        </p>
+      )}
+    </section>
+  );
+}
 
 export default function TaxDeduction({ initialValues }: { initialValues?: Partial<TaxDeductionForm> }) {
   const [form, setForm] = useState<TaxDeductionForm>({ ...initial, ...initialValues });
@@ -115,7 +155,27 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
 
   const legacyKind = legacyExceptionKind(form);
 
-  type NumKey = "principalMan" | "rate" | "years" | "incomeMan" | "socialInsuranceRate";
+  type NumKey =
+    | "principalMan"
+    | "rate"
+    | "years"
+    | "incomeMan"
+    | "socialInsuranceRate"
+    | "partnerIncomeMan"
+    | "partnerSocialInsuranceRate"
+    | "shareAPercent";
+  const two = hasTwoDebtors(form.mode);
+  const guarantee = form.mode === "JOINT_GUARANTEE";
+  const hasPartner = two || guarantee;
+  const shownMode = data?.mode ?? "SINGLE";
+  const shownTwo = hasTwoDebtors(shownMode) && !!data?.persons;
+  const shareNum = Number(form.shareAPercent);
+  const principalNum = Number(form.principalMan);
+  const shareOk = form.shareAPercent.trim() !== "" && shareNum >= 1 && shareNum <= 99;
+  const split =
+    shareOk && form.principalMan.trim() !== "" && Number.isFinite(principalNum) && principalNum > 0
+      ? splitPrincipal(Math.round(principalNum * 10000), shareNum)
+      : null;
   function field(id: NumKey, label: string, unit: string, opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal"; extra?: React.ReactNode }) {
     return (
       <NumberField
@@ -207,12 +267,30 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
                 onChange={(ev) => set("childcare", ev.target.checked)}
                 aria-describedby="td-childcare-hint"
               />
-              子育て世帯・若者夫婦世帯に該当する
+              {two ? `${PERSON_LABEL.A}が子育て世帯・若者夫婦世帯に該当する` : "子育て世帯・若者夫婦世帯に該当する"}
             </label>
             <p className="hint check-hint" id="td-childcare-hint">
               19歳未満の扶養親族がいる、または夫婦のいずれかが40歳未満の世帯です。入居年の12月31日時点で判定します。
+              {two && "控除を受ける人ごとに判定されます。"}
             </p>
           </div>
+
+          {two && (
+            <div className="field">
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={form.partnerChildcare}
+                  onChange={(ev) => set("partnerChildcare", ev.target.checked)}
+                  aria-describedby="td-partner-childcare-hint"
+                />
+                {PERSON_LABEL.B}が子育て世帯・若者夫婦世帯に該当する
+              </label>
+              <p className="hint check-hint" id="td-partner-childcare-hint">
+                子育て世帯・若者夫婦世帯は、控除を受ける人ごとに判定されます（19歳未満の扶養親族がいる人、または夫婦のいずれかが40歳未満）。
+              </p>
+            </div>
+          )}
 
           <div className="field">
             <label className="check">
@@ -246,7 +324,27 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
 
         <fieldset className="fs-group">
           <legend>借入</legend>
-          {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：3000万円 ＝ 30,000,000円" })}
+          <BorrowerModeSelector name="td-mode" value={form.mode} onChange={(m) => set("mode", m)} />
+          {guarantee && (
+            <p className="note" role="note">
+              {GUARANTOR_NOTE}
+            </p>
+          )}
+          {field("principalMan", two ? "借入金額（合計）" : "借入金額", "万円", {
+            step: STEP_MAN_LARGE,
+            hint: "例：3000万円 ＝ 30,000,000円",
+          })}
+          {two &&
+            field("shareAPercent", "あなたの負担割合（借入のうち、あなたの分）", "%", {
+              step: STEP_PERCENT_WHOLE,
+              hint: "借入の負担割合は、住宅の持分割合と同じにする前提で計算します。違うと控除が減る場合があります。",
+              extra: shareOk ? (
+                <p className="info-msg" role="note">
+                  {PERSON_LABEL.A}：{shareNum}%{split ? `（約${manOrYen(split.a)}）` : ""}　{PERSON_LABEL.B}：
+                  {Math.round((100 - shareNum) * 100) / 100}%{split ? `（約${manOrYen(split.b)}）` : ""}
+                </p>
+              ) : null,
+            })}
           {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。" })}
           {field("years", "返済期間", "年", {
             step: "1",
@@ -283,16 +381,34 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
 
         <fieldset className="fs-group">
           <legend>収入</legend>
-          {field("incomeMan", "年収（額面）", "万円", {
+          {field("incomeMan", hasPartner ? `${PERSON_LABEL.A}の年収（額面）` : "年収（額面）", "万円", {
             step: STEP_MAN_LARGE,
             hint: "税額の推計に使います。",
           })}
+          {two &&
+            field("partnerIncomeMan", `${PERSON_LABEL.B}の年収（額面）`, "万円", {
+              step: STEP_MAN_LARGE,
+              hint: "税額の推計に使います。",
+            })}
+          {guarantee && (
+            <p className="hint">保証人の収入は、住宅ローン控除の試算には使いません。</p>
+          )}
           <details className="advanced">
             <summary>詳細設定</summary>
-            {field("socialInsuranceRate", "社会保険料率（年収に対する割合）", "%", {
-              step: STEP_PERCENT,
-              hint: "実際の社会保険料率に近い値に変更できます。0〜30%で入力できます。",
-            })}
+            {field(
+              "socialInsuranceRate",
+              hasPartner ? `${PERSON_LABEL.A}の社会保険料率（年収に対する割合）` : "社会保険料率（年収に対する割合）",
+              "%",
+              {
+                step: STEP_PERCENT,
+                hint: "実際の社会保険料率に近い値に変更できます。0〜30%で入力できます。",
+              },
+            )}
+            {two &&
+              field("partnerSocialInsuranceRate", `${PERSON_LABEL.B}の社会保険料率（年収に対する割合）`, "%", {
+                step: STEP_PERCENT,
+                hint: "0〜30%で入力できます。",
+              })}
           </details>
         </fieldset>
       </form>
@@ -322,13 +438,25 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               </p>
               <p>{ineligibleMessage(data.ineligibleReason)}</p>
             </div>
+            {shownTwo && data.persons && (
+              <div className="person-cards">
+                {data.persons.map((p) => (
+                  <PersonCard p={p} key={p.role} />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {data && shown && data.eligible && data.rule && data.totals && data.assumptions && (
           <div className={stale ? "stale" : undefined}>
+            {shownMode === "JOINT_GUARANTEE" && (
+              <p className="note" role="note">
+                {GUARANTOR_NOTE}
+              </p>
+            )}
             <div className="verdict">
-              <p className="hint">控除額の合計の目安</p>
+              <p className="hint">{shownTwo ? "世帯の控除額の合計の目安" : "控除額の合計の目安"}</p>
               <p className="big">約{manOrYen(data.totals.totalDeduction)}</p>
               <p className="hint">
                 控除期間は{data.rule.deductionYears}年です。所得税と住民税から差し引かれる額の、期間中の合計を推計しています。
@@ -351,11 +479,31 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
                 `この条件では、控除しきれない額が合計で約${manOrYen(data.totals.totalUnclaimed)}生じる推計です。`}
             </p>
 
+            {shownTwo && data.persons && (
+              <>
+                <h3>お二人それぞれの目安</h3>
+                <div className="person-cards">
+                  {data.persons.map((p) => (
+                    <PersonCard p={p} key={p.role} />
+                  ))}
+                </div>
+              </>
+            )}
+
             <div className="note" role="note">
               <p style={{ margin: 0 }}>
-                適用された借入限度額：<strong>{yen(data.rule.limitAmount)}</strong>　控除率：
-                <strong>{data.rule.ratePercent}%</strong>　子育て世帯等の上乗せ：
-                <strong>{data.rule.childcareApplied ? "適用あり" : "適用なし"}</strong>
+                {shownTwo ? (
+                  <>
+                    控除率：<strong>{data.rule.ratePercent}%</strong>　控除期間：<strong>{data.rule.deductionYears}年</strong>
+                    （{PERSON_LABEL.A}の条件で表示しています。借入限度額は、お二人それぞれに当てはめています。）
+                  </>
+                ) : (
+                  <>
+                    適用された借入限度額：<strong>{yen(data.rule.limitAmount)}</strong>　控除率：
+                    <strong>{data.rule.ratePercent}%</strong>　子育て世帯等の上乗せ：
+                    <strong>{data.rule.childcareApplied ? "適用あり" : "適用なし"}</strong>
+                  </>
+                )}
               </p>
             </div>
 
@@ -363,7 +511,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               <p className="hint">返済期間が控除期間より短いため、表は{data.totals.listedYears}年分です。</p>
             )}
 
-            <h3>年ごとの控除額の目安</h3>
+            <h3>{shownTwo ? "年ごとの控除額の目安（お二人の合計）" : "年ごとの控除額の目安"}</h3>
             <div className="table-wrap plain td-table" tabIndex={0} role="region" aria-label="年ごとの控除額の表（横にスクロールできます）">
               <table className="compare">
                 <caption className="sr-only">入居後の年ごとの住宅ローン控除額（円）</caption>
@@ -405,10 +553,20 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
             <div className="panel-block">
               <h3>推計の前提</h3>
               <ul className="assume">
-                <li>独身で、扶養親族はいない前提で税額を推計しています。</li>
+                <li>
+                  {hasTwoDebtors(shownMode)
+                    ? "お二人とも、扶養親族はいない前提で税額を推計しています。"
+                    : "独身で、扶養親族はいない前提で税額を推計しています。"}
+                </li>
                 <li>
                   社会保険料率は年収の{data.assumptions.socialInsuranceRatePercent}%、年収は{yen(data.assumptions.annualIncome)}
                   で毎年同じ前提です。
+                  {hasTwoDebtors(shownMode) && shown.partnerAnnualIncome !== undefined && (
+                    <>
+                      （{PERSON_LABEL.B}は、年収{yen(shown.partnerAnnualIncome)}、社会保険料率
+                      {shown.partnerSocialInsuranceRatePercent}%）
+                    </>
+                  )}
                 </li>
                 <li>
                   給与所得控除は概算です（推計した給与所得：約{manOrYen(data.assumptions.estimatedTotalIncome)}、所得税の課税総所得金額等：約
@@ -422,6 +580,11 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
                 {data.assumptions.notes.includes("ADJUSTMENT_DEDUCTION_ASSUMED") && (
                   <li>個人住民税の調整控除は、2,500円として概算しています。</li>
                 )}
+                {twoPersonNoteTexts(data.assumptions.notes)
+                  .filter((t) => t !== GUARANTOR_NOTE)
+                  .map((t) => (
+                    <li key={t}>{t}</li>
+                  ))}
                 <li>繰上げ返済やボーナス返済は含まれていません。</li>
               </ul>
             </div>

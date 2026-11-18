@@ -5,6 +5,8 @@ import {
   manLabel,
   simulationHref,
   validateEligibility,
+  eligibilityModeNote,
+  eligibilityNoteTexts,
 } from "./eligibility";
 
 const base: EligibilityForm = {
@@ -13,6 +15,10 @@ const base: EligibilityForm = {
   rate: "1.2",
   years: "35",
   screeningRate: "3.5",
+  mode: "SINGLE",
+  partnerIncomeMan: "300",
+  partnerOtherMan: "0",
+  partnerCountPercent: "50",
 };
 const withOverrides = (o: Partial<EligibilityForm>): EligibilityForm => ({ ...base, ...o });
 
@@ -26,6 +32,7 @@ describe("validateEligibility", () => {
       annualRatePercent: 1.2,
       years: 35,
       screeningRatePercent: 3.5,
+      mode: "SINGLE",
     });
   });
 
@@ -116,5 +123,46 @@ describe("simulationHref", () => {
 
   it("floors partial 万円 (e.g. 12,345,678円 -> 1234万円)", () => {
     expect(simulationHref(12_345_678, 1, 30)).toBe("/simulation?principal=1234&rate=1&years=30");
+  });
+});
+
+describe("two-person modes (eligibility)", () => {
+  const two = (o: Partial<EligibilityForm>) => withOverrides({ mode: "JOINT_DEBT", partnerIncomeMan: "400", ...o });
+  const guarantee = (pct: string) => validateEligibility(two({ mode: "JOINT_GUARANTEE", partnerCountPercent: pct }));
+
+  it("sends partner fields for PAIR_LOAN / JOINT_DEBT without the percent", () => {
+    for (const mode of ["PAIR_LOAN", "JOINT_DEBT"] as const) {
+      const { request } = validateEligibility(two({ mode, partnerOtherMan: "24" }));
+      expect(request).toMatchObject({ mode, partnerAnnualIncome: 4_000_000, partnerOtherAnnualRepayments: 240_000 });
+      expect(request).not.toHaveProperty("partnerIncomeCountPercent");
+    }
+  });
+
+  it("JOINT_GUARANTEE sends the count percent (integer 0..100)", () => {
+    expect(guarantee("70").request?.partnerIncomeCountPercent).toBe(70);
+    expect(guarantee("0").errors).toEqual({});
+    expect(guarantee("100").errors).toEqual({});
+    expect(guarantee("101").errors.partnerCountPercent).toBeDefined();
+    expect(guarantee("50.5").errors.partnerCountPercent).toBeDefined();
+  });
+
+  it("partner income is required (1円..10億円) and other repayments 0..10億円", () => {
+    expect(validateEligibility(two({ partnerIncomeMan: "" })).errors.partnerIncomeMan).toBeDefined();
+    expect(validateEligibility(two({ partnerIncomeMan: "0" })).errors.partnerIncomeMan).toBeDefined();
+    expect(validateEligibility(two({ partnerIncomeMan: "100000" })).errors.partnerIncomeMan).toBeUndefined();
+    expect(validateEligibility(two({ partnerOtherMan: "-1" })).errors.partnerOtherMan).toBeDefined();
+  });
+
+  it("ignores partner fields for SINGLE", () => {
+    const { request, errors } = validateEligibility(withOverrides({ partnerIncomeMan: "abc" }));
+    expect(errors).toEqual({});
+    expect(request).not.toHaveProperty("partnerAnnualIncome");
+  });
+
+  it("note helpers map known codes, ignore unknown", () => {
+    expect(eligibilityNoteTexts(["INCOME_COMBINED_PROVISIONAL", "X"])).toHaveLength(1);
+    expect(eligibilityNoteTexts(null)).toEqual([]);
+    expect(eligibilityModeNote("SINGLE")).toBeNull();
+    expect(eligibilityModeNote("PAIR_LOAN")).toContain("個別に審査");
   });
 });

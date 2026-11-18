@@ -1,5 +1,7 @@
 package com.example.mortgage.taxdeduction;
 
+import com.example.mortgage.common.BorrowerMode;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -8,12 +10,18 @@ import java.util.List;
  * Response body of POST /api/v1/simulations/tax-deduction. All amounts are whole yen.
  * When eligible is false: years is empty and totals / assumptions are null. rule is null when no rule matched.
  *
+ * <p>For PAIR_LOAN / JOINT_DEBT, years / totals / eligible / ineligibleReason / rule / assumptions are the
+ * household view (sums over the eligible persons; rule and assumptions from person A, see service),
+ * and {@code persons} holds the per-person results. For SINGLE / JOINT_GUARANTEE, persons is null.
+ *
  * @param eligible         whether the deduction applies under the pre-checks
  * @param ineligibleReason reason code when not eligible, else null
  * @param rule             applied deduction rule, or null
  * @param years            one entry per listed deduction year
  * @param totals           totals over the listed years, or null
  * @param assumptions      estimate assumptions, or null
+ * @param mode             echo of the request mode (null only when built by the 6-argument constructor)
+ * @param persons          per-person results for PAIR_LOAN / JOINT_DEBT (A, B), else null
  */
 public record TaxDeductionResponse(
         boolean eligible,
@@ -21,7 +29,36 @@ public record TaxDeductionResponse(
         Rule rule,
         List<Year> years,
         Totals totals,
-        Assumptions assumptions) {
+        Assumptions assumptions,
+        BorrowerMode mode,
+        List<Person> persons) {
+
+    /** Single-person response without mode / persons (kept for existing callers). */
+    public TaxDeductionResponse(boolean eligible, String ineligibleReason, Rule rule, List<Year> years,
+                                Totals totals, Assumptions assumptions) {
+        this(eligible, ineligibleReason, rule, years, totals, assumptions, null, null);
+    }
+
+    /**
+     * Per-person result of a split loan.
+     *
+     * @param role             "A" (main borrower) or "B" (partner)
+     * @param principal        this person's share of the loan (yen)
+     * @param limitAmount      applied borrowing limit for this person (after own childcare choice), null if no rule
+     * @param eligible         whether this person's deduction applies under the pre-checks
+     * @param ineligibleReason reason code when not eligible, else null
+     * @param years            this person's deduction years (empty when not eligible)
+     * @param totals           this person's totals, or null when not eligible
+     */
+    public record Person(
+            String role,
+            long principal,
+            Long limitAmount,
+            boolean eligible,
+            String ineligibleReason,
+            List<Year> years,
+            Totals totals) {
+    }
 
     /**
      * @param limitAmount      applied borrowing limit (after childcare choice)

@@ -131,4 +131,73 @@ class TaxDeductionControllerTest {
     void missingHousingType_returns400() throws Exception {
         assertBadRequestOn(VALID.replace("\"housingType\": \"NEW\",", ""), "housingType");
     }
+
+    // ------------------------------------------------------------------ two-person modes
+
+    private static final String PAIR_VALID = VALID.replace("\"annualIncome\": 6000000",
+            "\"annualIncome\": 6000000, \"mode\": \"PAIR_LOAN\", \"partnerAnnualIncome\": 4000000");
+
+    @Test
+    void pairLoan_withoutPartnerIncome_returns400() throws Exception {
+        assertBadRequestOn(PAIR_VALID.replace(", \"partnerAnnualIncome\": 4000000", ""),
+                "partnerAnnualIncomeProvidedWhenSplit");
+    }
+
+    @Test
+    void jointDebt_withoutPartnerIncome_returns400() throws Exception {
+        assertBadRequestOn(PAIR_VALID.replace("PAIR_LOAN", "JOINT_DEBT")
+                        .replace(", \"partnerAnnualIncome\": 4000000", ""),
+                "partnerAnnualIncomeProvidedWhenSplit");
+    }
+
+    @Test
+    void jointGuarantee_withoutPartnerIncome_isAccepted() throws Exception {
+        given(taxDeductionService.estimate(any())).willReturn(new TaxDeductionResponse(false,
+                "NOT_ELIGIBLE_BY_RULE", null, List.of(), null, null));
+        mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON)
+                        .content(PAIR_VALID.replace("PAIR_LOAN", "JOINT_GUARANTEE")
+                                .replace(", \"partnerAnnualIncome\": 4000000", "")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shareAPercentZero_returns400() throws Exception {
+        assertBadRequestOn(PAIR_VALID.replace("\"mode\": \"PAIR_LOAN\"",
+                "\"mode\": \"PAIR_LOAN\", \"shareAPercent\": 0"), "shareAPercent");
+    }
+
+    @Test
+    void shareAPercent100_returns400() throws Exception {
+        assertBadRequestOn(PAIR_VALID.replace("\"mode\": \"PAIR_LOAN\"",
+                "\"mode\": \"PAIR_LOAN\", \"shareAPercent\": 100"), "shareAPercent");
+    }
+
+    @Test
+    void partnerIncomeZero_returns400() throws Exception {
+        assertBadRequestOn(PAIR_VALID.replace("\"partnerAnnualIncome\": 4000000",
+                "\"partnerAnnualIncome\": 0"), "partnerAnnualIncome");
+    }
+
+    @Test
+    void partnerSocialInsuranceAboveMax_returns400() throws Exception {
+        assertBadRequestOn(PAIR_VALID.replace("\"partnerAnnualIncome\": 4000000",
+                "\"partnerAnnualIncome\": 4000000, \"partnerSocialInsuranceRatePercent\": 31"),
+                "partnerSocialInsuranceRatePercent");
+    }
+
+    @Test
+    void splitPrincipalLeavingOneSideZero_returns400() throws Exception {
+        // principal 1 yen at 99% -> A 1 yen, B 0 yen
+        String body = PAIR_VALID.replace("\"principal\": 30000000", "\"principal\": 1")
+                .replace("\"mode\": \"PAIR_LOAN\"", "\"mode\": \"PAIR_LOAN\", \"shareAPercent\": 99");
+        assertBadRequestOn(body, "splitPrincipalPositive");
+    }
+
+    @Test
+    void unknownMode_returns400() throws Exception {
+        mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON)
+                        .content(PAIR_VALID.replace("PAIR_LOAN", "GUARANTOR")))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(taxDeductionService);
+    }
 }

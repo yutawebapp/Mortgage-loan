@@ -1,4 +1,5 @@
 import { ApiError, type ProblemDetail, type RepaymentMethod } from "./simulation";
+import type { BorrowerMode, PersonRole } from "../borrowerMode";
 
 export { ApiError };
 
@@ -19,6 +20,16 @@ export type TaxDeductionRequest = {
   method: RepaymentMethod;
   annualIncome: number;
   socialInsuranceRatePercent?: number;
+  /** 省略時は SINGLE。 */
+  mode?: BorrowerMode;
+  /** PAIR_LOAN / JOINT_DEBT のとき必須（円）。 */
+  partnerAnnualIncome?: number;
+  /** PAIR_LOAN / JOINT_DEBT のみ（0〜30）。 */
+  partnerSocialInsuranceRatePercent?: number;
+  /** PAIR_LOAN / JOINT_DEBT のみ。あなたの負担割合（1〜99、既定50）。 */
+  shareAPercent?: number;
+  /** PAIR_LOAN / JOINT_DEBT のみ（既定 false）。 */
+  partnerChildcareHousehold?: boolean;
 };
 
 export type TaxDeductionRule = {
@@ -66,7 +77,20 @@ export type TaxDeductionAssumptions = {
   notes: string[];
 };
 
+export type TaxDeductionPerson = {
+  role: PersonRole;
+  principal: number;
+  limitAmount: number | null;
+  eligible: boolean;
+  ineligibleReason: string | null;
+  years: TaxDeductionYear[];
+  totals: TaxDeductionTotals | null;
+};
+
 export type TaxDeductionResponse = {
+  mode?: BorrowerMode;
+  /** PAIR_LOAN / JOINT_DEBT のときだけ入る。上位の years / totals は対象者の合計。 */
+  persons?: TaxDeductionPerson[] | null;
   eligible: boolean;
   ineligibleReason: string | null;
   rule: TaxDeductionRule | null;

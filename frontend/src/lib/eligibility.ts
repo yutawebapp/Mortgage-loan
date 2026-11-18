@@ -1,4 +1,5 @@
 import type { EligibilityRequest } from "./api/eligibility";
+import { isTwoPerson, type BorrowerMode } from "./borrowerMode";
 
 export type EligibilityForm = {
   incomeMan: string;
@@ -6,6 +7,11 @@ export type EligibilityForm = {
   rate: string;
   years: string;
   screeningRate: string;
+  mode: BorrowerMode;
+  partnerIncomeMan: string;
+  partnerOtherMan: string;
+  /** 保証人の収入を審査で見る割合（%）。連帯保証のみ。 */
+  partnerCountPercent: string;
 };
 
 export type EligibilityErrors = Partial<Record<keyof EligibilityForm, string>>;
@@ -47,17 +53,47 @@ export function validateEligibility(v: EligibilityForm): {
   else if (!Number.isInteger(years) || years < 1 || years > 50)
     errors.years = "返済期間は1〜50年の整数で入力してください。";
 
+  const two = isTwoPerson(v.mode);
+  let partnerIncome = 0;
+  let partnerOther = 0;
+  let countPercent = 0;
+  if (two) {
+    const pMan = num(v.partnerIncomeMan);
+    partnerIncome = toYen(pMan);
+    if (!Number.isFinite(pMan)) errors.partnerIncomeMan = "配偶者・パートナーの年収（額面）を入力してください。";
+    else if (partnerIncome < 1 || partnerIncome > 1_000_000_000)
+      errors.partnerIncomeMan = "配偶者・パートナーの年収は10億円以下で、1円以上になるよう入力してください。";
+
+    const poMan = num(v.partnerOtherMan);
+    partnerOther = toYen(poMan);
+    if (!Number.isFinite(poMan))
+      errors.partnerOtherMan = "配偶者・パートナーの他の借入の年間返済額を入力してください（なければ0）。";
+    else if (partnerOther < 0 || partnerOther > 1_000_000_000)
+      errors.partnerOtherMan = "配偶者・パートナーの他の借入の年間返済額は0円以上10億円以下で入力してください。";
+
+    if (v.mode === "JOINT_GUARANTEE") {
+      countPercent = num(v.partnerCountPercent);
+      if (!Number.isFinite(countPercent)) errors.partnerCountPercent = "保証人の収入を見る割合を入力してください。";
+      else if (!Number.isInteger(countPercent) || countPercent < 0 || countPercent > 100)
+        errors.partnerCountPercent = "保証人の収入を見る割合は0〜100%の整数で入力してください。";
+    }
+  }
+
   if (Object.keys(errors).length > 0) return { request: null, errors };
-  return {
-    request: {
-      annualIncome: income,
-      otherAnnualRepayments: other,
-      annualRatePercent: num(v.rate),
-      years,
-      screeningRatePercent: num(v.screeningRate),
-    },
-    errors,
+  const request: EligibilityRequest = {
+    annualIncome: income,
+    otherAnnualRepayments: other,
+    annualRatePercent: num(v.rate),
+    years,
+    screeningRatePercent: num(v.screeningRate),
+    mode: v.mode,
   };
+  if (two) {
+    request.partnerAnnualIncome = partnerIncome;
+    request.partnerOtherAnnualRepayments = partnerOther;
+    if (v.mode === "JOINT_GUARANTEE") request.partnerIncomeCountPercent = countPercent;
+  }
+  return { request, errors };
 }
 
 type Q = string | string[] | undefined;
@@ -85,4 +121,29 @@ export function simulationHref(maxPrincipalYen: number, rate: number, years: num
   p.set("rate", String(rate));
   p.set("years", String(years));
   return `/simulation?${p.toString()}`;
+}
+
+const ELIGIBILITY_NOTES: Record<string, string> = {
+  INCOME_COMBINED_PROVISIONAL: "二人の収入を合算して審査する想定の、仮の計算です。",
+  PARTNER_INCOME_RATIO_ASSUMED: "保証人の収入のうち、入力した割合だけを審査で見る仮の想定です。",
+  EACH_PERSON_SCREENED_SEPARATELY: "二人それぞれの審査結果を足し合わせた、仮の計算です。",
+};
+
+/** 結果に付く注記コードを短い文にする。未知のコードは出さない。 */
+export function eligibilityNoteTexts(codes: readonly string[] | null | undefined): string[] {
+  return (codes ?? []).flatMap((c) => (ELIGIBILITY_NOTES[c] ? [ELIGIBILITY_NOTES[c]] : []));
+}
+
+/** 借り方ごとの説明（結果の上に出す）。SINGLE は null。 */
+export function eligibilityModeNote(mode: BorrowerMode): string | null {
+  switch (mode) {
+    case "PAIR_LOAN":
+      return "ペアローン：それぞれの収入で個別に審査し、合計する想定です。";
+    case "JOINT_DEBT":
+      return "収入合算（連帯債務）：二人の収入を合算して、1本のローンを審査する想定です。";
+    case "JOINT_GUARANTEE":
+      return "収入合算（連帯保証）：あなたの収入と、保証人の収入の一定割合を合算する仮の想定です。";
+    default:
+      return null;
+  }
 }

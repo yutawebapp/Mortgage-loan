@@ -7,3 +7,4 @@ export const STEP_MAN_LARGE = "10"; // 万円入力の高額項目（10万円単
 export const STEP_MAN_MONTHLY = "1"; // 毎月の返済額（万円/月、1万円単位）
 export const STEP_YEN_MONTHLY = "1000"; // 管理費・修繕積立金（円/月）
 export const STEP_YEN_YEARLY = "10000"; // 固定資産税・保険料（円/年）
+export const STEP_PERCENT_WHOLE = "1"; // 負担割合・審査で見る割合（%、1%単位）

@@ -10,6 +10,9 @@ import {
   simulationHref,
   taxDeductionInitialFromQuery,
   validateTaxDeduction,
+  hasTwoDebtors,
+  splitPrincipal,
+  twoPersonNoteTexts,
 } from "./taxDeduction";
 
 const base: TaxDeductionForm = {
@@ -26,6 +29,11 @@ const base: TaxDeductionForm = {
   method: "EQUAL_PAYMENT",
   incomeMan: "600",
   socialInsuranceRate: "15",
+  mode: "SINGLE",
+  partnerIncomeMan: "400",
+  partnerSocialInsuranceRate: "15",
+  shareAPercent: "50",
+  partnerChildcare: false,
 };
 const w = (o: Partial<TaxDeductionForm>): TaxDeductionForm => ({ ...base, ...o });
 
@@ -47,6 +55,7 @@ describe("validateTaxDeduction", () => {
       method: "EQUAL_PAYMENT",
       annualIncome: 6_000_000,
       socialInsuranceRatePercent: 15,
+      mode: "SINGLE",
     });
   });
 
@@ -165,5 +174,61 @@ describe("formatting helpers", () => {
   });
   it("simulationHref reuses the shared helper (principal in 万円)", () => {
     expect(simulationHref(30_000_000, 1.2, 35)).toBe("/simulation?principal=3000&rate=1.2&years=35");
+  });
+});
+
+describe("two-person modes (tax deduction)", () => {
+  it("PAIR_LOAN / JOINT_DEBT send partner fields; SINGLE and JOINT_GUARANTEE send only mode", () => {
+    const r = validateTaxDeduction(w({ mode: "PAIR_LOAN", shareAPercent: "60", partnerChildcare: true })).request;
+    expect(r).toMatchObject({
+      mode: "PAIR_LOAN",
+      partnerAnnualIncome: 4_000_000,
+      partnerSocialInsuranceRatePercent: 15,
+      shareAPercent: 60,
+      partnerChildcareHousehold: true,
+    });
+    expect(validateTaxDeduction(w({ mode: "JOINT_DEBT" })).request?.partnerChildcareHousehold).toBe(false);
+    for (const mode of ["SINGLE", "JOINT_GUARANTEE"] as const) {
+      const q = validateTaxDeduction(w({ mode, partnerIncomeMan: "", shareAPercent: "0" })).request!;
+      expect(q.mode).toBe(mode);
+      expect(q).not.toHaveProperty("partnerAnnualIncome");
+      expect(q).not.toHaveProperty("shareAPercent");
+      expect(q).not.toHaveProperty("partnerChildcareHousehold");
+    }
+  });
+
+  it("validates partner income (1円..10億円), partner rate (0..30) and share (1..99)", () => {
+    const e = (o: Partial<TaxDeductionForm>) => validateTaxDeduction(w({ mode: "JOINT_DEBT", ...o })).errors;
+    expect(e({ partnerIncomeMan: "" }).partnerIncomeMan).toBeDefined();
+    expect(e({ partnerIncomeMan: "0" }).partnerIncomeMan).toBeDefined();
+    expect(e({ partnerIncomeMan: "100000" }).partnerIncomeMan).toBeUndefined();
+    expect(e({ partnerIncomeMan: "100000.0001" }).partnerIncomeMan).toBeDefined();
+    expect(e({ partnerSocialInsuranceRate: "30" }).partnerSocialInsuranceRate).toBeUndefined();
+    expect(e({ partnerSocialInsuranceRate: "30.1" }).partnerSocialInsuranceRate).toBeDefined();
+    expect(e({ shareAPercent: "0.9" }).shareAPercent).toBeDefined();
+    expect(e({ shareAPercent: "1" }).shareAPercent).toBeUndefined();
+    expect(e({ shareAPercent: "99" }).shareAPercent).toBeUndefined();
+    expect(e({ shareAPercent: "99.5" }).shareAPercent).toBeDefined();
+  });
+
+  it("partner fields are not validated for single / guarantor", () => {
+    expect(validateTaxDeduction(w({ mode: "SINGLE", partnerIncomeMan: "abc" })).errors).toEqual({});
+    expect(validateTaxDeduction(w({ mode: "JOINT_GUARANTEE", shareAPercent: "" })).errors).toEqual({});
+  });
+
+  it("hasTwoDebtors and splitPrincipal", () => {
+    expect(hasTwoDebtors("PAIR_LOAN")).toBe(true);
+    expect(hasTwoDebtors("JOINT_DEBT")).toBe(true);
+    expect(hasTwoDebtors("JOINT_GUARANTEE")).toBe(false);
+    expect(hasTwoDebtors("SINGLE")).toBe(false);
+    expect(splitPrincipal(50_000_000, 60)).toEqual({ a: 30_000_000, b: 20_000_000 });
+    const s = splitPrincipal(10_000_001, 33);
+    expect(s.a + s.b).toBe(10_000_001);
+  });
+
+  it("maps known note codes and ignores unknown ones", () => {
+    const t = twoPersonNoteTexts(["PAIR_OR_JOINT_SHARE_EQUALS_OWNERSHIP", "UNKNOWN", "PARTNER_NOT_DEBTOR_NO_DEDUCTION"]);
+    expect(t).toHaveLength(2);
+    expect(twoPersonNoteTexts(undefined)).toEqual([]);
   });
 });

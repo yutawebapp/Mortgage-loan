@@ -362,3 +362,15 @@ a.btn-link.secondary:hover { background: var(--brand-tint); }
 .rt-meta > div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
 .rt-meta dt { color: var(--muted); min-width: 0; }
 .rt-meta dd { margin: 0; white-space: nowrap; flex: 0 0 auto; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ふたりで借りる場合の、人ごとのカード（借入可能額・住宅ローン控除で共通） */
+.person-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 16px; }
+.person-card { background: #fff; border: 1px solid var(--brand-line); border-top: 4px solid var(--brand); border-radius: 8px; padding: 12px; min-width: 0; }
+.person-card:nth-child(2) { border-top-color: var(--teal); }
+.person-card h4 { margin: 0 0 8px; font-size: 1rem; color: var(--brand-dark); }
+.person-card dl { margin: 0; }
+.person-card dt { font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-top: 8px; }
+.person-card dd { margin: 2px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.person-card dd.big { font-size: 1.15rem; color: var(--brand-dark); }
+.person-card p { margin: 6px 0 0; font-size: 0.9rem; }
+@media (max-width: 480px) { .person-cards { grid-template-columns: 1fr; } }

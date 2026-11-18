@@ -8,10 +8,19 @@ import {
   type EligibilityRequest,
   type EligibilityResponse,
 } from "@/lib/api/eligibility";
-import { manLabel, simulationHref, validateEligibility, type EligibilityForm } from "@/lib/eligibility";
+import {
+  eligibilityModeNote,
+  eligibilityNoteTexts,
+  manLabel,
+  simulationHref,
+  validateEligibility,
+  type EligibilityForm,
+} from "@/lib/eligibility";
+import { PERSON_LABEL, isTwoPerson } from "@/lib/borrowerMode";
 import { yen } from "@/lib/simulation";
-import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
+import { STEP_MAN_LARGE, STEP_PERCENT_WHOLE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { BorrowerModeSelector } from "./BorrowerModeFields";
 
 type Outcome = { key: string; data?: EligibilityResponse; error?: string };
 
@@ -21,7 +30,13 @@ const initial: EligibilityForm = {
   rate: "1.2",
   years: "35",
   screeningRate: "3.5",
+  mode: "SINGLE",
+  partnerIncomeMan: "300",
+  partnerOtherMan: "0",
+  partnerCountPercent: "50",
 };
+
+type FieldKey = "incomeMan" | "otherMan" | "rate" | "years" | "screeningRate" | "partnerIncomeMan" | "partnerOtherMan" | "partnerCountPercent";
 
 function errorMessage(e: unknown): string {
   if (e instanceof ApiError) {
@@ -71,7 +86,7 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
   const stale = !!data && loading;
 
   function field(
-    id: keyof EligibilityForm,
+    id: FieldKey,
     label: string,
     unit: string,
     opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal" },
@@ -92,18 +107,45 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
     );
   }
 
+  const two = isTwoPerson(form.mode);
+  const shownMode = data?.mode ?? "SINGLE";
+  const noteTexts = eligibilityNoteTexts(data?.notes);
+
   return (
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="借入可能額の条件">
-        <h2>収入と他の借入</h2>
-        {field("incomeMan", "年収（額面）", "万円", {
+        <h2>ローンの借り方</h2>
+        <BorrowerModeSelector name="el-mode" value={form.mode} onChange={(m) => set("mode", m)} />
+
+        <h2>{two ? `${PERSON_LABEL.A}の収入と他の借入` : "収入と他の借入"}</h2>
+        {field("incomeMan", two ? `${PERSON_LABEL.A}の年収（額面）` : "年収（額面）", "万円", {
           step: STEP_MAN_LARGE,
           hint: "税金などを引く前の金額です。例：500万円 ＝ 5,000,000円",
         })}
-        {field("otherMan", "他の借入の年間返済額", "万円", {
+        {field("otherMan", two ? `${PERSON_LABEL.A}の他の借入の年間返済額` : "他の借入の年間返済額", "万円", {
           step: STEP_MAN_LARGE,
           hint: "自動車ローン・教育ローン・カードローンなどの年間返済額の合計です。なければ0のままで構いません。",
         })}
+
+        {two && (
+          <>
+            <h2>{PERSON_LABEL.B}の収入と他の借入</h2>
+            {field("partnerIncomeMan", `${PERSON_LABEL.B}の年収（額面）`, "万円", {
+              step: STEP_MAN_LARGE,
+              hint: "税金などを引く前の金額です。",
+            })}
+            {field("partnerOtherMan", `${PERSON_LABEL.B}の他の借入の年間返済額`, "万円", {
+              step: STEP_MAN_LARGE,
+              hint: "なければ0のままで構いません。",
+            })}
+            {form.mode === "JOINT_GUARANTEE" &&
+              field("partnerCountPercent", "保証人の収入を審査で見る割合", "%", {
+                step: STEP_PERCENT_WHOLE,
+                inputMode: "numeric",
+                hint: "金融機関によって異なる仮の値です。0〜100%の整数で入力できます。",
+              })}
+          </>
+        )}
 
         <h2>借入予定の条件</h2>
         {field("rate", "借入予定の金利（年率）", "%", {
@@ -144,6 +186,21 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
 
         {data && request && (
           <div className={stale ? "stale" : undefined}>
+            {isTwoPerson(shownMode) && (
+              <div className="note" role="note">
+                <p style={{ margin: 0 }}>
+                  {eligibilityModeNote(shownMode)}
+                  {shownMode === "PAIR_LOAN" ? "下の金額は、二人分の合計です。" : "下の金額は、二人の収入を合わせた結果です。"}
+                </p>
+                {noteTexts.length > 0 && (
+                  <ul style={{ margin: "6px 0 0", paddingLeft: "1.2em" }}>
+                    {noteTexts.map((t) => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="verdict">
               <p className="hint">審査金利（年{data.atScreeningRate.ratePercent}%）で試算した場合</p>
               <p className="big">
@@ -181,14 +238,41 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
               実際の金利で計算した参考値です。金融機関の審査では、より高い審査金利が使われることがあります。
             </p>
 
+            {data.persons && data.persons.length > 0 && (
+              <>
+                <h3>お二人それぞれの目安</h3>
+                <div className="person-cards">
+                  {data.persons.map((p) => (
+                    <section className="person-card" key={p.role} aria-label={PERSON_LABEL[p.role]}>
+                      <h4>{PERSON_LABEL[p.role]}</h4>
+                      <dl>
+                        <dt>毎月の返済可能額</dt>
+                        <dd>{yen(p.availableMonthlyRepayment)}</dd>
+                        <dt>借入可能額（審査金利 年{p.atScreeningRate.ratePercent}%）</dt>
+                        <dd className="big">
+                          {p.atScreeningRate.maxPrincipal > 0 ? `約${manLabel(p.atScreeningRate.maxPrincipal)}` : "約0円"}
+                        </dd>
+                        <dt>借入可能額（実際の金利 年{p.atActualRate.ratePercent}%）</dt>
+                        <dd>{p.atActualRate.maxPrincipal > 0 ? `約${manLabel(p.atActualRate.maxPrincipal)}` : "約0円"}</dd>
+                        <dt>適用した返済負担率</dt>
+                        <dd>{p.burdenRatioLimitPercent}%</dd>
+                      </dl>
+                    </section>
+                  ))}
+                </div>
+              </>
+            )}
+
             <h3>返済負担率と返済可能額</h3>
             <dl className="summary">
+              {data.burdenRatioLimitPercent !== null && (
+                <div>
+                  <dt>適用した返済負担率</dt>
+                  <dd className="big">{data.burdenRatioLimitPercent}%</dd>
+                </div>
+              )}
               <div>
-                <dt>適用した返済負担率</dt>
-                <dd className="big">{data.burdenRatioLimitPercent}%</dd>
-              </div>
-              <div>
-                <dt>年収に対する年間返済額の上限</dt>
+                <dt>{data.persons ? "二人分を合計した年間返済額の上限" : "年収に対する年間返済額の上限"}</dt>
                 <dd>{yen(data.maxAnnualRepayment)}</dd>
               </div>
               <div>
