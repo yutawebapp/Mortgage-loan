@@ -9,6 +9,8 @@ import {
 } from "@/lib/api/simulation";
 import { aggregateByYear, validate, yen, type FormValues } from "@/lib/simulation";
 import { BalanceChart, YearlyChart } from "./Charts";
+import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: RepaymentResponse; error?: string };
 
@@ -79,37 +81,19 @@ export default function Simulator({ initialValues }: { initialValues?: Partial<F
     onChange: (v: string) => void,
     opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal" },
   ) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={id}>{label}</label>
-        <div className="input-row">
-          <input
-            id={id}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={value}
-            onChange={(ev) => onChange(ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint && (
-          <p className="hint" id={`${id}-hint`}>
-            {opts.hint}
-          </p>
-        )}
-        {!opts.hint && <span id={`${id}-hint`} hidden />}
-        {e && (
-          <p className="field-error" id={`${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={id}
+        label={label}
+        unit={unit}
+        value={value}
+        onChange={onChange}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+      />
     );
   }
 
@@ -118,11 +102,11 @@ export default function Simulator({ initialValues }: { initialValues?: Partial<F
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="借入条件">
         <h2>借入条件</h2>
         {field("principalMan", "借入金額", "万円", form.principalMan, (v) => set("principalMan", v), {
-          step: "any",
+          step: STEP_MAN_LARGE,
           hint: "例：3000万円 ＝ 30,000,000円",
         })}
         {field("rate", "金利（年率）", "%", form.rate, (v) => set("rate", v), {
-          step: "0.001",
+          step: STEP_RATE,
           hint: "0〜20%で入力できます。",
         })}
         {field("years", "返済期間", "年", form.years, (v) => set("years", v), {
@@ -168,7 +152,7 @@ export default function Simulator({ initialValues }: { initialValues?: Partial<F
           {form.useBonus && (
             <div className="bonus-field">
               {field("bonusMan", "ボーナス返済分の借入額", "万円", form.bonusMan, (v) => set("bonusMan", v), {
-                step: "any",
+                step: STEP_MAN_LARGE,
                 hint: "借入金額のうち、ボーナス月（6か月ごと）に返す分です。",
               })}
             </div>

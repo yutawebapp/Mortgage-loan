@@ -19,6 +19,8 @@ import {
 } from "@/lib/totalCost";
 import { yen } from "@/lib/simulation";
 import TotalCostChart from "./TotalCostChart";
+import { STEP_MAN_LARGE, STEP_PERCENT, STEP_RATE, STEP_YEN_MONTHLY, STEP_YEN_YEARLY } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: TotalCostResponse; error?: string };
 
@@ -91,38 +93,19 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
     unit: string,
     opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal" },
   ) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={id}>{label}</label>
-        <div className="input-row">
-          <input
-            id={id}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={form[id]}
-            onChange={(ev) => set(id, ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint ? (
-          <p className="hint" id={`${id}-hint`}>
-            {opts.hint}
-          </p>
-        ) : (
-          <span id={`${id}-hint`} hidden />
-        )}
-        {e && (
-          <p className="field-error" id={`${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={id}
+        label={label}
+        unit={unit}
+        value={form[id]}
+        onChange={(v) => set(id, v)}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+      />
     );
   }
 
@@ -134,10 +117,10 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="住居費の条件">
         <fieldset className="fs-group">
           <legend>購入の条件</legend>
-          {field("priceMan", "物件価格", "万円", { step: "any", hint: "例：4000万円 ＝ 40,000,000円" })}
-          {field("downMan", "頭金", "万円", { step: "any", hint: "自己資金から支払う金額です。諸費用を現金で払う分も含めて入力してください。なければ0を入力してください。" })}
+          {field("priceMan", "物件価格", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
+          {field("downMan", "頭金", "万円", { step: STEP_MAN_LARGE, hint: "自己資金から支払う金額です。諸費用を現金で払う分も含めて入力してください。なければ0を入力してください。" })}
           {field("closingRate", "諸費用の割合（物件価格に対して）", "%", {
-            step: "any",
+            step: STEP_PERCENT,
             hint: "諸費用（登記費用・仲介手数料・保証料・各種税など）は、物件価格の1割前後かかることが多いとされます。物件の種類や条件で大きく変わります。0〜30%で入力できます。",
           })}
           {loanEstimate !== null && (
@@ -156,7 +139,7 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
 
         <fieldset className="fs-group">
           <legend>ローンの条件</legend>
-          {field("rate", "金利（年率）", "%", { step: "0.001", hint: "0〜20%で入力できます。返済期間中は同じ金利として計算します。" })}
+          {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。返済期間中は同じ金利として計算します。" })}
           {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
           <fieldset className="field">
             <legend>返済方式</legend>
@@ -191,19 +174,19 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
           <p className="hint">
             わからない項目は0のままでも試算できます。戸建てでは管理費や修繕積立金がかからない場合もありますが、その場合は、将来の修繕の費用を自分で準備しておく必要があります。
           </p>
-          {field("managementFee", "管理費（月額）", "円", { step: "1", inputMode: "numeric", hint: "マンションなどで毎月支払う費用です。" })}
+          {field("managementFee", "管理費（月額）", "円", { step: STEP_YEN_MONTHLY, inputMode: "numeric", hint: "マンションなどで毎月支払う費用です。" })}
           {field("repairReserve", "修繕積立金（月額）", "円", {
-            step: "1",
+            step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
             hint: "将来の大規模修繕に備えて毎月積み立てる費用です。",
           })}
           {field("propertyTax", "固定資産税・都市計画税（年額）", "円", {
-            step: "1",
+            step: STEP_YEN_YEARLY,
             inputMode: "numeric",
             hint: "毎年、自治体から納付書が届きます。金額がわからない場合は、物件の資料や不動産会社でご確認ください。",
           })}
           {field("insurance", "火災・地震保険料（年額）", "円", {
-            step: "1",
+            step: STEP_YEN_YEARLY,
             inputMode: "numeric",
             hint: "数年分をまとめて払う場合は、1年あたりの金額に直して入力してください。",
           })}

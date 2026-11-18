@@ -26,6 +26,8 @@ import {
 } from "@/lib/taxDeduction";
 import { yen } from "@/lib/simulation";
 import TaxDeductionChart from "./TaxDeductionChart";
+import { STEP_MAN_LARGE, STEP_PERCENT, STEP_RATE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: TaxDeductionResponse; error?: string };
 
@@ -115,39 +117,20 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
 
   type NumKey = "principalMan" | "rate" | "years" | "incomeMan" | "socialInsuranceRate";
   function field(id: NumKey, label: string, unit: string, opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal"; extra?: React.ReactNode }) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={`td-${id}`}>{label}</label>
-        <div className="input-row">
-          <input
-            id={`td-${id}`}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={form[id]}
-            onChange={(ev) => set(id, ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`td-${id}-hint${e ? ` td-${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint ? (
-          <p className="hint" id={`td-${id}-hint`}>
-            {opts.hint}
-          </p>
-        ) : (
-          <span id={`td-${id}-hint`} hidden />
-        )}
-        {opts.extra}
-        {e && (
-          <p className="field-error" id={`td-${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={`td-${id}`}
+        label={label}
+        unit={unit}
+        value={form[id]}
+        onChange={(v) => set(id, v)}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+        extra={opts.extra}
+      />
     );
   }
 
@@ -263,8 +246,8 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
 
         <fieldset className="fs-group">
           <legend>借入</legend>
-          {field("principalMan", "借入金額", "万円", { step: "any", hint: "例：3000万円 ＝ 30,000,000円" })}
-          {field("rate", "金利（年率）", "%", { step: "0.001", hint: "0〜20%で入力できます。" })}
+          {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：3000万円 ＝ 30,000,000円" })}
+          {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。" })}
           {field("years", "返済期間", "年", {
             step: "1",
             inputMode: "numeric",
@@ -301,13 +284,13 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
         <fieldset className="fs-group">
           <legend>収入</legend>
           {field("incomeMan", "年収（額面）", "万円", {
-            step: "any",
+            step: STEP_MAN_LARGE,
             hint: "税額の推計に使います。",
           })}
           <details className="advanced">
             <summary>詳細設定</summary>
             {field("socialInsuranceRate", "社会保険料率（年収に対する割合）", "%", {
-              step: "any",
+              step: STEP_PERCENT,
               hint: "実際の社会保険料率に近い値に変更できます。0〜30%で入力できます。",
             })}
           </details>

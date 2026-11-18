@@ -16,6 +16,8 @@ import {
 } from "@/lib/rate-scenario";
 import { yen } from "@/lib/simulation";
 import RateScenarioChart, { seriesName } from "./RateScenarioChart";
+import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: RateScenarioResponse; error?: string };
 
@@ -84,39 +86,20 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
     unit: string,
     opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal"; pre?: string },
   ) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={id}>{label}</label>
-        <div className="input-row">
-          {opts.pre && <span className="unit-pre">{opts.pre}</span>}
-          <input
-            id={id}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={form[id]}
-            onChange={(ev) => set(id, ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint ? (
-          <p className="hint" id={`${id}-hint`}>
-            {opts.hint}
-          </p>
-        ) : (
-          <span id={`${id}-hint`} hidden />
-        )}
-        {e && (
-          <p className="field-error" id={`${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={id}
+        label={label}
+        unit={unit}
+        value={form[id]}
+        onChange={(v) => set(id, v)}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+        pre={opts.pre}
+      />
     );
   }
 
@@ -130,8 +113,8 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利上昇シミュレーションの条件">
         <h2>ローンの条件</h2>
-        {field("principalMan", "借入金額", "万円", { step: "any", hint: "例：3000万円 ＝ 30,000,000円" })}
-        {field("rate", "当初金利（年率）", "%", { step: "0.001", hint: "0〜20%で入力できます。変動金利型の現在の金利を想定します。" })}
+        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：3000万円 ＝ 30,000,000円" })}
+        {field("rate", "当初金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。変動金利型の現在の金利を想定します。" })}
         {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年の整数で入力できます。" })}
         <fieldset className="field">
           <legend>返済方式</legend>
@@ -187,7 +170,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
                 id="custom"
                 type="number"
                 inputMode="decimal"
-                step="0.1"
+                step={STEP_RATE_RISE}
                 min={0}
                 value={form.custom}
                 onChange={(ev) => set("custom", ev.target.value)}

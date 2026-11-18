@@ -10,6 +10,8 @@ import {
 import { diffPhrase, monthsLabel, validateRefinance, type RefinanceForm } from "@/lib/refinance";
 import { yen } from "@/lib/simulation";
 import RefinanceChart from "./RefinanceChart";
+import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: RefinanceResponse; error?: string };
 
@@ -90,38 +92,19 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
     onChange: (v: string) => void,
     opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal" },
   ) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={id}>{label}</label>
-        <div className="input-row">
-          <input
-            id={id}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={value}
-            onChange={(ev) => onChange(ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint ? (
-          <p className="hint" id={`${id}-hint`}>
-            {opts.hint}
-          </p>
-        ) : (
-          <span id={`${id}-hint`} hidden />
-        )}
-        {e && (
-          <p className="field-error" id={`${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={id}
+        label={label}
+        unit={unit}
+        value={value}
+        onChange={onChange}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+      />
     );
   }
 
@@ -130,11 +113,11 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="借り換えの条件">
         <h2>現在のローン</h2>
         {field("balanceMan", "現在の残債", "万円", form.balanceMan, (v) => set("balanceMan", v), {
-          step: "any",
+          step: STEP_MAN_LARGE,
           hint: "例：2500万円 ＝ 25,000,000円",
         })}
         {field("currentRate", "現在の金利（年率）", "%", form.currentRate, (v) => set("currentRate", v), {
-          step: "0.001",
+          step: STEP_RATE,
           hint: "0〜20%で入力できます。",
         })}
         {field("remainingYears", "現在ローンの残り期間", "年", form.remainingYears, (v) => set("remainingYears", v), {
@@ -145,7 +128,7 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
 
         <h2>借り換え後</h2>
         {field("newRate", "借り換え後の金利（年率）", "%", form.newRate, (v) => set("newRate", v), {
-          step: "0.001",
+          step: STEP_RATE,
           hint: "0〜20%で入力できます。",
         })}
         {field(
@@ -192,7 +175,7 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
           </p>
         </fieldset>
         {field("costsMan", "借り換え諸費用", "万円", form.costsMan, (v) => set("costsMan", v), {
-          step: "any",
+          step: STEP_MAN_LARGE,
           hint: "事務手数料・保証料・登記費用・繰上返済手数料などの合計の目安です。わからない場合は0のままでも試算できます。",
         })}
       </form>

@@ -6,6 +6,8 @@ import { ApiError, calculateBudget, type BudgetRequest, type BudgetResponse } fr
 import { manLabel, simulationHref, validateBudget, type BudgetForm } from "@/lib/budget";
 import { yen } from "@/lib/simulation";
 import BudgetChart from "./BudgetChart";
+import { STEP_MAN_LARGE, STEP_MAN_MONTHLY, STEP_PERCENT, STEP_RATE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: BudgetResponse; error?: string };
 
@@ -70,41 +72,19 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
     unit: string,
     opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal"; optional?: boolean },
   ) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={id}>
-          {label}
-          {opts.optional ? "（任意）" : ""}
-        </label>
-        <div className="input-row">
-          <input
-            id={id}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={form[id]}
-            onChange={(ev) => set(id, ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint ? (
-          <p className="hint" id={`${id}-hint`}>
-            {opts.hint}
-          </p>
-        ) : (
-          <span id={`${id}-hint`} hidden />
-        )}
-        {e && (
-          <p className="field-error" id={`${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={id}
+        label={opts.optional ? `${label}（任意）` : label}
+        unit={unit}
+        value={form[id]}
+        onChange={(v) => set(id, v)}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+      />
     );
   }
 
@@ -113,26 +93,26 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="購入予算の条件">
         <h2>用意できる金額</h2>
         {field("downMan", "頭金", "万円", {
-          step: "any",
+          step: STEP_MAN_LARGE,
           hint: "自己資金から支払う金額です。なければ0で構いません。例：500万円 ＝ 5,000,000円",
         })}
         {field("monthlyMan", "希望する毎月の返済額", "万円", {
-          step: "any",
+          step: STEP_MAN_MONTHLY,
           hint: "小数も入力できます。例：8.5万円 ＝ 85,000円",
         })}
 
         <h2>借入の条件</h2>
-        {field("rate", "金利（年率）", "%", { step: "0.001", hint: "0〜20%で入力できます。" })}
+        {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。" })}
         {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
 
         <details className="advanced">
           <summary>詳細設定</summary>
           {field("closingRate", "諸費用の割合（物件価格に対して）", "%", {
-            step: "any",
+            step: STEP_PERCENT,
             hint: "諸費用（登記費用・仲介手数料・保証料・各種税など）は、物件価格の1割前後かかることが多いとされます。物件の種類や条件で大きく変わります。0〜30%で入力できます。",
           })}
           {field("incomeMan", "年収", "万円", {
-            step: "any",
+            step: STEP_MAN_LARGE,
             optional: true,
             hint: "入力すると、返済負担率の目安を表示します。",
           })}

@@ -10,6 +10,8 @@ import {
 } from "@/lib/api/eligibility";
 import { manLabel, simulationHref, validateEligibility, type EligibilityForm } from "@/lib/eligibility";
 import { yen } from "@/lib/simulation";
+import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: EligibilityResponse; error?: string };
 
@@ -74,38 +76,19 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
     unit: string,
     opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal" },
   ) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={id}>{label}</label>
-        <div className="input-row">
-          <input
-            id={id}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={form[id]}
-            onChange={(ev) => set(id, ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint ? (
-          <p className="hint" id={`${id}-hint`}>
-            {opts.hint}
-          </p>
-        ) : (
-          <span id={`${id}-hint`} hidden />
-        )}
-        {e && (
-          <p className="field-error" id={`${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={id}
+        label={label}
+        unit={unit}
+        value={form[id]}
+        onChange={(v) => set(id, v)}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+      />
     );
   }
 
@@ -114,17 +97,17 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="借入可能額の条件">
         <h2>収入と他の借入</h2>
         {field("incomeMan", "年収（額面）", "万円", {
-          step: "any",
+          step: STEP_MAN_LARGE,
           hint: "税金などを引く前の金額です。例：500万円 ＝ 5,000,000円",
         })}
         {field("otherMan", "他の借入の年間返済額", "万円", {
-          step: "any",
+          step: STEP_MAN_LARGE,
           hint: "自動車ローン・教育ローン・カードローンなどの年間返済額の合計です。なければ0のままで構いません。",
         })}
 
         <h2>借入予定の条件</h2>
         {field("rate", "借入予定の金利（年率）", "%", {
-          step: "0.001",
+          step: STEP_RATE,
           hint: "0〜20%で入力できます。",
         })}
         {field("years", "返済期間", "年", {
@@ -136,7 +119,7 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
         <details className="advanced">
           <summary>詳細設定</summary>
           {field("screeningRate", "審査金利（年率）", "%", {
-            step: "0.001",
+            step: STEP_RATE,
             hint: "金融機関は、実際の金利より高い金利で返済能力を確認することが多いため、その想定の金利です。0〜20%で入力できます。",
           })}
         </details>

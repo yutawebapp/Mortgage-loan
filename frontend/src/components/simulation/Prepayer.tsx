@@ -10,6 +10,8 @@ import {
 import { monthSpanLabel, validatePrepayment, type PrepaymentForm } from "@/lib/prepayment";
 import { yen } from "@/lib/simulation";
 import PrepaymentChart from "./PrepaymentChart";
+import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
 
 type Outcome = { key: string; data?: PrepaymentResponse; error?: string };
 
@@ -81,38 +83,19 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
 
   type NumKey = "principalMan" | "rate" | "years" | "prepayMan";
   function field(id: NumKey, label: string, unit: string, opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal" }) {
-    const e = err(id);
     return (
-      <div className="field">
-        <label htmlFor={id}>{label}</label>
-        <div className="input-row">
-          <input
-            id={id}
-            type="number"
-            inputMode={opts.inputMode ?? "decimal"}
-            step={opts.step}
-            min={0}
-            value={form[id]}
-            onChange={(ev) => set(id, ev.target.value)}
-            onBlur={blur(id)}
-            aria-invalid={e ? true : undefined}
-            aria-describedby={`${id}-hint${e ? ` ${id}-err` : ""}`}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-        {opts.hint ? (
-          <p className="hint" id={`${id}-hint`}>
-            {opts.hint}
-          </p>
-        ) : (
-          <span id={`${id}-hint`} hidden />
-        )}
-        {e && (
-          <p className="field-error" id={`${id}-err`}>
-            {e}
-          </p>
-        )}
-      </div>
+      <NumberField
+        id={id}
+        label={label}
+        unit={unit}
+        value={form[id]}
+        onChange={(v) => set(id, v)}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+      />
     );
   }
 
@@ -123,8 +106,8 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="繰上げ返済の条件">
         <h2>現在のローン</h2>
-        {field("principalMan", "借入金額", "万円", { step: "any", hint: "例：3000万円 ＝ 30,000,000円" })}
-        {field("rate", "金利（年率）", "%", { step: "0.001", hint: "0〜20%で入力できます。繰上げ後も同じ金利で計算します。" })}
+        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：3000万円 ＝ 30,000,000円" })}
+        {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。繰上げ後も同じ金利で計算します。" })}
         {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
         <fieldset className="field">
           <legend>返済方式</legend>
@@ -198,7 +181,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
           )}
         </fieldset>
         {field("prepayMan", "繰上げ返済額", "万円", {
-          step: "any",
+          step: STEP_MAN_LARGE,
           hint: "その時点のローン残高を上回る場合は、残高の全額を繰上げ返済するものとして計算します。",
         })}
         <fieldset className="field">
