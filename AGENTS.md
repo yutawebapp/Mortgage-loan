@@ -11,7 +11,7 @@
 - DB を初期化して migration をやり直す: `docker compose down -v`(架空データのみなので消えて問題ない)。
 - Backend(`backend/`): `./mvnw test` / 単体: `./mvnw test -Dtest=RepaymentCalculatorTest`。DB を使うテスト(`ProductMapperTest`、`TaxDeduction*Test` など)は Testcontainers で Docker が必要。`ProductMapperTest` は `disabledWithoutDocker=true` なので Docker が無いとスキップされ、緑でも未検証。`TaxDeduction*Test` は Docker が無いと失敗する。
 - Frontend(`frontend/`): `npm test && npm run lint && npm run build`。単体テストは Vitest(`src/**/*.test.ts`、`globals` 無効なので `describe/it/expect` は `vitest` から import)。単体実行: `npx vitest run src/lib/simulation.test.ts`。テスト対象は `src/lib/` の純粋ロジックのみ(コンポーネントテストは未導入)。
-- CI・opencode.json は無い。変更後は上記の test / lint / build を自分で実行して確認する。
+- CI は `.github/workflows/ci.yml`(GitHub Actions。main/develop への push と PR で backend の `./mvnw test` と frontend の test / lint / build を実行)。ローカルでの実行確認も省略しない。opencode.json は無い。
 
 ## Next.js 16 に注意
 - 学習データと異なる破壊的変更あり。Next 固有のコードを書く前に `frontend/node_modules/next/dist/docs/` を読む(`frontend/AGENTS.md` も同旨で、`next dev` が再生成するため差分に出ることがある)。
