@@ -42,6 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absUrl("/tax-deduction"), changeFrequency: "monthly", priority: 0.8 },
     { url: absUrl("/total-cost"), changeFrequency: "monthly", priority: 0.8 },
     { url: absUrl("/rate-scenario"), changeFrequency: "monthly", priority: 0.8 },
+    { url: absUrl("/rate-types"), changeFrequency: "monthly", priority: 0.8 },
   ];
 
   // Sample (fictional) product pages are noindex, so they stay out of the sitemap.

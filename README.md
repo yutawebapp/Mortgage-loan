@@ -14,6 +14,8 @@
 | 繰上げ返済シミュレーター | `/prepayment` | 期間短縮型/返済額軽減型の利息軽減額と短縮期間 |
 | 金利上昇シミュレーション | `/rate-scenario` | 変動金利が上昇した場合の返済額の推移(簡易モデル) |
 | 住宅ローン控除シミュレーター | `/tax-deduction` | 入居年・住宅の性能・年収から、控除額と実質負担の目安 |
+| 住居費の総額シミュレーター | `/total-cost` | 頭金・諸費用・管理費・固定資産税などを含めた総額と月平均の目安 |
+| 金利タイプの比較 | `/rate-types` | 変動・固定期間選択型・全期間固定を、仮の金利で並べて比較(簡易モデル) |
 
 試算結果はすべて目安であり、実際の返済額・審査結果・控除額を保証するものではありません。
 商品データは開発用の架空データです(実在の金融機関・金利ではありません)。
@@ -55,6 +57,8 @@ DB を初期状態に戻す場合は `docker compose down -v` のあとに再起
 | POST | `/simulations/prepayment` | 繰上げ返済 |
 | POST | `/simulations/rate-scenarios` | 金利上昇シナリオ |
 | POST | `/simulations/tax-deduction` | 住宅ローン控除 |
+| POST | `/simulations/total-cost` | 住居費の総額 |
+| POST | `/simulations/rate-types` | 金利タイプの比較 |
 | GET | `/products`, `/products/{id}` | 商品一覧・詳細 |
 
 ## テスト

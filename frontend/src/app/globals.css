@@ -339,3 +339,26 @@ a.btn-link.secondary:hover { background: var(--brand-tint); }
 .tc-year-table { min-width: max-content; }
 .tc-year-table tbody th { text-align: right; }
 .tc-loan-line { margin: 4px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---- 金利タイプの比較 ---- */
+.compare td.neutral-num { font-weight: 600; color: var(--ink); }
+.chart-data { margin: 12px 0; }
+.chart-data summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.notes { margin: 8px 0 16px; padding-left: 1.4em; font-size: 0.9rem; }
+.notes li { margin: 4px 0; }
+
+/* 金利タイプの比較：結果カード（この結果のまとめだけ、横スクロールなしで一覧できる） */
+.rt-cards { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 720px) { .rt-cards { grid-template-columns: 1fr 1fr; } }
+.rt-card { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
+.rt-card h4 { margin: 0 0 4px; font-size: 1rem; display: flex; align-items: center; gap: 8px; color: var(--brand-dark); }
+.rt-card h4 svg { flex: 0 0 auto; }
+.rt-sub { margin: 0 0 10px; font-size: 0.85rem; color: var(--muted); }
+.rt-label { margin: 8px 0 0; font-size: 0.8rem; color: var(--muted); }
+.rt-big { margin: 0; font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rt-bar { margin: 6px 0 10px; height: 8px; background: var(--border-soft); border-radius: 4px; overflow: hidden; }
+.rt-bar span { display: block; height: 100%; border-radius: 4px; }
+.rt-meta { margin: 0; padding-top: 8px; border-top: 1px solid var(--border-soft); font-size: 0.9rem; }
+.rt-meta > div { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+.rt-meta dt { color: var(--muted); min-width: 0; }
+.rt-meta dd { margin: 0; white-space: nowrap; flex: 0 0 auto; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }

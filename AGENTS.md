@@ -22,7 +22,7 @@
 ## Backend の規約
 - 計算ロジックは Spring/DB 非依存の純Java(`*.domain` パッケージ)。借り換え・繰上げ・金利上昇・住宅ローン控除などは `RepaymentCalculator`(`calculate` / `singleLoanSchedule`)を再利用する。償却計算を二重実装しない。
 - 金額は `BigDecimal`。丸めは `common/RoundingPolicy` の1か所(円未満四捨五入 HALF_UP)。借入可能額のみ意図的に切り捨て(`EligibilityCalculator` の定数に集約)。
-- 計算APIは `/api/v1/simulations/{repayment,refinance,eligibility,budget,prepayment,rate-scenarios,tax-deduction}`、商品は `/api/v1/products`(一覧は README の表)。入力検証は Bean Validation、エラーは `GlobalExceptionHandler` で RFC 7807(ProblemDetail)。リクエストの入力値はログに出さない。
+- 計算APIは `/api/v1/simulations/{repayment,refinance,eligibility,budget,prepayment,rate-scenarios,tax-deduction,total-cost,rate-types}`、商品は `/api/v1/products`(一覧は README の表)。入力検証は Bean Validation、エラーは `GlobalExceptionHandler` で RFC 7807(ProblemDetail)。リクエストの入力値はログに出さない。
 - MyBatis の SQL は `src/main/resources/mapper/*.xml`。並び替えは enum ホワイトリスト + `<choose>`。ユーザー入力を `${}` に使わない。XML 内の `<=` は `&lt;=` にエスケープ。
 - Flyway: コミット済みの `V1`〜`V5` は編集せず、新しい `V<n>` を追加する(未コミットの migration は直してよい)。
 - 計算仕様(ボーナス払いの簡易モデル、返済負担率 30%/35%・審査金利 3.5%・諸費用10%は仮置き値)を変えたら `docs/design.md` の該当節も更新し、Python 等で独立に出した期待値でテストを書く(テスト対象コードで期待値を作らない)。
@@ -33,7 +33,6 @@
 - 商品データは**架空のサンプル**。`src/lib/products.ts` の `SAMPLE_DATA_NOINDEX = true` の間、`/products` 系は noindex かつ sitemap 除外。実データ化するときに false にする。
 - パンくずは `components/layout/Breadcrumb` が表示と JSON-LD を同じ配列から出す。ページ追加時は `lib/nav.ts`・`lib/seo.ts` も更新。
 - 配色は `globals.css` 冒頭の CSS 変数に集約。
-- 比較表(`.compare`)のセルは折り返さず(`white-space: nowrap`)、`table-wrap` の横スクロールに入れる。
 - ツール(ページ)を追加するときは `lib/nav.ts`(ヘッダー・フッター・ホームのカード)、`app/sitemap.ts`、ページの metadata / JSON-LD、`src/lib/api/*.ts` の手書き型、Vitest のテストをそろえる。
 
 ## Git
