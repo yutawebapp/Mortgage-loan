@@ -51,3 +51,28 @@ export const TOOLS = [
     description: "変動金利・固定期間選択型・全期間固定を、同じ借入条件で並べて、返済額の違いを仮の金利で比べられます。",
   },
 ] as const;
+
+type ToolHref = (typeof TOOLS)[number]["href"];
+
+// ヘッダーのメニューのまとめ方。使う目的が近いツールを1つのプルダウンにまとめる。
+// ツールが1つだけのグループは、プルダウンにせず、そのままリンクで表示する。
+export const NAV_GROUPS: readonly { label: string; intro: string; hrefs: readonly ToolHref[] }[] = [
+  { label: "借りる前に", intro: "借りられる額や、買える予算、住まいの費用の目安を調べます。", hrefs: ["/eligibility", "/budget", "/total-cost", "/tax-deduction"] },
+  { label: "返済を試算", intro: "毎月の返済額や、繰上げ返済・借り換えの効果を試算します。", hrefs: ["/simulation", "/prepayment", "/refinance"] },
+  { label: "金利を比べる", intro: "金融機関・商品の金利や、金利タイプ・金利上昇の影響を比べます。", hrefs: ["/products", "/rate-types", "/rate-scenario"] },
+];
+
+export type NavTool = { href: string; label: string };
+
+/** グループごとに、表示するツール（href と名前）を並べる。 */
+export function navGroupTools(hrefs: readonly string[]): NavTool[] {
+  return hrefs.flatMap((h) => {
+    const t = TOOLS.find((x) => x.href === h);
+    return t ? [{ href: t.href, label: t.label }] : [];
+  });
+}
+
+/** 現在のパスがそのツールのページ（配下を含む）か。 */
+export function isActivePath(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}

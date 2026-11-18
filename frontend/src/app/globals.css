@@ -220,14 +220,52 @@ th.left, tbody th { text-align: left; }
 .site-header { background: linear-gradient(135deg, var(--brand-deep), var(--brand-dark) 60%, #0d4a7a); border-bottom: 4px solid var(--accent); box-shadow: 0 2px 10px rgba(7, 31, 58, 0.25); }
 .site-header-inner, .site-footer-inner { max-width: 1040px; margin: 0 auto; padding: 12px 20px; }
 .site-name { display: inline-block; font-weight: 700; font-size: 1.1rem; letter-spacing: 0.02em; color: #fff; text-decoration: none; padding: 6px 0; overflow-wrap: anywhere; }
-.site-nav, .footer-nav { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 16px; }
+.footer-nav { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .site-nav a, .footer-nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 0.9rem; color: var(--on-dark); text-decoration: none; border-bottom: 2px solid transparent; }
 .site-nav a:hover, .footer-nav a:hover { color: #fff; text-decoration: underline; }
 .site-nav a[aria-current="page"] { font-weight: 700; color: #fff; border-bottom-color: var(--accent); }
 .site-header :focus-visible, .site-footer :focus-visible { outline-color: var(--accent); }
+
+/* ヘッダーのメニュー：狭い画面は「メニュー」ボタンで全体を開く（グループは見出し付きで展開）。広い画面はプルダウン。 */
+.site-header-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 16px; }
+.site-header-inner > .site-name { flex: 1 1 0; min-width: 0; }
+.menu-toggle { flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; font: inherit; font-size: 0.9rem; font-weight: 600; color: #fff; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 8px; cursor: pointer; }
+.menu-toggle[aria-expanded="true"] { background: rgba(255, 255, 255, 0.22); }
+.site-nav-wrap { display: none; flex: 1 1 100%; padding: 4px 0 8px; }
+.site-nav-wrap.is-open { display: block; }
+.site-nav { list-style: none; margin: 0; padding: 0; }
+.nav-trigger { display: none; }
+.nav-group-title { display: block; margin-top: 10px; padding-bottom: 2px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; color: var(--accent); border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.nav-sub { list-style: none; margin: 0; padding: 0; }
+.nav-item > .nav-link { display: flex; margin-top: 8px; }
 @media (min-width: 880px) {
-  .site-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .site-header-inner { flex-wrap: nowrap; gap: 24px; }
+  .menu-toggle { display: none; }
+  .site-header-inner > .site-name { flex: none; }
+  .nav-item:last-child .nav-sub { left: auto; right: 0; }
+  .site-nav-wrap, .site-nav-wrap.is-open { display: block; flex: 0 1 auto; padding: 0; }
+  .site-nav { display: flex; align-items: center; gap: 0 8px; }
+  .nav-item { position: relative; }
+  .nav-item > .nav-link { margin-top: 0; padding: 0 10px; }
+  .nav-group-title { display: none; }
+  .nav-trigger { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; font: inherit; font-size: 0.9rem; color: var(--on-dark); background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }
+  .nav-trigger:hover, .nav-group.is-open .nav-trigger { color: #fff; }
+  .nav-trigger.is-active { font-weight: 700; color: #fff; border-bottom-color: var(--accent); }
+  .nav-caret { width: 6px; height: 6px; margin-top: -3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform 0.15s; }
+  .nav-group.is-open .nav-caret { margin-top: 3px; transform: rotate(-135deg); }
+  .nav-sub { display: none; position: absolute; top: 100%; left: 0; z-index: 20; min-width: 17rem; padding: 6px; background: var(--brand-deep); border: 1px solid rgba(255, 255, 255, 0.2); border-top: 3px solid var(--accent); border-radius: 0 0 8px 8px; box-shadow: 0 8px 20px rgba(7, 31, 58, 0.4); }
+  .nav-group.is-open .nav-sub { display: block; }
+  .nav-sub a { display: flex; padding: 0 10px; border-radius: 6px; border-bottom: 0; }
+  .nav-sub a:hover { background: rgba(255, 255, 255, 0.1); text-decoration: none; }
+  .nav-sub a[aria-current="page"] { background: rgba(255, 255, 255, 0.14); }
 }
+@media (prefers-reduced-motion: reduce) { .nav-caret { transition: none; } }
+
+/* フッター：ヘッダーと同じグループ分けで、見出し付きの短いリストを並べる */
+.footer-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+.footer-group-title { margin: 8px 0 0; padding-bottom: 2px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; color: var(--accent); border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+@media (max-width: 479px) { .footer-groups { grid-template-columns: 1fr; } }
+@media (min-width: 880px) { .footer-groups { grid-template-columns: repeat(3, 1fr); gap: 8px 32px; } }
 .site-footer { margin-top: 40px; background: var(--brand-deep); color: var(--on-dark); }
 .site-footer-inner { padding-top: 24px; padding-bottom: 32px; }
 .footer-name { margin: 0 0 4px; font-weight: 700; }
@@ -258,11 +296,15 @@ th.left, tbody th { text-align: left; }
 .hero .home-intro { color: #e8f1fa; margin: 0; }
 @media (min-width: 720px) { .hero { padding: 36px; } }
 .home-intro { color: var(--muted); }
-.tool-cards { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 12px; }
+.tool-group { margin: 28px 0 0; }
+.tool-group h3 { margin: 0; padding-left: 10px; border-left: 4px solid var(--accent); font-size: 1.2rem; color: var(--brand-dark); }
+.tool-group-intro { margin: 4px 0 0 14px; color: var(--muted); font-size: 0.9rem; }
+.tool-cards { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
+@media (min-width: 640px) { .tool-cards { grid-template-columns: repeat(2, 1fr); } }
 .tool-cards li { background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--teal); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 20px; transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s; }
 .tool-cards li:nth-child(odd) { border-left-color: var(--brand); }
 .tool-cards li:hover, .tool-cards li:focus-within { border-color: var(--brand); box-shadow: var(--shadow-hover); transform: translateY(-1px); }
-.tool-cards h3 { margin: 0 0 4px; font-size: 1.05rem; }
+.tool-cards h4 { margin: 0 0 4px; font-size: 1.05rem; }
 .tool-cards p { margin: 0; color: var(--muted); font-size: 0.95rem; }
 .tool-cards a { display: inline-block; padding: 4px 0; font-weight: 700; color: var(--brand-dark); }
 @media (prefers-reduced-motion: reduce) { .product-card, .tool-cards li, .chip { transition: none; } .tool-cards li:hover { transform: none; } }
