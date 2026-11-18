@@ -6,6 +6,11 @@
 - `~/Documents/GitHub/Mortgage-loan` 以外のディレクトリ(`~/Documents/GitHub/` 配下の他プロジェクト、ホーム直下など)は参照・読み取り・編集しない。ファイルの探索・検索も、このリポジトリ内に限定する。
 - テスト用の一時ファイルなどもリポジトリの外に書かない(必要ならリポジトリ内の `tmp/`(gitignore 済み)を使う)。
 
+## 利用モデル
+- 利用してよいモデルは Anthropic / OpenAI / Google 製のみ。それ以外のモデル(`opencode/big-pickle`、GLM 等の無料・他社モデルを含む)は、メインでもサブエージェントでも使わない。
+- OpenRouter 等の経由サービスを使う場合も、モデル提供元が上記3社のものに限る。
+- `model` を指定するときは提供元を確認し、上記以外なら選ばない。
+
 ## Commands
 - 起動: `cp .env.example .env && docker compose up --build`(`.env` が無いと `DB_PASSWORD` 未設定で compose が失敗する)。リポジトリルートで実行。
 - DB を初期化して migration をやり直す: `docker compose down -v`(架空データのみなので消えて問題ない)。
