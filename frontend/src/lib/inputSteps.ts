@@ -8,3 +8,4 @@ export const STEP_MAN_MONTHLY = "1"; // 毎月の返済額（万円/月、1万�
 export const STEP_YEN_MONTHLY = "1000"; // 管理費・修繕積立金（円/月）
 export const STEP_YEN_YEARLY = "10000"; // 固定資産税・保険料（円/年）
 export const STEP_PERCENT_WHOLE = "1"; // 負担割合・審査で見る割合（%、1%単位）
+export const STEP_MONTHS = "0.5"; // 更新料（家賃の何か月分、0.5か月単位）

@@ -12,7 +12,9 @@ type Props = {
   step: string;
   hint?: string;
   error?: string;
-  inputMode?: "numeric" | "decimal";
+  inputMode?: "numeric" | "decimal" | "text";
+  /** 入力できる最小値（既定は 0。マイナスを許す欄だけ指定する）。 */
+  min?: number;
   /** 入力欄の前に出す文字（例：「+」）。 */
   pre?: string;
   /** ヒントとエラーの間に出す追加の要素。 */
@@ -31,6 +33,7 @@ export function NumberField({
   hint,
   error,
   inputMode = "decimal",
+  min = 0,
   pre,
   extra,
 }: Props) {
@@ -44,7 +47,7 @@ export function NumberField({
           type="number"
           inputMode={inputMode}
           step={step}
-          min={0}
+          min={min}
           value={value}
           onChange={(ev) => onChange(ev.target.value)}
           onBlur={onBlur}

@@ -416,3 +416,21 @@ a.btn-link.secondary:hover { background: var(--brand-tint); }
 .person-card dd.big { font-size: 1.15rem; color: var(--brand-dark); }
 .person-card p { margin: 6px 0 0; font-size: 0.9rem; }
 @media (max-width: 480px) { .person-cards { grid-template-columns: 1fr; } }
+
+/* 賃貸と購入の比較 */
+.rvb-headline { margin: 6px 0; font-size: 1.1rem; font-weight: 700; line-height: 1.6; color: var(--brand-dark); }
+.rvb-headline.sub { font-size: 0.98rem; font-weight: 600; }
+.rvb-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 12px; }
+.rvb-card { background: #fff; border: 1px solid var(--border); border-top: 4px solid var(--muted); border-radius: 8px; padding: 12px; min-width: 0; }
+.rvb-card h4 { margin: 0 0 8px; font-size: 1rem; color: var(--brand-dark); }
+.rvb-card dl { margin: 0; }
+.rvb-card dt { font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-top: 8px; }
+.rvb-card dd { margin: 2px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rvb-card dd.big { font-size: 1.15rem; color: var(--ink); }
+.rvb-card .hint { margin: 8px 0 0; }
+.compare.rvb-sens { min-width: 0; }
+.rvb-sens th, .rvb-sens td { white-space: normal; font-size: 0.88rem; }
+.rvb-sens thead th { text-align: left; }
+.rvb-sens td { text-align: left; font-variant-numeric: tabular-nums; }
+.rvb-cur { display: block; font-size: 0.75rem; font-weight: 400; color: var(--muted); }
+@media (max-width: 480px) { .rvb-cards { grid-template-columns: 1fr; } }

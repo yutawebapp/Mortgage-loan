@@ -41,6 +41,11 @@ export const TOOLS = [
     description: "頭金・諸費用・管理費・固定資産税などを含めた、住まいにかかる費用の総額と月平均の目安を調べられます。",
   },
   {
+    href: "/rent-vs-buy",
+    label: "賃貸と購入の比較シミュレーター",
+    description: "購入した場合と賃貸の場合の、支出の合計が年ごとにどう積み重なるかを、入力した前提で並べて確認できます。",
+  },
+  {
     href: "/rate-scenario",
     label: "金利上昇シミュレーション",
     description: "変動金利で金利が上昇した場合の、毎月の返済額と総返済額の変化を上昇幅ごとに比べられます。",
@@ -57,7 +62,7 @@ type ToolHref = (typeof TOOLS)[number]["href"];
 // ヘッダーのメニューのまとめ方。使う目的が近いツールを1つのプルダウンにまとめる。
 // ツールが1つだけのグループは、プルダウンにせず、そのままリンクで表示する。
 export const NAV_GROUPS: readonly { label: string; intro: string; hrefs: readonly ToolHref[] }[] = [
-  { label: "借りる前に", intro: "借りられる額や、買える予算、住まいの費用の目安を調べます。", hrefs: ["/eligibility", "/budget", "/total-cost", "/tax-deduction"] },
+  { label: "借りる前に", intro: "借りられる額や、買える予算、住まいの費用の目安を調べます。", hrefs: ["/eligibility", "/budget", "/total-cost", "/rent-vs-buy", "/tax-deduction"] },
   { label: "返済を試算", intro: "毎月の返済額や、繰上げ返済・借り換えの効果を試算します。", hrefs: ["/simulation", "/prepayment", "/refinance"] },
   { label: "金利を比べる", intro: "金融機関・商品の金利や、金利タイプ・金利上昇の影響を比べます。", hrefs: ["/products", "/rate-types", "/rate-scenario"] },
 ];
