@@ -53,6 +53,23 @@ describe("pageMetadata", () => {
     expect(m.robots).toEqual({ index: false, follow: true });
   });
 
+  it("non-production origin (localhost): forces index=false and follow=false even if indexable", async () => {
+    const { seo } = await load("http://localhost:3000");
+    expect(seo.pageMetadata({ title: "t", description: "d", path: "/" }).robots).toEqual({ index: false, follow: false });
+    expect(seo.pageMetadata({ title: "t", description: "d", path: "/", noindex: true }).robots).toEqual({
+      index: false,
+      follow: false,
+    });
+  });
+
+  it("robotsDirectives: production honours the page noindex flag; non-production is always noindex", async () => {
+    const { seo } = await load(SITE);
+    expect(seo.robotsDirectives(false, SITE)).toEqual({ index: true, follow: true });
+    expect(seo.robotsDirectives(true, SITE)).toEqual({ index: false, follow: true });
+    expect(seo.robotsDirectives(false, "http://localhost:3000")).toEqual({ index: false, follow: false });
+    expect(seo.robotsDirectives(true, "http://localhost:3000")).toEqual({ index: false, follow: false });
+  });
+
   it("absoluteTitle uses the title as-is for both <title> and og:title", async () => {
     const { seo } = await load(SITE);
     const m = seo.pageMetadata({ title: "独自タイトル", description: "d", path: "/", absoluteTitle: true });

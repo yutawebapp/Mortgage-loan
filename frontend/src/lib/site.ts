@@ -23,6 +23,27 @@ function normalizeSiteUrl(raw: string | undefined): string {
 /** Public origin without trailing slash, e.g. https://example.com */
 export const SITE_URL = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
+/**
+ * True only for a public https origin. Local/dev values (localhost, 127.0.0.1, 0.0.0.0, ::1,
+ * *.local, *.localhost) or http are treated as NOT production: a build that forgot to set
+ * NEXT_PUBLIC_SITE_URL would otherwise emit localhost canonicals and sitemap entries.
+ * When false, robots.txt disallows everything and every page is noindex (safe default for
+ * local dev and CI).
+ */
+export function isProductionSiteUrl(url: string): boolean {
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return false;
+  }
+  if (u.protocol !== "https:") return false;
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1") return false;
+  if (host.endsWith(".local") || host.endsWith(".localhost")) return false;
+  return true;
+}
+
 /** Absolute URL for a root-relative path such as "/simulation". */
 export function absUrl(path: string): string {
   return `${SITE_URL}${path}`;

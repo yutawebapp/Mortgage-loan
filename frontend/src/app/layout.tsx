@@ -24,10 +24,6 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
   formatDetection: {
     telephone: false,
     email: false,

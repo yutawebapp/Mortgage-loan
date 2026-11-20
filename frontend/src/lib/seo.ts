@@ -1,7 +1,19 @@
 import type { Metadata } from "next";
-import { SITE_LOCALE, SITE_NAME, absUrl } from "./site";
+import { SITE_LOCALE, SITE_NAME, SITE_URL, absUrl, isProductionSiteUrl } from "./site";
 
 export type Crumb = { name: string; path: string };
+
+/**
+ * Robots directives for a page. Non-production origins (localhost etc.) are always noindex/nofollow,
+ * regardless of the page's own `noindex` flag.
+ */
+export function robotsDirectives(
+  noindex: boolean,
+  siteUrl: string = SITE_URL,
+): { index: boolean; follow: boolean } {
+  if (!isProductionSiteUrl(siteUrl)) return { index: false, follow: false };
+  return { index: !noindex, follow: true };
+}
 
 export function pageMetadata(opts: {
   title: string;
@@ -19,7 +31,7 @@ export function pageMetadata(opts: {
     title: absoluteTitle ? { absolute: title } : title,
     description,
     alternates: { canonical: url },
-    robots: { index: !noindex, follow: true },
+    robots: robotsDirectives(noindex),
     openGraph: {
       type: "website",
       locale: SITE_LOCALE,
