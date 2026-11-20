@@ -72,6 +72,11 @@ export const NAV_GROUPS: readonly { label: string; intro: string; hrefs: readonl
   { label: "金利を比べる", intro: "金融機関・商品の金利や、金利タイプ・金利上昇の影響を比べます。", hrefs: ["/products", "/rate-types", "/rate-scenario"] },
 ];
 
+// サイト情報のページ（フッターと、各ページのパンくずで使う）。
+export const ABOUT_PAGE = { href: "/about", label: "このサイトについて" } as const;
+export const PRIVACY_PAGE = { href: "/privacy", label: "プライバシーポリシー" } as const;
+export const LEGAL_LINKS = [ABOUT_PAGE, PRIVACY_PAGE] as const;
+
 export type NavTool = { href: string; label: string };
 
 /** グループごとに、表示するツール（href と名前）を並べる。 */

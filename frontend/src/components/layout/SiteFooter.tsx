@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NAV_GROUPS, navGroupTools } from "@/lib/nav";
+import { LEGAL_LINKS, NAV_GROUPS, navGroupTools } from "@/lib/nav";
 import { SITE_NAME } from "@/lib/site";
 
 export default function SiteFooter() {
@@ -24,6 +24,15 @@ export default function SiteFooter() {
               </ul>
             </div>
           ))}
+        </nav>
+        <nav aria-label="サイト情報" className="footer-legal">
+          <ul className="footer-nav">
+            {LEGAL_LINKS.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href}>{l.label}</Link>
+              </li>
+            ))}
+          </ul>
         </nav>
         <p className="footer-note">
           試算結果は目安であり、実際の返済額・借入可否・審査結果を保証するものではありません。最終的な条件は、各金融機関の公式情報でご確認ください。

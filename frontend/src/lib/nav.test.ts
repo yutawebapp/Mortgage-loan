@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NAV_GROUPS, TOOLS, isActivePath, navGroupTools } from "./nav";
+import { LEGAL_LINKS, NAV_GROUPS, TOOLS, isActivePath, navGroupTools } from "./nav";
 
 describe("NAV_GROUPS", () => {
   it("contains every tool exactly once and no unknown href", () => {
@@ -27,5 +27,16 @@ describe("isActivePath", () => {
     expect(isActivePath("/products", "/products")).toBe(true);
     expect(isActivePath("/products/abc", "/products")).toBe(true);
     expect(isActivePath("/products-x", "/products")).toBe(false);
+  });
+});
+
+describe("LEGAL_LINKS", () => {
+  it("links to the about and privacy pages only", () => {
+    expect(LEGAL_LINKS.map((l) => l.href)).toEqual(["/about", "/privacy"]);
+  });
+
+  it("does not add the legal pages to the tools list", () => {
+    expect(TOOLS.map((t) => t.href)).not.toContain("/about");
+    expect(TOOLS.map((t) => t.href)).not.toContain("/privacy");
   });
 });

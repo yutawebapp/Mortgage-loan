@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { fetchProducts } from "@/lib/api/products";
+import { ABOUT_PAGE, PRIVACY_PAGE } from "@/lib/nav";
 import { SAMPLE_DATA_NOINDEX } from "@/lib/products";
 import { absUrl } from "@/lib/site";
 
@@ -45,6 +46,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absUrl("/life-plan"), changeFrequency: "monthly", priority: 0.8 },
     { url: absUrl("/rate-scenario"), changeFrequency: "monthly", priority: 0.8 },
     { url: absUrl("/rate-types"), changeFrequency: "monthly", priority: 0.8 },
+    { url: absUrl(ABOUT_PAGE.href), changeFrequency: "monthly", priority: 0.5 },
+    { url: absUrl(PRIVACY_PAGE.href), changeFrequency: "monthly", priority: 0.5 },
   ];
 
   // Sample (fictional) product pages are noindex, so they stay out of the sitemap.
