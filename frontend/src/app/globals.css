@@ -527,3 +527,33 @@ a.btn-link.secondary:hover { background: var(--brand-tint); }
 @media print {
   .print-only { display: block; }
 }
+
+/* ---- プラン比較（/simulation） ---- */
+.plan-compare-wrap { margin: 12px 0 0; min-width: 0; }
+.plan-compare-wrap .table-wrap, .table-wrap:has(.plan-compare) { max-height: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.plan-compare { min-width: max-content; }
+.plan-compare th, .plan-compare td { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.plan-compare thead th:first-child, .plan-compare tbody th { text-align: left; }
+.plan-compare tbody th { font-weight: 600; }
+.plan-compare tbody tr:hover { background: transparent; }
+.plan-compare thead th:last-child { background: var(--brand-deep); }
+.plan-compare tbody td:last-child { color: var(--muted); background: var(--brand-soft); border-left: 1px solid var(--border-soft); }
+.plan-compare + .hint, .table-wrap + .hint.plan-compare-note { margin: 8px 0 0; max-width: var(--prose-max); white-space: normal; }
+
+.plan-compare-form { margin: 20px 0 0; padding: 14px 16px 4px; border: 1px solid var(--brand-line); border-left: 4px solid var(--brand); border-radius: 8px; background: var(--brand-soft); min-width: 0; }
+.plan-compare-form > legend, .plan-compare-form > h3, .plan-compare-form > h2 { float: none; width: auto; margin: 0 0 12px; padding: 0 6px 0 0; font-size: 1rem; font-weight: 700; color: var(--brand-dark); }
+.plan-compare-form .plan-compare-fields { display: grid; gap: 0 20px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .plan-compare-form .plan-compare-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .plan-compare-form .plan-compare-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.plan-compare-form .field { min-width: 0; }
+.plan-compare-form .input-row input { background: var(--surface); }
+
+@media print {
+  .plan-compare-form { display: none !important; }
+  .print-area .plan-compare { width: 100%; font-size: 9pt; }
+  .print-area .plan-compare thead { display: table-header-group; }
+  .print-area .plan-compare tr { break-inside: avoid; page-break-inside: avoid; }
+  .print-area .plan-compare th, .print-area .plan-compare td { border-bottom: 1px solid #999; background: #fff !important; border-left: 0; font-weight: 400; }
+  .print-area .plan-compare thead th, .print-area .plan-compare tbody th { font-weight: 700; }
+  .print-area .plan-compare thead th { border-bottom: 2px solid #000; }
+}
