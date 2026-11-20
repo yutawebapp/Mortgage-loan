@@ -39,7 +39,6 @@ import { PERSON_LABEL } from "@/lib/borrowerMode";
 import { NumberField } from "./NumberField";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
 import SavedConditionsNotice from "./SavedConditionsNotice";
-import NextSteps, { type NextStep } from "./NextSteps";
 
 /** request は、その結果を出したリクエストのスナップショット（入力中の値は混ぜない）。 */
 type Outcome = { key: string; data?: TaxDeductionResponse; request?: TaxDeductionRequest; error?: string };
@@ -177,16 +176,8 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
   const shown = data && request ? request : null;
   // 結果に対応するリクエストのスナップショット（data が無いときは undefined）
   const resultRequest = data ? outcome?.request : undefined;
-  const pairNext = resultRequest ? pairSimulationHref(resultRequest) : null;
-  const nextSteps: NextStep[] = pairNext
-    ? [
-        {
-          href: pairNext,
-          label: "二人の負担割合ごとの返済額を見る",
-          hint: "借入額・金利・返済期間に、あなたの負担割合を加えた状態で、お二人それぞれの返済額の目安を確認できます。",
-        },
-      ]
-    : [];
+  // 二人で借りる結果は、負担割合（pair/share）つきで試算画面へ渡す（スナップショットから作る）
+  const simulationLink = resultRequest ? pairSimulationHref(resultRequest) : null;
 
   const legacyKind = legacyExceptionKind(form);
 
@@ -668,15 +659,13 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
             <p className="cta cta-row">
               <Link
                 className="btn-link"
-                href={simulationHref(shown.principal, shown.annualRatePercent, shown.years)}
+                href={simulationLink ?? simulationHref(shown.principal, shown.annualRatePercent, shown.years)}
               >
                 この条件で返済額を試算する
               </Link>
             </p>
           </div>
         )}
-
-        {data && nextSteps.length > 0 && <NextSteps items={nextSteps} />}
 
         <p className="disclaimer">
           試算結果は目安です。実際の控除額は、住宅の要件、扶養親族や各種控除の状況、年末の借入残高などによって異なります。確定申告や年末調整の際は、税務署等でご確認ください。
