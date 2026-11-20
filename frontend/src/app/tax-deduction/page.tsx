@@ -36,6 +36,32 @@ export default function Page() {
         <p>
           入居年と住宅の区分に応じた借入限度額と控除期間は、データとして管理しています。結果には、出典と確認日を表示します。
         </p>
+        <h3>制度・数値の出典</h3>
+        <ul>
+          <li>
+            国土交通省「住宅ローン減税 Q&amp;A」(2026年7月更新)：借入限度額・控除期間・対象要件（
+            <a href="https://www.mlit.go.jp/jutakukentiku/house/content/002011976.pdf" rel="noopener noreferrer">PDF</a>
+            、確認日 2026-11-17）
+          </li>
+          <li>
+            国税庁 タックスアンサー No.1410（給与所得控除）、No.1199（基礎控除）、No.2260（所得税の税率）（確認日 2026-11-17）：
+            <a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm" rel="noopener noreferrer">No.1410</a>
+            、
+            <a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm" rel="noopener noreferrer">No.1199</a>
+            、
+            <a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm" rel="noopener noreferrer">No.2260</a>
+          </li>
+          <li>
+            総務省：住宅ローン控除の住民税側の控除（
+            <a href="https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/090929.html" rel="noopener noreferrer">ページ</a>
+            、確認日 2026-11-17）／個人住民税の税率・控除額（
+            <a href="https://www.soumu.go.jp/main_content/001075462.pdf" rel="noopener noreferrer">PDF</a>
+            、確認日 2026-11-17）
+          </li>
+        </ul>
+        <p>
+          数値は表示した確認日時点の公開情報にもとづく目安です。制度改正や年度更新で変わることがあります。
+        </p>
         <div className="faq">
           <h3>よくある質問</h3>
           <details>
