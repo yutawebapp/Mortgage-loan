@@ -19,6 +19,8 @@ import java.math.BigDecimal;
  * @param years             loan term in years, 1..50
  * @param method            EQUAL_PAYMENT or EQUAL_PRINCIPAL
  * @param bonusAmount       yen repaid by bonus payments, 0..principal (null means 0)
+ * @param selfSharePercent  optional: the self borrower's share in percent (1..99) for a two-person
+ *                          loan (ペアローン / 収入合算). null means a single borrower (no breakdown).
  */
 public record RepaymentRequest(
         @NotNull
@@ -40,7 +42,11 @@ public record RepaymentRequest(
         RepaymentMethod method,
 
         @Min(0)
-        Long bonusAmount) {
+        Long bonusAmount,
+
+        @Min(1)
+        @Max(99)
+        Integer selfSharePercent) {
 
     public RepaymentRequest {
         if (bonusAmount == null) {

@@ -466,3 +466,64 @@ a.btn-link.secondary:hover { background: var(--brand-tint); }
 .panel > .info-msg:first-child { margin-top: 0; margin-bottom: 18px; }
 .lp-chart .chart-axis text { font-size: 12px; }
 @media (max-width: 560px) { .lp-chart .chart-axis text { font-size: 17px; } }
+
+/* ---- 結果エリアの操作・補助ブロック ---- */
+.result-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0; }
+.share-link { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-width: 0; }
+/* 状態テキストは常に領域を確保し、表示・非表示でレイアウトが動かないようにする */
+.share-link .status { min-height: 1.6em; flex: 1 1 12em; min-width: 0; overflow-wrap: anywhere; }
+
+.next-steps { margin: 20px 0 0; padding: 12px 0 0; border-top: 1px solid var(--border); }
+.next-steps h3 { font-size: 0.95rem; margin: 0 0 4px; color: var(--muted); }
+.next-steps ul { list-style: none; margin: 0; padding: 0; }
+.next-steps li { padding: 4px 0; border-bottom: 1px solid var(--border-soft); }
+.next-steps li:last-child { border-bottom: 0; }
+.next-steps a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; overflow-wrap: anywhere; }
+.next-steps .hint { margin: 0 0 4px; max-width: var(--prose-max); }
+
+.saved-conditions { margin: 16px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; }
+.saved-conditions p { margin: 0; flex: 1 1 100%; }
+.saved-conditions .btn-sub { border-color: transparent; background: transparent; padding: 8px 0; text-decoration: underline; text-underline-offset: 3px; }
+.saved-conditions .btn-sub:hover:not(:disabled) { background: transparent; color: var(--brand-dark); }
+.saved-conditions [role="status"] { min-height: 1.6em; }
+
+.export-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.export-actions .btn-sub, .export-actions a.btn-link { flex: 1 1 8em; justify-content: center; text-align: center; }
+@media (min-width: 560px) { .export-actions .btn-sub, .export-actions a.btn-link { flex: 0 0 auto; } }
+
+.pair-breakdown { margin: 12px 0 0; min-width: 0; }
+.pair-breakdown .table-wrap { max-height: none; overflow-x: auto; }
+.pair-breakdown table { min-width: max-content; }
+.pair-breakdown th, .pair-breakdown td { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pair-breakdown thead th:first-child, .pair-breakdown tbody th { text-align: left; }
+.pair-breakdown tbody th { font-weight: 600; }
+.pair-breakdown .hint, .pair-breakdown > p { margin: 8px 0 0; color: var(--muted); font-size: 0.85rem; max-width: var(--prose-max); white-space: normal; }
+
+/* ---- 印刷 ---- */
+@media print {
+  .no-print, .site-header, .site-footer, .breadcrumb, nav { display: none !important; }
+  html, body { background: #fff !important; color: #000; min-height: 0; }
+  main { max-width: none; padding: 0; margin: 0; }
+  * { box-shadow: none !important; text-shadow: none !important; transition: none !important; animation: none !important; }
+  .card, .panel, .results { background: #fff !important; border: 0 !important; padding: 0 !important; }
+  /* .print-area がある画面では、その中身だけを出す */
+  body:has(.print-area) main > *:not(.print-area):not(:has(.print-area)) { display: none !important; }
+  .print-area { display: block !important; color: #000; background: #fff; }
+  .print-area, .print-area * { color: #000 !important; }
+  .print-area a { text-decoration: none; }
+  .print-area .hint, .print-area .disclaimer, .print-area .note { display: block; font-size: 10pt; }
+  .table-wrap { overflow: visible !important; max-height: none !important; border: 0; background: #fff; }
+  table { min-width: 0 !important; font-size: 9pt; }
+  th, td { border-bottom: 1px solid #999; padding: 3px 6px; background: #fff !important; position: static !important; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr, img, svg { break-inside: avoid; page-break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; }
+  @page { margin: 14mm; }
+}
+
+/* 印刷専用の借入条件（画面では表示しない） */
+.print-only { display: none; }
+@media print {
+  .print-only { display: block; }
+}

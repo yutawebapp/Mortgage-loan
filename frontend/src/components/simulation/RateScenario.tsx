@@ -15,7 +15,12 @@ import {
   type RateScenarioForm,
 } from "@/lib/rate-scenario";
 import { yen } from "@/lib/simulation";
+import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import RateScenarioChart, { seriesName } from "./RateScenarioChart";
+import ShareLinkButton from "./ShareLinkButton";
+import NextSteps, { type NextStep } from "./NextSteps";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
 
@@ -44,6 +49,20 @@ const n = (v: number) => v.toLocaleString("ja-JP");
 
 export default function RateScenario({ initialValues }: { initialValues?: Partial<RateScenarioForm> }) {
   const [form, setForm] = useState<RateScenarioForm>({ ...initial, ...initialValues });
+  // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値。年は2年以上のみ適用する。
+  const sharedNow: SharedConditions = sanitizeShared(form);
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) =>
+      setForm((f) => ({
+        ...f,
+        ...(patch.principalMan !== undefined ? { principalMan: patch.principalMan } : {}),
+        ...(patch.rate !== undefined ? { rate: patch.rate } : {}),
+        ...(patch.years !== undefined && Number(patch.years) >= 2 ? { years: patch.years } : {}),
+      })),
+    accept: (c) => acceptFor("/rate-scenario", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -71,7 +90,10 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof RateScenarioForm>(k: K, v: RateScenarioForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof RateScenarioForm>(k: K, v: RateScenarioForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: keyof typeof errors) => (touched[k] || outcome ? errors[k] : undefined);
 
@@ -108,6 +130,13 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
   const pointsErr = err("risePoints");
 
   const rows = data ? [data.baseline, ...data.scenarios] : [];
+  const nextSteps: NextStep[] = [
+    {
+      href: hrefWith("/rate-types", sharedNow),
+      label: "金利タイプごとに比べる",
+      hint: "変動金利・固定期間選択型・全期間固定を、同じ借入条件で並べて比べられます。",
+    },
+  ];
 
   return (
     <div className="sim">
@@ -190,6 +219,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
             </p>
           )}
         </fieldset>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="result-h" aria-busy={loading}>
@@ -259,6 +289,13 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
               riseAfterYears={request.riseAfterYears}
             />
             <p className="hint">点線の縦線は、金利が上昇する時期です。</p>
+            <NextSteps items={nextSteps} />
+          </div>
+        )}
+
+        {request && (
+          <div className="result-actions">
+            <ShareLinkButton conditions={sharedNow} />
           </div>
         )}
 

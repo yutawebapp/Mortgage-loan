@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ADVANCED_KEYS,
   type LifePlanForm,
+  lifePlanInitialFromQuery,
   lifePlanNoteMessages,
   manApprox,
   newChild,
@@ -194,5 +195,21 @@ describe("formatting and wording", () => {
     ]);
     expect(all).toHaveLength(7);
     for (const x of all) expect(x).not.toMatch(/安心|問題なし|危険|必ず|確実|おすすめ|お得/);
+  });
+});
+
+describe("lifePlanInitialFromQuery", () => {
+  it("reads principal as 借入額 (loanMan), rate and years", () => {
+    expect(lifePlanInitialFromQuery({ principal: "3000", rate: "0.8", years: "30" })).toEqual({
+      loanMan: "3000",
+      rate: "0.8",
+      years: "30",
+    });
+  });
+
+  it("ignores invalid values and allows an empty query", () => {
+    expect(lifePlanInitialFromQuery({ principal: "0", rate: "21", years: "51" })).toEqual({});
+    expect(lifePlanInitialFromQuery({ principal: "abc", rate: ["1"], years: "1.5" })).toEqual({});
+    expect(lifePlanInitialFromQuery({})).toEqual({});
   });
 });

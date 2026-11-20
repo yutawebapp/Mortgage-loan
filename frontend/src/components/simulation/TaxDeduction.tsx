@@ -30,11 +30,14 @@ import {
   type TaxDeductionForm,
 } from "@/lib/taxDeduction";
 import { yen } from "@/lib/simulation";
+import { acceptFor, sanitizeShared } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import TaxDeductionChart from "./TaxDeductionChart";
 import { STEP_MAN_LARGE, STEP_PERCENT, STEP_PERCENT_WHOLE, STEP_RATE } from "@/lib/inputSteps";
 import { PERSON_LABEL } from "@/lib/borrowerMode";
 import { NumberField } from "./NumberField";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 
 type Outcome = { key: string; data?: TaxDeductionResponse; error?: string };
 
@@ -116,6 +119,20 @@ function PersonCard({ p }: { p: TaxDeductionPerson }) {
 
 export default function TaxDeduction({ initialValues }: { initialValues?: Partial<TaxDeductionForm> }) {
   const [form, setForm] = useState<TaxDeductionForm>({ ...initial, ...initialValues });
+  // 共通条件: 借入金額（principalMan）・金利・返済期間
+  const sharedNow = sanitizeShared({ principalMan: form.principalMan, rate: form.rate, years: form.years });
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) =>
+      setForm((f) => ({
+        ...f,
+        principalMan: patch.principalMan ?? f.principalMan,
+        rate: patch.rate ?? f.rate,
+        years: patch.years ?? f.years,
+      })),
+    accept: (c) => acceptFor("/tax-deduction", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -143,7 +160,10 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof TaxDeductionForm>(k: K, v: TaxDeductionForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof TaxDeductionForm>(k: K, v: TaxDeductionForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: keyof typeof errors) => (touched[k] || outcome ? errors[k] : undefined);
 
@@ -411,6 +431,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               })}
           </details>
         </fieldset>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="td-result-h" aria-busy={loading}>

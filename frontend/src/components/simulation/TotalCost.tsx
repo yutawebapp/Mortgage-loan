@@ -18,11 +18,16 @@ import {
   type TotalCostForm,
 } from "@/lib/totalCost";
 import { yen } from "@/lib/simulation";
+import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import TotalCostChart from "./TotalCostChart";
 import { STEP_MAN_LARGE, STEP_PERCENT, STEP_RATE, STEP_YEN_MONTHLY, STEP_YEN_YEARLY } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import ShareLinkButton from "./ShareLinkButton";
+import NextSteps, { type NextStep } from "./NextSteps";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 
-type Outcome = { key: string; data?: TotalCostResponse; error?: string };
+type Outcome = { key: string; data?: TotalCostResponse; error?: string; req: TotalCostRequest };
 
 const initial: TotalCostForm = {
   priceMan: "4000",
@@ -49,6 +54,14 @@ type FieldKey = keyof Omit<TotalCostForm, "method">;
 
 export default function TotalCost({ initialValues }: { initialValues?: Partial<TotalCostForm> }) {
   const [form, setForm] = useState<TotalCostForm>({ ...initial, ...initialValues });
+  // 共通条件は金利・返済期間のみ。このツールの principal は物件価格なので、借入額（principalMan）は受け取らない・渡さない。
+  const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) => setForm((f) => ({ ...f, rate: patch.rate ?? f.rate, years: patch.years ?? f.years })),
+    accept: (c) => acceptFor("/total-cost", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -62,10 +75,10 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
     const body: TotalCostRequest = request;
     const timer = setTimeout(() => {
       calculateTotalCost(body, ctrl.signal)
-        .then((data) => setOutcome({ key, data }))
+        .then((data) => setOutcome({ key, data, req: body }))
         .catch((e: unknown) => {
           if (ctrl.signal.aborted) return;
-          setOutcome({ key, error: errorMessage(e) });
+          setOutcome({ key, error: errorMessage(e), req: body });
         });
     }, 400);
     return () => {
@@ -76,16 +89,41 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof TotalCostForm>(k: K, v: TotalCostForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof TotalCostForm>(k: K, v: TotalCostForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: FieldKey) => (touched[k] || outcome ? errors[k] : undefined);
 
   const noLoan = loanEstimate !== null && loanEstimate <= 0 && Object.keys(errors).length === 0;
   const current = outcome && outcome.key === key ? outcome : null;
   const loading = !!request && !current;
-  const data = request ? (current?.data ?? outcome?.data) : undefined;
+  // 表示する結果・次に調べるリンク・共有リンクは、すべて同じ request（snap.req）から作る（フォームの現在値は使わない）
+  const snap = request ? (current?.data ? current : outcome) : null;
+  const data = snap?.data;
+  const shown = data && snap?.req ? snap.req : null;
   const stale = !!data && loading;
-  const shown = data && request ? request : null;
+  const sharedShown: SharedConditions = shown
+    ? sanitizeShared({ rate: String(shown.annualRatePercent), years: String(shown.years) })
+    : {};
+
+  // 次に調べる（price は 物件価格・万円、loan は 借入額・万円。遷移先の principal が読む意味に合わせて渡す）
+  const priceManStr = shown ? String(shown.propertyPrice / 10000) : null;
+  const loanManStr = data && data.loanPrincipal >= 10000 ? String(data.loanPrincipal / 10000) : null;
+  const nextSteps: NextStep[] = [];
+  if (priceManStr)
+    nextSteps.push({
+      href: hrefWith("/rent-vs-buy", sharedShown, { principal: priceManStr }),
+      label: "賃貸と購入の支出を比べる",
+      hint: "同じ物件価格で、賃貸に住み続けた場合の累計支出と比べたときの推移を確認できます。",
+    });
+  if (loanManStr)
+    nextSteps.push({
+      href: hrefWith("/tax-deduction", sharedShown, { principal: loanManStr }),
+      label: "住宅ローン控除の目安を調べる",
+      hint: "この借入額・金利・返済期間で、控除額の目安を確認できます。",
+    });
 
   function field(
     id: FieldKey,
@@ -191,6 +229,7 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
             hint: "数年分をまとめて払う場合は、1年あたりの金額に直して入力してください。",
           })}
         </fieldset>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="tc-result-h" aria-busy={loading}>
@@ -314,6 +353,17 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
                 住宅ローン控除を調べる
               </Link>
             </p>
+            <NextSteps items={nextSteps} />
+          </div>
+        )}
+
+        {shown && priceManStr && (
+          <div className="result-actions">
+            <ShareLinkButton
+              conditions={sharedShown}
+              extra={{ principal: priceManStr }}
+              label="主な条件（物件価格・金利・期間）のリンクをコピー"
+            />
           </div>
         )}
 

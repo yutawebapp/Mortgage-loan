@@ -143,6 +143,13 @@ describe("taxDeductionInitialFromQuery", () => {
     expect(taxDeductionInitialFromQuery({ principal: "100001", rate: "abc", years: "1.5" })).toEqual({});
     expect(taxDeductionInitialFromQuery({ principal: ["1", "2"], rate: undefined })).toEqual({});
   });
+
+  it("accepts decimal 万円 for the principal (shared with the other tools)", () => {
+    expect(taxDeductionInitialFromQuery({ principal: "2500.5" })).toEqual({ principalMan: "2500.5" });
+    expect(taxDeductionInitialFromQuery({ principal: "1234.5678" })).toEqual({ principalMan: "1234.5678" });
+    expect(taxDeductionInitialFromQuery({ principal: "0.5" })).toEqual({});
+    expect(taxDeductionInitialFromQuery({ principal: "1.1234567" })).toEqual({});
+  });
 });
 
 describe("ineligibleMessage", () => {

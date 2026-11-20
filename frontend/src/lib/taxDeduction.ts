@@ -153,7 +153,8 @@ type Q = string | string[] | undefined;
 export function taxDeductionInitialFromQuery(q: { principal?: Q; rate?: Q; years?: Q }): Partial<TaxDeductionForm> {
   const out: Partial<TaxDeductionForm> = {};
   const p = q.principal;
-  if (typeof p === "string" && /^\d{1,6}$/.test(p) && Number(p) >= 1 && Number(p) <= 100000) out.principalMan = p;
+  if (typeof p === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(p) && Number(p) >= 1 && Number(p) <= 100000)
+    out.principalMan = p;
   const r = q.rate;
   if (typeof r === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(r) && Number(r) <= 20) out.rate = r;
   const y = q.years;

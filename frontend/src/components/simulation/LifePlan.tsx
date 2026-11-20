@@ -30,8 +30,11 @@ import {
   STEP_YEN_MONTHLY,
   STEP_YEN_YEARLY,
 } from "@/lib/inputSteps";
+import { acceptFor, sanitizeShared } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import { NumberField } from "./NumberField";
 import { OutflowChart, SavingsChart } from "./LifePlanChart";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 
 type Outcome = { key: string; data?: LifePlanResponse; error?: string };
 
@@ -67,8 +70,26 @@ function errorMessage(e: unknown): string {
 
 const cell = (n: number) => n.toLocaleString("ja-JP");
 
-export default function LifePlan() {
-  const [form, setForm] = useState<LifePlanForm>(initial);
+export default function LifePlan({ initialValues }: { initialValues?: Partial<LifePlanForm> }) {
+  const [form, setForm] = useState<LifePlanForm>({ ...initial, ...initialValues });
+  // 共通条件: 借入額（principalMan ↔ フォームの loanMan）・金利・返済期間
+  const sharedNow = sanitizeShared({ principalMan: form.loanMan, rate: form.rate, years: form.years });
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared({
+      principalMan: initialValues?.loanMan,
+      rate: initialValues?.rate,
+      years: initialValues?.years,
+    }),
+    current: sharedNow,
+    apply: (patch) =>
+      setForm((f) => ({
+        ...f,
+        loanMan: patch.principalMan ?? f.loanMan,
+        rate: patch.rate ?? f.rate,
+        years: patch.years ?? f.years,
+      })),
+    accept: (c) => acceptFor("/life-plan", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -98,6 +119,8 @@ export default function LifePlan() {
   }, [key]);
 
   const set = <K extends keyof LifePlanForm>(k: K, v: LifePlanForm[K]) => {
+    // 借入額の欄（loanMan）は共通キー principalMan として記録する
+    markEdited(k === "loanMan" ? "principalMan" : k);
     setForm((f) => ({ ...f, [k]: v }));
   };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
@@ -322,6 +345,7 @@ export default function LifePlan() {
             })}
           </fieldset>
         </details>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="lp-result-h" aria-busy={loading}>

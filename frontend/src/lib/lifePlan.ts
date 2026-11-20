@@ -193,6 +193,24 @@ export function validateLifePlan(v: LifePlanForm): { request: LifePlanRequest | 
   return { request, errors };
 }
 
+type Q = string | string[] | undefined;
+
+/**
+ * Initial form values from ?principal= (借入額・万円, 1..100000), ?rate= (0..20), ?years= (1..50).
+ * 借入額は loanMan に入れる。不正な値は無視。
+ */
+export function lifePlanInitialFromQuery(q: { principal?: Q; rate?: Q; years?: Q }): Partial<LifePlanForm> {
+  const out: Partial<LifePlanForm> = {};
+  const dec = (v: Q) => (typeof v === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(v) ? v : null);
+  const principal = dec(q.principal);
+  if (principal !== null && Number(principal) >= 1 && Number(principal) <= 100000) out.loanMan = principal;
+  const rate = dec(q.rate);
+  if (rate !== null && Number(rate) <= 20) out.rate = rate;
+  const years = typeof q.years === "string" && /^\d{1,2}$/.test(q.years) ? Number(q.years) : null;
+  if (years !== null && years >= 1 && years <= 50) out.years = String(years);
+  return out;
+}
+
 /** 子の入力欄が1つでも誤りのとき、その番号の誤りを返す。 */
 export const childError = (errors: LifePlanErrors, i: number): ChildErrors => errors.children?.[i] ?? {};
 

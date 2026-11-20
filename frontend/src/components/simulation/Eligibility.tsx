@@ -18,9 +18,12 @@ import {
 } from "@/lib/eligibility";
 import { PERSON_LABEL, isTwoPerson } from "@/lib/borrowerMode";
 import { yen } from "@/lib/simulation";
+import { acceptFor, sanitizeShared } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import { STEP_MAN_LARGE, STEP_PERCENT_WHOLE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 
 type Outcome = { key: string; data?: EligibilityResponse; error?: string };
 
@@ -49,6 +52,14 @@ function errorMessage(e: unknown): string {
 
 export default function Eligibility({ initialValues }: { initialValues?: Partial<EligibilityForm> }) {
   const [form, setForm] = useState<EligibilityForm>({ ...initial, ...initialValues });
+  // 共通条件（金利・返済期間のみ。借入額は借入可能額の出力なので共有しない）
+  const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) => setForm((f) => ({ ...f, rate: patch.rate ?? f.rate, years: patch.years ?? f.years })),
+    accept: (c) => acceptFor("/eligibility", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -76,7 +87,10 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof EligibilityForm>(k: K, v: EligibilityForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof EligibilityForm>(k: K, v: EligibilityForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: keyof typeof errors) => (touched[k] || outcome ? errors[k] : undefined);
 
@@ -165,6 +179,7 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
             hint: "金融機関は、実際の金利より高い金利で返済能力を確認することが多いため、その想定の金利です。0〜20%で入力できます。",
           })}
         </details>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="result-h" aria-busy={loading}>

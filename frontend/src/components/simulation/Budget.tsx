@@ -5,11 +5,15 @@ import { useEffect, useMemo, useState } from "react";
 import { ApiError, calculateBudget, type BudgetRequest, type BudgetResponse } from "@/lib/api/budget";
 import { manLabel, simulationHref, validateBudget, type BudgetForm } from "@/lib/budget";
 import { yen } from "@/lib/simulation";
+import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import BudgetChart from "./BudgetChart";
 import { STEP_MAN_LARGE, STEP_MAN_MONTHLY, STEP_PERCENT, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import NextSteps, { type NextStep } from "./NextSteps";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 
-type Outcome = { key: string; data?: BudgetResponse; error?: string };
+type Outcome = { key: string; data?: BudgetResponse; error?: string; req: BudgetRequest };
 
 const initial: BudgetForm = {
   downMan: "500",
@@ -30,6 +34,14 @@ function errorMessage(e: unknown): string {
 
 export default function Budget({ initialValues }: { initialValues?: Partial<BudgetForm> }) {
   const [form, setForm] = useState<BudgetForm>({ ...initial, ...initialValues });
+  // 共通条件（金利・返済期間のみ。借入額は出力なので共有しない）
+  const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) => setForm((f) => ({ ...f, rate: patch.rate ?? f.rate, years: patch.years ?? f.years })),
+    accept: (c) => acceptFor("/budget", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -43,10 +55,10 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
     const body: BudgetRequest = request;
     const timer = setTimeout(() => {
       calculateBudget(body, ctrl.signal)
-        .then((data) => setOutcome({ key, data }))
+        .then((data) => setOutcome({ key, data, req: body }))
         .catch((e: unknown) => {
           if (ctrl.signal.aborted) return;
-          setOutcome({ key, error: errorMessage(e) });
+          setOutcome({ key, error: errorMessage(e), req: body });
         });
     }, 400);
     return () => {
@@ -57,14 +69,36 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof BudgetForm>(k: K, v: BudgetForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof BudgetForm>(k: K, v: BudgetForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: keyof typeof errors) => (touched[k] || outcome ? errors[k] : undefined);
 
   const current = outcome && outcome.key === key ? outcome : null;
   const loading = !!request && !current;
-  const data = current?.data ?? (request ? outcome?.data : undefined);
+  // 次に調べるリンクは、表示中の結果を作った request（snap.req）の金利・期間から作る（フォームの現在値は使わない）
+  const snap = request ? (current?.data ? current : outcome) : null;
+  const data = snap?.data;
+  const shown = data && snap?.req ? snap.req : null;
+  const sharedShown: SharedConditions = shown
+    ? sanitizeShared({ rate: String(shown.annualRatePercent), years: String(shown.years) })
+    : {};
   const stale = !!data && loading;
+
+  // 次に調べる: 計算した物件価格（万円未満切り捨て）を総額試算の物件価格として渡す
+  const maxPriceMan = data ? Math.floor(data.maxPropertyPrice / 10000) : 0;
+  const nextSteps: NextStep[] =
+    maxPriceMan >= 1
+      ? [
+          {
+            href: hrefWith("/total-cost", sharedShown, { principal: String(maxPriceMan) }),
+            label: "住居費の総額を試算",
+            hint: "この物件価格で、諸費用や管理費などを含めた住居費の総額の目安を確認できます。",
+          },
+        ]
+      : [];
 
   function field(
     id: keyof BudgetForm,
@@ -117,6 +151,7 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
             hint: "入力すると、返済負担率の目安を表示します。",
           })}
         </details>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="result-h" aria-busy={loading}>
@@ -213,6 +248,7 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
                 年収から借入可能額を調べる
               </Link>
             </p>
+            <NextSteps items={nextSteps} />
           </div>
         )}
 

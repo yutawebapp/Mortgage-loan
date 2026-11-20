@@ -21,6 +21,9 @@ import {
   type RentVsBuyForm,
 } from "@/lib/rentVsBuy";
 import { yen } from "@/lib/simulation";
+import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { derivedLoan } from "@/lib/totalCost";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import {
   STEP_MAN_LARGE,
   STEP_MONTHS,
@@ -31,8 +34,11 @@ import {
 } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
 import RentVsBuyChart from "./RentVsBuyChart";
+import ShareLinkButton from "./ShareLinkButton";
+import NextSteps, { type NextStep } from "./NextSteps";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 
-type Outcome = { key: string; data?: RentVsBuyResponse; error?: string };
+type Outcome = { key: string; data?: RentVsBuyResponse; error?: string; req: RentVsBuyRequest };
 
 const initial: RentVsBuyForm = {
   priceMan: "4000",
@@ -67,6 +73,14 @@ type FieldKey = keyof Omit<RentVsBuyForm, "method">;
 
 export default function RentVsBuy({ initialValues }: { initialValues?: Partial<RentVsBuyForm> }) {
   const [form, setForm] = useState<RentVsBuyForm>({ ...initial, ...initialValues });
+  // 共通条件は金利・返済期間のみ。このツールの principal は物件価格なので、借入額（principalMan）は受け取らない・渡さない。
+  const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) => setForm((f) => ({ ...f, rate: patch.rate ?? f.rate, years: patch.years ?? f.years })),
+    accept: (c) => acceptFor("/rent-vs-buy", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -81,10 +95,10 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
     const body: RentVsBuyRequest = request;
     const timer = setTimeout(() => {
       calculateRentVsBuy(body, ctrl.signal)
-        .then((data) => setOutcome({ key, data }))
+        .then((data) => setOutcome({ key, data, req: body }))
         .catch((e: unknown) => {
           if (ctrl.signal.aborted) return;
-          setOutcome({ key, error: errorMessage(e) });
+          setOutcome({ key, error: errorMessage(e), req: body });
         });
     }, 400);
     return () => {
@@ -95,7 +109,10 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof RentVsBuyForm>(k: K, v: RentVsBuyForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof RentVsBuyForm>(k: K, v: RentVsBuyForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: FieldKey) => (touched[k] || outcome ? errors[k] : undefined);
 
@@ -103,9 +120,14 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
   const noLoan = loanEstimate !== null && loanEstimate <= 0 && Object.keys(errors).length === 0;
   const current = outcome && outcome.key === key ? outcome : null;
   const loading = !!request && !current;
-  const data = request ? (current?.data ?? outcome?.data) : undefined;
+  // 表示する結果・次に調べるリンク・共有リンクは、すべて同じ request（snap.req）から作る（フォームの現在値は使わない）
+  const snap = request ? (current?.data ? current : outcome) : null;
+  const data = snap?.data;
+  const shown = data && snap?.req ? snap.req : null;
   const stale = !!data && loading;
-  const shown = data && request ? request : null;
+  const sharedShown: SharedConditions = shown
+    ? sanitizeShared({ rate: String(shown.annualRatePercent), years: String(shown.years) })
+    : {};
 
   function field(
     id: FieldKey,
@@ -134,6 +156,23 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
   const sentences = data && shown ? crossoverSentences(data.summary, shown.horizonYears) : null;
   const notes = data ? rentVsBuyNoteMessages(data.notes) : [];
   const assumptions = data ? rentVsBuyAssumptionMessages(data.notes) : [];
+
+  // 次に調べる: 購入の借入額（物件価格 ＋ 諸費用 − 頭金）を、ライフプランの借入額として渡す
+  const shownLoan =
+    shown && shown.closingCostRatePercent !== undefined
+      ? derivedLoan(shown.propertyPrice, shown.downPayment, shown.closingCostRatePercent)
+      : null;
+  const loanManStr = shownLoan !== null && shownLoan >= 10000 ? String(shownLoan / 10000) : null;
+  const priceManStr = shown ? String(shown.propertyPrice / 10000) : null;
+  const nextSteps: NextStep[] = loanManStr
+    ? [
+        {
+          href: hrefWith("/life-plan", sharedShown, { principal: loanManStr }),
+          label: "ライフプランで貯蓄の推移を試算",
+          hint: "住宅ローンの返済や教育費などを含めて、年齢ごとの貯蓄の推移の目安を確認できます。",
+        },
+      ]
+    : [];
 
   return (
     <div className="sim">
@@ -278,6 +317,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
             })}
           </fieldset>
         </details>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="rvb-result-h" aria-busy={loading}>
@@ -447,6 +487,17 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
                 住宅ローン控除を調べる
               </Link>
             </p>
+            <NextSteps items={nextSteps} />
+          </div>
+        )}
+
+        {shown && priceManStr && (
+          <div className="result-actions">
+            <ShareLinkButton
+              conditions={sharedShown}
+              extra={{ principal: priceManStr }}
+              label="主な条件（物件価格・金利・期間）のリンクをコピー"
+            />
           </div>
         )}
 

@@ -21,6 +21,9 @@ import {
 } from "@/lib/rateTypes";
 import { simulationHref } from "@/lib/eligibility";
 import { yen } from "@/lib/simulation";
+import { acceptFor, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
 import RateTypesChart, { CaseSwatch, STYLES } from "./RateTypesChart";
@@ -40,6 +43,19 @@ const n = (v: number) => v.toLocaleString("ja-JP");
 
 export default function RateTypes({ initialValues }: { initialValues?: Partial<RateTypesForm> }) {
   const [form, setForm] = useState<RateTypesForm>({ ...RATE_TYPES_DEFAULTS, ...initialValues });
+  // 共通条件は借入金額と返済期間のみ（金利は4つあるため共通化しない）。年は2年以上のみ適用する。
+  const sharedNow: SharedConditions = sanitizeShared({ principalMan: form.principalMan, years: form.years });
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) =>
+      setForm((f) => ({
+        ...f,
+        ...(patch.principalMan !== undefined ? { principalMan: patch.principalMan } : {}),
+        ...(patch.years !== undefined && Number(patch.years) >= 2 ? { years: patch.years } : {}),
+      })),
+    accept: (c) => acceptFor("/rate-types", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -67,7 +83,10 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof RateTypesForm>(k: K, v: RateTypesForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof RateTypesForm>(k: K, v: RateTypesForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: NumKey) => (touched[k] || outcome ? errors[k] : undefined);
 
@@ -176,6 +195,7 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
           <legend>全期間固定</legend>
           {field("fullFixedRate", "仮の金利（年率）", "%", { step: STEP_RATE, hint: rateHint })}
         </fieldset>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="result-h" aria-busy={loading}>

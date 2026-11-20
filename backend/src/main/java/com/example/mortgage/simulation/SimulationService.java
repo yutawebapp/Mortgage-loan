@@ -1,5 +1,6 @@
 package com.example.mortgage.simulation;
 
+import com.example.mortgage.simulation.domain.PairRepaymentCalculator;
 import com.example.mortgage.simulation.domain.RepaymentCalculator;
 import com.example.mortgage.simulation.domain.RepaymentResult;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,10 @@ public class SimulationService {
                 request.method(),
                 BigDecimal.valueOf(request.bonusAmount()));
 
+        RepaymentResponse.PairBreakdown pairBreakdown = request.selfSharePercent() == null
+                ? null
+                : simulatePair(request);
+
         return new RepaymentResponse(
                 result.monthlyPayment().longValueExact(),
                 result.bonusPayment().longValueExact(),
@@ -31,6 +36,33 @@ public class SimulationService {
                                 row.principal().longValueExact(),
                                 row.interest().longValueExact(),
                                 row.balance().longValueExact()))
-                        .toList());
+                        .toList(),
+                pairBreakdown);
+    }
+
+    private RepaymentResponse.PairBreakdown simulatePair(RepaymentRequest request) {
+        PairRepaymentCalculator.PairResult pair = PairRepaymentCalculator.calculate(
+                BigDecimal.valueOf(request.principal()),
+                request.annualRatePercent(),
+                request.years(),
+                request.method(),
+                BigDecimal.valueOf(request.bonusAmount()),
+                request.selfSharePercent());
+
+        return new RepaymentResponse.PairBreakdown(
+                toPerson(pair.self()),
+                toPerson(pair.partner()),
+                pair.notes().stream().map(Enum::name).toList());
+    }
+
+    private static RepaymentResponse.Person toPerson(PairRepaymentCalculator.PersonLoan loan) {
+        RepaymentResult r = loan.repayment();
+        return new RepaymentResponse.Person(
+                loan.principal().longValueExact(),
+                loan.bonusAmount().longValueExact(),
+                r.monthlyPayment().longValueExact(),
+                r.bonusPayment().longValueExact(),
+                r.totalPayment().longValueExact(),
+                r.totalInterest().longValueExact());
     }
 }

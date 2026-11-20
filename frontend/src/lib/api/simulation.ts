@@ -6,6 +6,8 @@ export type RepaymentRequest = {
   years: number;
   method: RepaymentMethod;
   bonusAmount?: number;
+  /** 二人で借りる場合の本人の負担割合（%、1〜99）。未指定なら一人の計算。 */
+  selfSharePercent?: number;
 };
 
 export type ScheduleRow = {
@@ -17,12 +19,30 @@ export type ScheduleRow = {
   balance: number;
 };
 
+export type PairPerson = {
+  principal: number;
+  bonusAmount: number;
+  monthlyPayment: number;
+  bonusPayment: number;
+  totalPayment: number;
+  totalInterest: number;
+};
+
+export type PairBreakdown = {
+  self: PairPerson;
+  partner: PairPerson;
+  /** 注記のコード（例：PAIR_SHARE_PROVISIONAL）。 */
+  notes: string[];
+};
+
 export type RepaymentResponse = {
   monthlyPayment: number;
   bonusPayment: number;
   totalPayment: number;
   totalInterest: number;
   schedule: ScheduleRow[];
+  /** selfSharePercent を指定したときだけ値が入る。 */
+  pairBreakdown?: PairBreakdown | null;
 };
 
 export type ProblemDetail = {

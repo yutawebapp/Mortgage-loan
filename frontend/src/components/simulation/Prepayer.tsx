@@ -9,7 +9,12 @@ import {
 } from "@/lib/api/prepayment";
 import { monthSpanLabel, validatePrepayment, type PrepaymentForm } from "@/lib/prepayment";
 import { yen } from "@/lib/simulation";
+import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
 import PrepaymentChart from "./PrepaymentChart";
+import ShareLinkButton from "./ShareLinkButton";
+import NextSteps, { type NextStep } from "./NextSteps";
+import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
 
@@ -43,6 +48,14 @@ function diffCell(n: number): string {
 
 export default function Prepayer({ initialValues }: { initialValues?: Partial<PrepaymentForm> }) {
   const [form, setForm] = useState<PrepaymentForm>({ ...initial, ...initialValues });
+  // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値
+  const sharedNow: SharedConditions = sanitizeShared(form);
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    fromUrl: sanitizeShared(initialValues ?? {}),
+    current: sharedNow,
+    apply: (patch) => setForm((f) => ({ ...f, ...patch })),
+    accept: (c) => acceptFor("/prepayment", c),
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -70,7 +83,10 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const set = <K extends keyof PrepaymentForm>(k: K, v: PrepaymentForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof PrepaymentForm>(k: K, v: PrepaymentForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: keyof typeof errors) => (touched[k] || outcome ? errors[k] : undefined);
 
@@ -98,6 +114,14 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
       />
     );
   }
+
+  const nextSteps: NextStep[] = [
+    {
+      href: hrefWith("/refinance", sharedNow),
+      label: "借り換えと比べる",
+      hint: "繰上げ返済をする代わりに借り換えをした場合の、毎月の返済額や総支払額の目安と比べられます。",
+    },
+  ];
 
   const timingError = err("afterYears") ?? err("afterMonths");
   const timingErrorId = err("afterYears") ? "afterYears-err" : "afterMonths-err";
@@ -210,6 +234,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
               : "返済期間を変えずに、毎月の返済額を下げる方法です。"}
           </p>
         </fieldset>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
 
       <section className="results" aria-labelledby="result-h" aria-busy={loading}>
@@ -321,6 +346,13 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
             <p className="hint">
               繰上げ返済をした場合の残高です。横軸は繰上げ返済をしない場合の返済期間までで、点線は繰上げ返済をする時期を示します。
             </p>
+            <NextSteps items={nextSteps} />
+          </div>
+        )}
+
+        {request && (
+          <div className="result-actions">
+            <ShareLinkButton conditions={sharedNow} />
           </div>
         )}
 
