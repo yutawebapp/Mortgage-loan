@@ -1,5 +1,6 @@
 package com.example.mortgage;
 
+import com.example.mortgage.lifeplan.LifePlanMapper;
 import com.example.mortgage.product.ProductMapper;
 import com.example.mortgage.taxdeduction.TaxDeductionMapper;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,10 @@ class HealthEndpointTest {
     /** Same for the tax deduction mapper (TaxDeductionService needs it at context load). */
     @MockitoBean
     private TaxDeductionMapper taxDeductionMapper;
+
+    /** Same for the life plan mapper (LifePlanParameterLoader needs it at context load). */
+    @MockitoBean
+    private LifePlanMapper lifePlanMapper;
 
     @Test
     void actuatorHealthIsUp() throws Exception {
