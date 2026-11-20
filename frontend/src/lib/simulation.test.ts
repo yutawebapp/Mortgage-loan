@@ -424,14 +424,44 @@ describe("signedDiff / compareRows", () => {
     expect(signedDiff(-500, "円")).toBe("−500円");
     expect(signedDiff(0, "年")).toBe("0年");
   });
-  it("compares B minus A for each row", () => {
-    const a = { monthlyPayment: 100000, totalPayment: 42000000, totalInterest: 12000000, years: 35 };
-    const b = { monthlyPayment: 110000, totalPayment: 39600000, totalInterest: 9600000, years: 30 };
+  it("compares B minus A for each row, starting with the conditions (rate, method)", () => {
+    const a = {
+      monthlyPayment: 100000,
+      totalPayment: 42000000,
+      totalInterest: 12000000,
+      years: 35,
+      annualRatePercent: 1.2,
+      method: "EQUAL_PAYMENT" as const,
+    };
+    const b = {
+      monthlyPayment: 110000,
+      totalPayment: 39600000,
+      totalInterest: 9600000,
+      years: 30,
+      annualRatePercent: 1.5,
+      method: "EQUAL_PRINCIPAL" as const,
+    };
     expect(compareRows(a, b)).toEqual([
+      { label: "金利（年率）", a: "1.2%", b: "1.5%", diff: "+0.3%" },
+      { label: "返済方式", a: "元利均等返済", b: "元金均等返済", diff: "—" },
       { label: "毎月の返済額（初回）", a: "100,000円", b: "110,000円", diff: "+10,000円" },
       { label: "総返済額", a: "42,000,000円", b: "39,600,000円", diff: "−2,400,000円" },
       { label: "利息総額", a: "12,000,000円", b: "9,600,000円", diff: "−2,400,000円" },
       { label: "返済期間", a: "35年", b: "30年", diff: "−5年" },
     ]);
+  });
+  it("shows a 0% rate difference without float noise and a negative rate diff with −", () => {
+    const base = {
+      monthlyPayment: 1,
+      totalPayment: 1,
+      totalInterest: 1,
+      years: 35,
+      method: "EQUAL_PAYMENT" as const,
+    };
+    const same = compareRows({ ...base, annualRatePercent: 1.2 }, { ...base, annualRatePercent: 1.2 });
+    expect(same[0]).toEqual({ label: "金利（年率）", a: "1.2%", b: "1.2%", diff: "0%" });
+    // 1.2 - 1.5 = -0.30000000000000004 in floating point; rounded to 6 decimals it is −0.3
+    const down = compareRows({ ...base, annualRatePercent: 1.5 }, { ...base, annualRatePercent: 1.2 });
+    expect(down[0].diff).toBe("−0.3%");
   });
 });

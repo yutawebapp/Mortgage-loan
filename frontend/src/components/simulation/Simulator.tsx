@@ -100,7 +100,7 @@ export default function Simulator({
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [view, setView] = useState<"year" | "month">("year");
   const [retry, setRetry] = useState(0);
-  // 二人で借りる設定は共通条件には含めず、このコンポーネント内だけで持つ（URLには出さない）。
+  // 二人で借りる設定は共通条件には含めない。URLクエリ（pair / share）からは初期値として読むが、共有リンクには書き出さない。
   const [pair, setPair] = useState<PairOptions>(
     initialPairFromUrl ?? initialPair,
   );
@@ -218,6 +218,9 @@ export default function Simulator({
   const shownOutcomeB = requestB && outcomeB?.data ? outcomeB : null;
   const dataB = shownOutcomeB?.data;
   const shownB = shownOutcomeB?.request;
+  // プランBの計算が失敗したときのエラー（現在の条件に対するものだけ）。
+  const errorB =
+    requestB && outcomeB && outcomeB.key === keyB ? outcomeB.error : undefined;
   const compareStale = loading || loadingB;
   const summaryA =
     data && shown
@@ -226,6 +229,8 @@ export default function Simulator({
           totalPayment: data.totalPayment,
           totalInterest: data.totalInterest,
           years: shown.years,
+          annualRatePercent: shown.annualRatePercent,
+          method: shown.method,
         }
       : null;
   const summaryB =
@@ -235,6 +240,8 @@ export default function Simulator({
           totalPayment: dataB.totalPayment,
           totalInterest: dataB.totalInterest,
           years: shownB.years,
+          annualRatePercent: shownB.annualRatePercent,
+          method: shownB.method,
         }
       : null;
   const compareList =
@@ -427,12 +434,12 @@ export default function Simulator({
           unit="歳"
           value={ageInput}
           onChange={setAgeInput}
-          onBlur={() => {}}
+          onBlur={blur("age")}
           step="1"
           min={AGE_MIN}
           inputMode="numeric"
           hint={`任意です。入力すると、完済時の年齢の目安を表示します。（${AGE_MIN}〜80歳の整数）`}
-          error={ageErr}
+          error={touched.age ? ageErr : undefined}
         />
         <div className="field">
           <button
@@ -589,46 +596,61 @@ export default function Simulator({
               </>
             )}
 
-            {compareList && shownB && (
+            {summaryA && planB && (errorB || (compareList && shownB)) && (
               <div
                 className={`plan-compare-wrap${compareStale ? " stale" : ""}`}
               >
                 <h3>プランAとプランBの比較</h3>
-                <div
-                  className="table-wrap"
-                  tabIndex={0}
-                  role="region"
-                  aria-label="プランAとプランBの比較（横にスクロールできます）"
-                >
-                  <table className="plan-compare">
-                    <caption className="sr-only">
-                      プランAとプランBの比較
-                    </caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">項目</th>
-                        <th scope="col">プランA</th>
-                        <th scope="col">プランB</th>
-                        <th scope="col">差（B−A）</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {compareList.map((r) => (
-                        <tr key={r.label}>
-                          <th scope="row">{r.label}</th>
-                          <td>{r.a}</td>
-                          <td>{r.b}</td>
-                          <td>{r.diff}</td>
+                {errorB && (
+                  <div className="alert no-print" role="alert">
+                    <p>{errorB}</p>
+                    <button
+                      type="button"
+                      onClick={() => setRetry((r) => r + 1)}
+                    >
+                      再計算する
+                    </button>
+                  </div>
+                )}
+                {compareList && shownB && (
+                <>
+                  <div
+                    className="table-wrap"
+                    tabIndex={0}
+                    role="region"
+                    aria-label="プランAとプランBの比較（横にスクロールできます）"
+                  >
+                    <table className="plan-compare">
+                      <caption className="sr-only">
+                        プランAとプランBの比較
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th scope="col">項目</th>
+                          <th scope="col">プランA</th>
+                          <th scope="col">プランB</th>
+                          <th scope="col">差（B−A）</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="hint plan-compare-note">
-                  返済方式や返済期間が違うと、総返済額や利息総額は単純に比べられないことがあります。試算結果は目安です。
-                </p>
-                {payoffB !== null && (
-                  <p>プランBの完済時の年齢の目安: {payoffB}歳</p>
+                      </thead>
+                      <tbody>
+                        {compareList.map((r) => (
+                          <tr key={r.label}>
+                            <th scope="row">{r.label}</th>
+                            <td>{r.a}</td>
+                            <td>{r.b}</td>
+                            <td>{r.diff}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="hint plan-compare-note">
+                    返済方式や返済期間が違うと、総返済額や利息総額は単純に比べられないことがあります。試算結果は目安です。
+                  </p>
+                  {payoffB !== null && (
+                    <p>プランBの完済時の年齢の目安: {payoffB}歳</p>
+                  )}
+                </>
                 )}
               </div>
             )}

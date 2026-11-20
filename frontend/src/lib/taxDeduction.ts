@@ -212,9 +212,10 @@ export function pairSimulationHref(
   const extra: Record<string, string> = { pair: "1" };
   const s = req.shareAPercent;
   if (s !== undefined && Number.isInteger(s) && s >= 1 && s <= 99) extra.share = String(s);
+  // 借入額は万円の小数（例：1234.5678万円）のまま渡す。シミュレーターの principal は小数の万円を受け付ける（1万円〜10億円は hrefWith 側で判定）。
   return hrefWith(
     "/simulation",
-    { principalMan: String(Math.floor(req.principal / 10000)), rate: String(req.annualRatePercent), years: String(req.years) },
+    { principalMan: String(req.principal / 10000), rate: String(req.annualRatePercent), years: String(req.years) },
     extra,
   );
 }

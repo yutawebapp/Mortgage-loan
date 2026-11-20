@@ -234,13 +234,39 @@ export type PlanSummary = {
   totalPayment: number;
   totalInterest: number;
   years: number;
+  /** 計算に使った金利（%）。結果を出したリクエストの値を入れる。 */
+  annualRatePercent: number;
+  method: RepaymentMethod;
 };
 
 export type CompareRow = { label: string; a: string; b: string; diff: string };
 
-/** プランA・Bの比較行（毎月の返済額（初回）・総返済額・利息総額・返済期間）。差は B−A。 */
+/** 金利の差（B−A・%）。小数の誤差を丸めてから符号付きで表す。 */
+function rateDiff(a: number, b: number): string {
+  const d = Math.round((b - a) * 1e6) / 1e6;
+  if (d === 0) return "0%";
+  const sign = d > 0 ? "+" : "−";
+  return `${sign}${Math.abs(d).toLocaleString("ja-JP", { maximumFractionDigits: 6 })}%`;
+}
+
+/**
+ * プランA・Bの比較行（金利・返済方式・毎月の返済額（初回）・総返済額・利息総額・返済期間）。差は B−A。
+ * 返済方式は数値でないので差は「—」。
+ */
 export function compareRows(a: PlanSummary, b: PlanSummary): CompareRow[] {
   return [
+    {
+      label: "金利（年率）",
+      a: `${a.annualRatePercent}%`,
+      b: `${b.annualRatePercent}%`,
+      diff: rateDiff(a.annualRatePercent, b.annualRatePercent),
+    },
+    {
+      label: "返済方式",
+      a: METHOD_LABEL[a.method],
+      b: METHOD_LABEL[b.method],
+      diff: "—",
+    },
     {
       label: "毎月の返済額（初回）",
       a: yen(a.monthlyPayment),

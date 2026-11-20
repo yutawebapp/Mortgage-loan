@@ -220,11 +220,17 @@ describe("pairSimulationHref", () => {
     expect(pairSimulationHref({ principal: 30_000_000, annualRatePercent: 1.2, years: 35, shareAPercent: 60 })).toBeNull();
   });
 
-  it("floors principal to 万円 and drops it when outside 1万円..10億円", () => {
+  it("keeps fractional 万円 (the simulator accepts decimals) and drops principal outside 1万円..10億円", () => {
     expect(pairSimulationHref({ ...snap, principal: 12_345_678 })).toBe(
-      "/simulation?principal=1234&rate=1.2&years=35&pair=1&share=60",
+      "/simulation?principal=1234.5678&rate=1.2&years=35&pair=1&share=60",
+    );
+    expect(pairSimulationHref({ ...snap, principal: 30_050_000 })).toBe(
+      "/simulation?principal=3005&rate=1.2&years=35&pair=1&share=60",
     );
     expect(pairSimulationHref({ ...snap, principal: 9_999 })).toBe(
+      "/simulation?rate=1.2&years=35&pair=1&share=60",
+    );
+    expect(pairSimulationHref({ ...snap, principal: 1_000_010_000 })).toBe(
       "/simulation?rate=1.2&years=35&pair=1&share=60",
     );
   });
