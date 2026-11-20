@@ -158,13 +158,16 @@ public final class LifePlanCalculator {
         }
         YearRow retirementYearEnd = rows.get(input.retireAge() - 1 - input.currentAge());
         YearRow last = rows.get(rows.size() - 1);
+        // Payoff age is reported only when it falls inside the projection (<= lifeEndAge); otherwise null.
+        int payoffAge = input.currentAge() + input.years();
+        boolean payoffInside = hasLoan && payoffAge <= input.lifeEndAge();
         return new Summary(
                 firstShortfallAge,
                 minRow.savingsClosing(),
                 minRow.age(),
                 retirementYearEnd.savingsClosing(),
                 last.savingsClosing(),
-                hasLoan ? input.currentAge() + input.years() : null,
+                payoffInside ? payoffAge : null,
                 totalEducation,
                 peak == null ? BigDecimal.ZERO : peak.educationCost(),
                 peak == null ? null : peak.age(),

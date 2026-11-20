@@ -231,6 +231,13 @@ export function shortfallSentence(s: LifePlanSummary, endAge: number): string {
     : `入力した条件では、${endAge}歳までの間、貯蓄はマイナスになりません。`;
 }
 
+/** 住宅ローンの完済の文言。返済額の合計は想定期間内（endAge まで）の支払いだけを数える。 */
+export function loanSentence(s: LifePlanSummary, endAge: number): string {
+  if (s.loanPayoffAge !== null) return `完済は${s.loanPayoffAge}歳の時点です。`;
+  if (s.totalLoanPayment > 0) return `想定する期間（${endAge}歳まで）内には完済しません。`;
+  return "借入はない計算です。";
+}
+
 export const ASSUMPTION_LINE =
   "この結果は、入力した収入・支出などの前提によって変わります。将来を予測するものではありません。金額はすべて現在の価値で、物価の上昇は考慮していません。";
 

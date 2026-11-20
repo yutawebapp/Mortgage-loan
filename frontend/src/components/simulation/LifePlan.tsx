@@ -15,6 +15,7 @@ import {
   lifePlanNoteMessages,
   manApprox,
   newChild,
+  loanSentence,
   shortfallSentence,
   validateLifePlan,
   yenSigned,
@@ -392,16 +393,16 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
               <section className="lp-card" aria-label="住宅ローン">
                 <h3>住宅ローンの完済</h3>
                 {s.loanPayoffAge !== null ? (
-                  <>
-                    <p className="lp-val">{s.loanPayoffAge}歳</p>
-                    <p className="hint">返済額の合計は約{manApprox(s.totalLoanPayment)}です。</p>
-                  </>
+                  <p className="lp-val">{s.loanPayoffAge}歳</p>
                 ) : (
-                  <>
-                    <p className="lp-val">―</p>
-                    <p className="hint">{s.totalLoanPayment > 0 ? "想定する期間内には完済しません。" : "借入はない計算です。"}</p>
-                  </>
+                  <p className="lp-val">―</p>
                 )}
+                <p className="hint">{loanSentence(s, endAge)}</p>
+                {s.totalLoanPayment > 0 ? (
+                  <p className="hint">
+                    返済額の合計は約{manApprox(s.totalLoanPayment)}です（{endAge}歳までの期間内に支払う分だけを数えています）。
+                  </p>
+                ) : null}
               </section>
               <section className="lp-card" aria-label="教育費">
                 <h3>教育費</h3>

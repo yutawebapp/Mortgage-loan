@@ -48,7 +48,7 @@ public record LifePlanResult(
      * @param minSavingsAge        age of the first occurrence of minSavings
      * @param savingsAtRetirement  closing savings at age retireAge - 1
      * @param savingsAtEnd         closing savings at lifeEndAge
-     * @param loanPayoffAge        currentAge + years when there is a loan, else null
+     * @param loanPayoffAge        currentAge + years when there is a loan and that age is <= lifeEndAge, else null
      * @param totalEducationCost   sum of educationCost over the projection
      * @param peakEducationCost    largest educationCost in one year (0 when none)
      * @param peakEducationAge     age of the first year with peakEducationCost, null when there is no education cost

@@ -4,6 +4,7 @@ import {
   type LifePlanForm,
   lifePlanInitialFromQuery,
   lifePlanNoteMessages,
+  loanSentence,
   manApprox,
   newChild,
   shortfallSentence,
@@ -178,6 +179,26 @@ describe("formatting and wording", () => {
     expect(b).toContain("95歳までの間");
     expect(b).toContain("マイナスになりません");
     for (const t of [a, b]) expect(t).not.toMatch(/安心|問題なし|危険|必ず|確実|おすすめ|お得/);
+  });
+
+  it("loan sentence: payoff age, no payoff inside the period, or no loan", () => {
+    const base = {
+      firstShortfallAge: null,
+      minSavings: 0,
+      minSavingsAge: 90,
+      savingsAtRetirement: 0,
+      savingsAtEnd: 0,
+      loanPayoffAge: null,
+      totalEducationCost: 0,
+      peakEducationCost: null,
+      peakEducationAge: null,
+      totalLoanPayment: 0,
+    };
+    expect(loanSentence({ ...base, loanPayoffAge: 70, totalLoanPayment: 1 }, 95)).toBe("完済は70歳の時点です。");
+    expect(loanSentence({ ...base, totalLoanPayment: 9_999_535 }, 70)).toBe(
+      "想定する期間（70歳まで）内には完済しません。",
+    );
+    expect(loanSentence(base, 95)).toBe("借入はない計算です。");
   });
 
   it("note codes map in order; unknown (and prototype keys) are ignored", () => {

@@ -184,13 +184,32 @@ class LifePlanCalculatorTest {
     @Test
     void loanPrincipalLongerThanHorizon_payoffAfterLifeEnd() {
         // 20M 2.0% 35y EQUAL_PRINCIPAL; horizon 60..70 (11 years). Loan continues beyond lifeEnd.
+        // Payoff would be 60+35 = 95 > 70, so loanPayoffAge is null; totalLoanPayment counts only ages 60..70.
         LifePlanResult r = run(new Spec().ages(60, 65, 70).income(6_000_000, 0).living(200_000, 220_000)
                 .savings(5_000_000, 0).loan(20_000_000, "2.0", 35, RepaymentMethod.EQUAL_PRINCIPAL));
 
         assertRow(row(r, 0), 60, 6_000_000, 2_400_000, 966_202, 19_428_560, 0, 0, 2_633_798, 7_633_798);
         assertRow(row(r, 1), 61, 6_000_000, 2_400_000, 954_769, 18_857_124, 0, 0, 2_645_231, 10_279_029);
         assertRow(row(r, 10), 70, 0, 2_640_000, 851_904, 13_714_272, 0, 0, -3_491_904, -2_839_535);
-        assertSummary(r.summary(), 70, -2_839_535, 70, 18_283_317, -2_839_535, 95, 0, 0, null, 9_999_535);
+        assertSummary(r.summary(), 70, -2_839_535, 70, 18_283_317, -2_839_535, null, 0, 0, null, 9_999_535);
+    }
+
+    /** loanPayoffAge = currentAge + years is reported only when it is <= lifeEndAge (boundary and beyond). */
+    @Test
+    void loanPayoffAge_nullWhenAfterLifeEnd_andReportedWhenNotAfter() {
+        // 70 + 35 = 105 > 95 -> null (issue case).
+        LifePlanResult after = run(new Spec().ages(70, 72, 95).income(6_000_000, 0).living(200_000, 220_000)
+                .savings(5_000_000, 0).loan(20_000_000, "2.0", 35, RepaymentMethod.EQUAL_PAYMENT));
+        assertThat(after.summary().loanPayoffAge()).isNull();
+        assertThat(after.summary().totalLoanPayment()).isPositive();
+        // 60 + 35 = 95 <= 95 -> 95 (payoff age equals the last projected age).
+        LifePlanResult equal = run(new Spec().ages(60, 62, 95).income(6_000_000, 0).living(200_000, 220_000)
+                .savings(5_000_000, 0).loan(20_000_000, "2.0", 35, RepaymentMethod.EQUAL_PAYMENT));
+        assertThat(equal.summary().loanPayoffAge()).isEqualTo(95);
+        // 60 + 36 = 96 > 95 -> null.
+        LifePlanResult oneMore = run(new Spec().ages(60, 62, 95).income(6_000_000, 0).living(200_000, 220_000)
+                .savings(5_000_000, 0).loan(20_000_000, "2.0", 36, RepaymentMethod.EQUAL_PAYMENT));
+        assertThat(oneMore.summary().loanPayoffAge()).isNull();
     }
 
     @Test
