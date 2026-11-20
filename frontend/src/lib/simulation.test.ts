@@ -5,9 +5,15 @@ import {
   type PairOptions,
   aggregateByYear,
   formatDateJa,
+  ageError,
+  compareRows,
   initialFromQuery,
   loanConditionRows,
   initialPair,
+  pairInitialFromQuery,
+  parseAge,
+  payoffAge,
+  signedDiff,
   validate,
   yen,
 } from "./simulation";
@@ -361,6 +367,71 @@ describe("loanConditionRows", () => {
       ["ボーナス返済の借入額", "5,000,000円"],
       ["あなたの負担割合", "40%"],
       ["試算日", "2026年11月20日"],
+    ]);
+  });
+});
+
+describe("pairInitialFromQuery", () => {
+  it("is off when no pair params are given", () => {
+    expect(pairInitialFromQuery({})).toEqual({ enabled: false, selfPercent: "50" });
+  });
+  it("pair=1 turns the toggle on with 50%", () => {
+    expect(pairInitialFromQuery({ pair: "1" })).toEqual({ enabled: true, selfPercent: "50" });
+  });
+  it("share=<1..99> turns the toggle on and sets the self share", () => {
+    expect(pairInitialFromQuery({ share: "40" })).toEqual({ enabled: true, selfPercent: "40" });
+    expect(pairInitialFromQuery({ pair: "1", share: "70" })).toEqual({ enabled: true, selfPercent: "70" });
+    expect(pairInitialFromQuery({ share: "1" }).selfPercent).toBe("1");
+    expect(pairInitialFromQuery({ share: "99" }).selfPercent).toBe("99");
+  });
+  it("ignores invalid values", () => {
+    for (const share of ["0", "100", "-5", "4.5", "abc", "", "1000"]) {
+      expect(pairInitialFromQuery({ share })).toEqual(initialPair);
+    }
+    expect(pairInitialFromQuery({ pair: "true" })).toEqual(initialPair);
+    expect(pairInitialFromQuery({ pair: ["1", "1"] })).toEqual(initialPair);
+  });
+  it("invalid share with pair=1 falls back to 50%", () => {
+    expect(pairInitialFromQuery({ pair: "1", share: "0" })).toEqual({ enabled: true, selfPercent: "50" });
+  });
+});
+
+describe("payoff age helpers", () => {
+  it("parseAge accepts integers 18..80 and treats blank as off", () => {
+    expect(parseAge("")).toBeNull();
+    expect(parseAge("  ")).toBeNull();
+    expect(parseAge("18")).toBe(18);
+    expect(parseAge("80")).toBe(80);
+    expect(parseAge("17")).toBeNull();
+    expect(parseAge("81")).toBeNull();
+    expect(parseAge("30.5")).toBeNull();
+  });
+  it("ageError is empty for blank or valid, and a message otherwise", () => {
+    expect(ageError("")).toBeUndefined();
+    expect(ageError("35")).toBeUndefined();
+    expect(ageError("81")).toBeDefined();
+    expect(ageError("x")).toBeDefined();
+  });
+  it("payoffAge is age plus years", () => {
+    expect(payoffAge(35, 35)).toBe(70);
+    expect(payoffAge(18, 50)).toBe(68);
+  });
+});
+
+describe("signedDiff / compareRows", () => {
+  it("formats differences with explicit sign and no judgment words", () => {
+    expect(signedDiff(1234, "円")).toBe("+1,234円");
+    expect(signedDiff(-500, "円")).toBe("−500円");
+    expect(signedDiff(0, "年")).toBe("0年");
+  });
+  it("compares B minus A for each row", () => {
+    const a = { monthlyPayment: 100000, totalPayment: 42000000, totalInterest: 12000000, years: 35 };
+    const b = { monthlyPayment: 110000, totalPayment: 39600000, totalInterest: 9600000, years: 30 };
+    expect(compareRows(a, b)).toEqual([
+      { label: "毎月の返済額（初回）", a: "100,000円", b: "110,000円", diff: "+10,000円" },
+      { label: "総返済額", a: "42,000,000円", b: "39,600,000円", diff: "−2,400,000円" },
+      { label: "利息総額", a: "12,000,000円", b: "9,600,000円", diff: "−2,400,000円" },
+      { label: "返済期間", a: "35年", b: "30年", diff: "−5年" },
     ]);
   });
 });

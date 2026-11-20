@@ -4,15 +4,21 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ApiError,
   calculateRepayment,
+  type RepaymentMethod,
   type RepaymentRequest,
   type RepaymentResponse,
 } from "@/lib/api/simulation";
 import {
+  AGE_MIN,
   ESTIMATE_NOTE,
+  ageError,
   aggregateByYear,
+  compareRows,
   formatDateJa,
   initialPair,
   loanConditionRows,
+  parseAge,
+  payoffAge,
   validate,
   yen,
   type FormValues,
@@ -50,6 +56,9 @@ type Outcome = {
   error?: string;
 };
 
+// プランB（比較用）の入力。借入額・ボーナス・二人で借りる設定はプランAと共通。
+type PlanBForm = { rate: string; years: string; method: RepaymentMethod };
+
 const initial: FormValues = {
   principalMan: "3000",
   rate: "1.2",
@@ -70,8 +79,11 @@ function errorMessage(e: unknown): string {
 
 export default function Simulator({
   initialValues,
+  initialPair: initialPairFromUrl,
 }: {
   initialValues?: Partial<FormValues>;
+  /** URLクエリ（pair / share）から決めた二人で借りる設定の初期値。 */
+  initialPair?: PairOptions;
 }) {
   const [form, setForm] = useState<FormValues>({
     ...initial,
@@ -89,7 +101,16 @@ export default function Simulator({
   const [view, setView] = useState<"year" | "month">("year");
   const [retry, setRetry] = useState(0);
   // 二人で借りる設定は共通条件には含めず、このコンポーネント内だけで持つ（URLには出さない）。
-  const [pair, setPair] = useState<PairOptions>(initialPair);
+  const [pair, setPair] = useState<PairOptions>(
+    initialPairFromUrl ?? initialPair,
+  );
+  // プランB（比較）。開いているときだけ planB が入り、計算結果は outcomeB に持つ。
+  const [planB, setPlanB] = useState<PlanBForm | null>(null);
+  const [outcomeB, setOutcomeB] = useState<Outcome | null>(null);
+  // 現在の年齢（任意・共通条件には含めない）。空欄は表示しない。
+  const [ageInput, setAgeInput] = useState("");
+  const age = parseAge(ageInput);
+  const ageErr = ageError(ageInput);
 
   const { request, errors } = useMemo(() => validate(form, pair), [form, pair]);
   const key = request ? JSON.stringify(request) + retry : null;
@@ -121,6 +142,51 @@ export default function Simulator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
+  const planBValidation = useMemo(
+    () =>
+      planB
+        ? validate(
+            {
+              ...form,
+              rate: planB.rate,
+              years: planB.years,
+              method: planB.method,
+            },
+            initialPair,
+          )
+        : null,
+    [form, planB],
+  );
+  const requestB = planBValidation?.request ?? null;
+  const keyB = requestB ? JSON.stringify(requestB) + retry : null;
+
+  useEffect(() => {
+    if (!requestB || !keyB) return;
+    const ctrl = new AbortController();
+    const body: RepaymentRequest = requestB;
+    const timer = setTimeout(() => {
+      calculateRepayment(body, ctrl.signal)
+        .then((data) =>
+          setOutcomeB({
+            key: keyB,
+            data,
+            request: body,
+            date: formatDateJa(new Date()),
+          }),
+        )
+        .catch((e: unknown) => {
+          if (ctrl.signal.aborted) return;
+          setOutcomeB({ key: keyB, error: errorMessage(e) });
+        });
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+    // request is fully captured by keyB
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keyB]);
+
   const set = <K extends keyof FormValues>(k: K, v: FormValues[K]) => {
     markEdited(k);
     setForm((f) => ({ ...f, [k]: v }));
@@ -148,6 +214,44 @@ export default function Simulator({
   const pairNotesProvisional = !!pairData?.notes.includes(
     "PAIR_SHARE_PROVISIONAL",
   );
+  const loadingB = !!requestB && !(outcomeB && outcomeB.key === keyB);
+  const shownOutcomeB = requestB && outcomeB?.data ? outcomeB : null;
+  const dataB = shownOutcomeB?.data;
+  const shownB = shownOutcomeB?.request;
+  const compareStale = loading || loadingB;
+  const summaryA =
+    data && shown
+      ? {
+          monthlyPayment: data.monthlyPayment,
+          totalPayment: data.totalPayment,
+          totalInterest: data.totalInterest,
+          years: shown.years,
+        }
+      : null;
+  const summaryB =
+    planB && dataB && shownB
+      ? {
+          monthlyPayment: dataB.monthlyPayment,
+          totalPayment: dataB.totalPayment,
+          totalInterest: dataB.totalInterest,
+          years: shownB.years,
+        }
+      : null;
+  const compareList =
+    summaryA && summaryB ? compareRows(summaryA, summaryB) : null;
+  const payoffA = age !== null && shown ? payoffAge(age, shown.years) : null;
+  const payoffB = age !== null && shownB ? payoffAge(age, shownB.years) : null;
+  const baseConditionRows = shown ? loanConditionRows(shown, shownDate, false) : [];
+  // 印刷の借入条件：年齢は試算日の直前に入れる（CSVには出さない）。
+  const printRows: Array<[string, string | number]> =
+    age !== null && shown
+      ? [
+          ...baseConditionRows.slice(0, -1),
+          ["現在の年齢", `${age}歳`],
+          ["完済時の年齢の目安", `${payoffAge(age, shown.years)}歳`],
+          ...baseConditionRows.slice(-1),
+        ]
+      : baseConditionRows;
 
   function exportCsv(unit: ScheduleUnit) {
     if (!data || !shown) return;
@@ -317,6 +421,97 @@ export default function Simulator({
             </div>
           )}
         </div>
+        <NumberField
+          id="age"
+          label="現在の年齢"
+          unit="歳"
+          value={ageInput}
+          onChange={setAgeInput}
+          onBlur={() => {}}
+          step="1"
+          min={AGE_MIN}
+          inputMode="numeric"
+          hint={`任意です。入力すると、完済時の年齢の目安を表示します。（${AGE_MIN}〜80歳の整数）`}
+          error={ageErr}
+        />
+        <div className="field">
+          <button
+            type="button"
+            className="btn-sub"
+            aria-expanded={!!planB}
+            onClick={() =>
+              setPlanB(
+                planB
+                  ? null
+                  : {
+                      rate: form.rate,
+                      years: form.years,
+                      method: form.method,
+                    },
+              )
+            }
+          >
+            {planB ? "比較をやめる" : "別の条件と比べる"}
+          </button>
+        </div>
+        {planB && (
+          <fieldset className="plan-compare-form">
+            <legend>プランB</legend>
+            <p className="hint">
+              借入金額とボーナス併用の設定は、プランAと同じです。二人の負担内訳はプランAだけに表示します。
+            </p>
+            <div className="plan-compare-fields">
+              <NumberField
+                id="planBRate"
+                label="金利（年率）"
+                unit="%"
+                value={planB.rate}
+                onChange={(v) => setPlanB((p) => (p ? { ...p, rate: v } : p))}
+                onBlur={() => {}}
+                step={STEP_RATE}
+                hint="0〜20%で入力できます。"
+                error={planBValidation?.errors.rate}
+              />
+              <NumberField
+                id="planBYears"
+                label="返済期間"
+                unit="年"
+                value={planB.years}
+                onChange={(v) => setPlanB((p) => (p ? { ...p, years: v } : p))}
+                onBlur={() => {}}
+                step="1"
+                inputMode="numeric"
+                hint="1〜50年の整数で入力できます。"
+                error={planBValidation?.errors.years}
+              />
+              <fieldset className="field">
+                <legend>返済方式</legend>
+                <label className="radio">
+                  <input
+                    type="radio"
+                    name="planBMethod"
+                    checked={planB.method === "EQUAL_PAYMENT"}
+                    onChange={() =>
+                      setPlanB((p) => (p ? { ...p, method: "EQUAL_PAYMENT" } : p))
+                    }
+                  />
+                  元利均等返済
+                </label>
+                <label className="radio">
+                  <input
+                    type="radio"
+                    name="planBMethod"
+                    checked={planB.method === "EQUAL_PRINCIPAL"}
+                    onChange={() =>
+                      setPlanB((p) => (p ? { ...p, method: "EQUAL_PRINCIPAL" } : p))
+                    }
+                  />
+                  元金均等返済
+                </label>
+              </fieldset>
+            </div>
+          </fieldset>
+        )}
         <SavedConditionsNotice
           restored={restored}
           hasSaved={hasSaved}
@@ -351,7 +546,7 @@ export default function Simulator({
             <div className="print-only">
               <h3>借入条件</h3>
               <dl className="print-conditions">
-                {loanConditionRows(shown, shownDate, false).map(([k, v]) => (
+                {printRows.map(([k, v]) => (
                   <div key={k}>
                     <dt>{k}</dt>
                     <dd>{v}</dd>
@@ -384,6 +579,58 @@ export default function Simulator({
               <p className="hint">
                 元金均等返済では、毎月の返済額は少しずつ減ります。
               </p>
+            )}
+            {payoffA !== null && (
+              <>
+                <p>完済時の年齢の目安: {payoffA}歳</p>
+                <p className="hint">
+                  金融機関によって、完済時の年齢に上限が設けられていることがあります。
+                </p>
+              </>
+            )}
+
+            {compareList && shownB && (
+              <div
+                className={`plan-compare-wrap${compareStale ? " stale" : ""}`}
+              >
+                <h3>プランAとプランBの比較</h3>
+                <div
+                  className="table-wrap"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="プランAとプランBの比較（横にスクロールできます）"
+                >
+                  <table className="plan-compare">
+                    <caption className="sr-only">
+                      プランAとプランBの比較
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">項目</th>
+                        <th scope="col">プランA</th>
+                        <th scope="col">プランB</th>
+                        <th scope="col">差（B−A）</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {compareList.map((r) => (
+                        <tr key={r.label}>
+                          <th scope="row">{r.label}</th>
+                          <td>{r.a}</td>
+                          <td>{r.b}</td>
+                          <td>{r.diff}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="hint plan-compare-note">
+                  返済方式や返済期間が違うと、総返済額や利息総額は単純に比べられないことがあります。試算結果は目安です。
+                </p>
+                {payoffB !== null && (
+                  <p>プランBの完済時の年齢の目安: {payoffB}歳</p>
+                )}
+              </div>
             )}
 
             <h3>残高推移</h3>

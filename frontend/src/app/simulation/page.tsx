@@ -2,7 +2,7 @@ import Simulator from "@/components/simulation/Simulator";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { initialFromQuery } from "@/lib/simulation";
+import { initialFromQuery, pairInitialFromQuery } from "@/lib/simulation";
 
 const TITLE = "返済シミュレーター";
 const DESCRIPTION =
@@ -24,7 +24,10 @@ export default async function Page({
       <Breadcrumb crumbs={[HOME_CRUMB, { name: TITLE, path: "/simulation" }]} />
       <h1>返済シミュレーター</h1>
       <p className="lead">借入金額・金利・返済期間を入力すると、毎月の返済額と総返済額の目安を表示します。</p>
-      <Simulator initialValues={initialFromQuery(sp)} />
+      <Simulator
+        initialValues={initialFromQuery(sp)}
+        initialPair={pairInitialFromQuery(sp)}
+      />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

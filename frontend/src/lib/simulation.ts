@@ -188,3 +188,82 @@ export function initialFromQuery(q: {
   if (years !== null && years >= 1 && years <= 50) out.years = String(years);
   return out;
 }
+
+/** 二人で借りる設定の初期値（URLクエリ）。pair=1 または share=1〜99 で有効。share は あなたの負担割合。 */
+export function pairInitialFromQuery(q: { pair?: Q; share?: Q }): PairOptions {
+  const share =
+    typeof q.share === "string" && /^\d{1,2}$/.test(q.share)
+      ? Number(q.share)
+      : null;
+  if (share !== null && share >= 1 && share <= 99)
+    return { enabled: true, selfPercent: String(share) };
+  if (q.pair === "1") return { enabled: true, selfPercent: "50" };
+  return initialPair;
+}
+
+export const AGE_MIN = 18;
+export const AGE_MAX = 80;
+
+/** 現在の年齢の入力。空欄は未入力（null）、範囲外・小数は無効（null）。 */
+export function parseAge(s: string): number | null {
+  if (s.trim() === "") return null;
+  const n = Number(s);
+  return Number.isInteger(n) && n >= AGE_MIN && n <= AGE_MAX ? n : null;
+}
+
+/** 年齢入力のエラー文。空欄・有効値はエラーなし。 */
+export function ageError(s: string): string | undefined {
+  if (s.trim() === "" || parseAge(s) !== null) return undefined;
+  return `現在の年齢は${AGE_MIN}〜${AGE_MAX}の整数で入力してください。`;
+}
+
+/** 完済時の年齢の目安（現在の年齢 + 返済期間）。 */
+export function payoffAge(age: number, years: number): number {
+  return age + years;
+}
+
+/** 差分の表記（B−A）。0は符号なし、正は「+」、負は「−」。 */
+export function signedDiff(n: number, unit: string): string {
+  if (n === 0) return `0${unit}`;
+  const sign = n > 0 ? "+" : "−";
+  return `${sign}${Math.abs(n).toLocaleString("ja-JP")}${unit}`;
+}
+
+export type PlanSummary = {
+  monthlyPayment: number;
+  totalPayment: number;
+  totalInterest: number;
+  years: number;
+};
+
+export type CompareRow = { label: string; a: string; b: string; diff: string };
+
+/** プランA・Bの比較行（毎月の返済額（初回）・総返済額・利息総額・返済期間）。差は B−A。 */
+export function compareRows(a: PlanSummary, b: PlanSummary): CompareRow[] {
+  return [
+    {
+      label: "毎月の返済額（初回）",
+      a: yen(a.monthlyPayment),
+      b: yen(b.monthlyPayment),
+      diff: signedDiff(b.monthlyPayment - a.monthlyPayment, "円"),
+    },
+    {
+      label: "総返済額",
+      a: yen(a.totalPayment),
+      b: yen(b.totalPayment),
+      diff: signedDiff(b.totalPayment - a.totalPayment, "円"),
+    },
+    {
+      label: "利息総額",
+      a: yen(a.totalInterest),
+      b: yen(b.totalInterest),
+      diff: signedDiff(b.totalInterest - a.totalInterest, "円"),
+    },
+    {
+      label: "返済期間",
+      a: `${a.years}年`,
+      b: `${b.years}年`,
+      diff: signedDiff(b.years - a.years, "年"),
+    },
+  ];
+}
