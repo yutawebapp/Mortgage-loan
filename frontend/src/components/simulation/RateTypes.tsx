@@ -27,6 +27,8 @@ import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
 import RateTypesChart, { CaseSwatch, STYLES } from "./RateTypesChart";
+import { rateTypesInitialFromQuery } from "@/lib/rateTypes";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: RateTypesResponse; error?: string };
 type NumKey = Exclude<keyof RateTypesForm, "method">;
@@ -46,7 +48,6 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
   // 共通条件は借入金額と返済期間のみ（金利は4つあるため共通化しない）。年は2年以上のみ適用する。
   const sharedNow: SharedConditions = sanitizeShared({ principalMan: form.principalMan, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared(initialValues ?? {}),
     current: sharedNow,
     apply: (patch) =>
       setForm((f) => ({
@@ -56,6 +57,8 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
       })),
     accept: (c) => acceptFor("/rate-types", c),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(rateTypesInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);

@@ -15,7 +15,9 @@ import {
   aggregateByYear,
   compareRows,
   formatDateJa,
+  initialFromQuery,
   initialPair,
+  pairInitialFromQuery,
   loanConditionRows,
   parseAge,
   payoffAge,
@@ -36,6 +38,7 @@ import {
   type SharedConditions,
 } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 import ShareLinkButton from "./ShareLinkButton";
 import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
@@ -92,17 +95,21 @@ export default function Simulator({
   // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値
   const sharedNow: SharedConditions = sanitizeShared(form);
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared(initialValues ?? {}),
     current: sharedNow,
     apply: (patch) => setForm((f) => ({ ...f, ...patch })),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(initialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [view, setView] = useState<"year" | "month">("year");
   const [retry, setRetry] = useState(0);
   // 二人で借りる設定は共通条件には含めない。URLクエリ（pair / share）からは初期値として読むが、共有リンクには書き出さない。
-  const [pair, setPair] = useState<PairOptions>(
-    initialPairFromUrl ?? initialPair,
+  const [pair, setPair] = useState<PairOptions>(initialPairFromUrl ?? initialPair);
+  // pair / share がURLにあるときだけ、マウント後に二人で借りる設定を読む
+  useUrlInitialValues(
+    (q) => (q.pair !== undefined || q.share !== undefined ? pairInitialFromQuery(q) : null),
+    setPair,
   );
   // プランB（比較）。開いているときだけ planB が入り、計算結果は outcomeB に持つ。
   const [planB, setPlanB] = useState<PlanBForm | null>(null);

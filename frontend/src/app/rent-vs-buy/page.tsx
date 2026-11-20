@@ -3,7 +3,6 @@ import RentVsBuy from "@/components/simulation/RentVsBuy";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { totalCostInitialFromQuery } from "@/lib/totalCost";
 
 const TITLE = "賃貸と購入の比較シミュレーター";
 const DESCRIPTION =
@@ -11,12 +10,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/rent-vs-buy" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd data={webApplicationJsonLd({ name: TITLE, description: DESCRIPTION, path: "/rent-vs-buy" })} />
@@ -25,7 +19,7 @@ export default async function Page({
       <p className="lead">
         購入した場合と賃貸の場合について、支出の合計が年ごとにどう積み重なるかを並べて確認できます。どちらが良いかを決めるものではなく、入力した前提での推移を示すものです。
       </p>
-      <RentVsBuy initialValues={totalCostInitialFromQuery(sp)} />
+      <RentVsBuy />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

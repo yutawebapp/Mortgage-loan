@@ -2,7 +2,6 @@ import RateTypes from "@/components/simulation/RateTypes";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { rateTypesInitialFromQuery } from "@/lib/rateTypes";
 
 const TITLE = "金利タイプの比較";
 const DESCRIPTION =
@@ -10,12 +9,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/rate-types" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd data={webApplicationJsonLd({ name: TITLE, description: DESCRIPTION, path: "/rate-types" })} />
@@ -24,7 +18,7 @@ export default async function Page({
       <p className="lead">
         変動金利・固定期間選択型・全期間固定を、同じ借入条件で並べて、毎月の返済額や総返済額がどう変わるかを確認できます。金利は仮の値を自分で入力します。
       </p>
-      <RateTypes initialValues={rateTypesInitialFromQuery(sp)} />
+      <RateTypes />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

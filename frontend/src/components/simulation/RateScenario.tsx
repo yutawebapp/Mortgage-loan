@@ -23,6 +23,8 @@ import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { rateScenarioInitialFromQuery } from "@/lib/rate-scenario";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: RateScenarioResponse; error?: string };
 
@@ -52,7 +54,6 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
   // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値。年は2年以上のみ適用する。
   const sharedNow: SharedConditions = sanitizeShared(form);
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared(initialValues ?? {}),
     current: sharedNow,
     apply: (patch) =>
       setForm((f) => ({
@@ -63,6 +64,8 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
       })),
     accept: (c) => acceptFor("/rate-scenario", c),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(rateScenarioInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);

@@ -2,7 +2,6 @@ import TaxDeduction from "@/components/simulation/TaxDeduction";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { taxDeductionInitialFromQuery } from "@/lib/taxDeduction";
 
 const TITLE = "住宅ローン控除シミュレーター";
 const DESCRIPTION =
@@ -10,12 +9,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/tax-deduction" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd data={webApplicationJsonLd({ name: TITLE, description: DESCRIPTION, path: "/tax-deduction" })} />
@@ -24,7 +18,7 @@ export default async function Page({
       <p className="lead">
         入居年・住宅の性能・借入条件・年収から、控除額と実質負担の目安を調べます。年収から税額を簡易的に推計するため、結果は目安としてご覧ください。
       </p>
-      <TaxDeduction initialValues={taxDeductionInitialFromQuery(sp)} />
+      <TaxDeduction />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

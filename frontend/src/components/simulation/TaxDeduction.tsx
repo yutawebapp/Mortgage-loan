@@ -39,6 +39,8 @@ import { PERSON_LABEL } from "@/lib/borrowerMode";
 import { NumberField } from "./NumberField";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
 import SavedConditionsNotice from "./SavedConditionsNotice";
+import { taxDeductionInitialFromQuery } from "@/lib/taxDeduction";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 /** request は、その結果を出したリクエストのスナップショット（入力中の値は混ぜない）。 */
 type Outcome = { key: string; data?: TaxDeductionResponse; request?: TaxDeductionRequest; error?: string };
@@ -124,7 +126,6 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
   // 共通条件: 借入金額（principalMan）・金利・返済期間
   const sharedNow = sanitizeShared({ principalMan: form.principalMan, rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared(initialValues ?? {}),
     current: sharedNow,
     apply: (patch) =>
       setForm((f) => ({
@@ -135,6 +136,8 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
       })),
     accept: (c) => acceptFor("/tax-deduction", c),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(taxDeductionInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);

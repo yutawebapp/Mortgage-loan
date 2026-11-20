@@ -2,7 +2,6 @@ import Eligibility from "@/components/simulation/Eligibility";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { eligibilityInitialFromQuery } from "@/lib/eligibility";
 
 const TITLE = "借入可能額/審査目安";
 const DESCRIPTION =
@@ -10,12 +9,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/eligibility" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd
@@ -26,7 +20,7 @@ export default async function Page({
       <p className="lead">
         年収や他の借入の返済額から、住宅ローンの借入可能額の目安を表示します。金融機関が返済能力を確認する際の考え方を参考にした簡易的な試算です。
       </p>
-      <Eligibility initialValues={eligibilityInitialFromQuery(sp)} />
+      <Eligibility />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

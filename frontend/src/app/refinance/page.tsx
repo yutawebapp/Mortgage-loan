@@ -2,7 +2,6 @@ import Refinancer from "@/components/simulation/Refinancer";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { refinanceInitialFromQuery } from "@/lib/refinance";
 
 const TITLE = "借り換え診断";
 const DESCRIPTION =
@@ -10,12 +9,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/refinance" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd
@@ -26,7 +20,7 @@ export default async function Page({
       <p className="lead">
         現在のローンと借り換え後の条件を入力すると、毎月の返済額・総支払額の違いと、諸費用を取り戻せる時期の目安を表示します。
       </p>
-      <Refinancer initialValues={refinanceInitialFromQuery(sp)} />
+      <Refinancer />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

@@ -5,8 +5,9 @@
  * - 共通キーは3つ: principalMan（借入金額・万円）/ rate（金利・%）/ years（返済期間・年）。
  *   値はフォームと同じ文字列で持つ。範囲外・不正な値は黙って捨てる（例外は投げない）。
  * - URLクエリのキーは既存の `?principal&rate&years`（principal = principalMan）。
- * - 受け取り側: 各ツールの `xxxInitialFromQuery`（lib/*.ts）が読む。保存値は
- *   useSharedConditions が マウント後に適用する。優先順位は URLクエリ > 保存値 > ツールの既定値。
+ * - 受け取り側: 各ツールの `xxxInitialFromQuery`（lib/*.ts）が読む。URLの値は
+ *   useUrlInitialValues（マウント後）、保存値は useSharedConditions がマウント後に適用する。
+ *   優先順位は URLクエリ > 保存値 > ツールの既定値。
  * - 渡す側: `hrefWith(path, c, extra)` でリンク、`buildShareUrl` で共有URL（ShareLinkButton）を作る。
  *   渡すのは SHARED_QUERY_KEYS_BY_PATH に登録された遷移先が読むキーだけ。
  *   意味が違うキー（例: /total-cost の principal は物件価格）は extra で明示的に渡す。

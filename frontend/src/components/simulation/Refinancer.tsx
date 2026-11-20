@@ -12,6 +12,8 @@ import { yen } from "@/lib/simulation";
 import RefinanceChart from "./RefinanceChart";
 import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { refinanceInitialFromQuery } from "@/lib/refinance";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: RefinanceResponse; error?: string };
 
@@ -42,6 +44,8 @@ function diffCell(n: number): string {
 
 export default function Refinancer({ initialValues }: { initialValues?: Partial<RefinanceForm> }) {
   const [form, setForm] = useState<RefinanceForm>({ ...initial, ...initialValues });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 既定値）
+  useUrlInitialValues(refinanceInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [newYearsEdited, setNewYearsEdited] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);

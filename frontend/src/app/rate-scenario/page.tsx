@@ -2,7 +2,6 @@ import RateScenario from "@/components/simulation/RateScenario";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { rateScenarioInitialFromQuery } from "@/lib/rate-scenario";
 
 const TITLE = "金利上昇シミュレーション";
 const DESCRIPTION =
@@ -10,12 +9,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/rate-scenario" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd data={webApplicationJsonLd({ name: TITLE, description: DESCRIPTION, path: "/rate-scenario" })} />
@@ -24,7 +18,7 @@ export default async function Page({
       <p className="lead">
         変動金利型のローンで、一定の時期に金利が上昇した場合に、毎月の返済額や総返済額がどのように変わるかを、上昇幅ごとに比べて確認できます。
       </p>
-      <RateScenario initialValues={rateScenarioInitialFromQuery(sp)} />
+      <RateScenario />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

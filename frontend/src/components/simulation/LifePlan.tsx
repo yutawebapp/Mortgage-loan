@@ -36,6 +36,8 @@ import { useSharedConditions } from "@/lib/useSharedConditions";
 import { NumberField } from "./NumberField";
 import { OutflowChart, SavingsChart } from "./LifePlanChart";
 import SavedConditionsNotice from "./SavedConditionsNotice";
+import { lifePlanInitialFromQuery } from "@/lib/lifePlan";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: LifePlanResponse; error?: string };
 
@@ -76,11 +78,6 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
   // 共通条件: 借入額（principalMan ↔ フォームの loanMan）・金利・返済期間
   const sharedNow = sanitizeShared({ principalMan: form.loanMan, rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared({
-      principalMan: initialValues?.loanMan,
-      rate: initialValues?.rate,
-      years: initialValues?.years,
-    }),
     current: sharedNow,
     apply: (patch) =>
       setForm((f) => ({
@@ -91,6 +88,8 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
       })),
     accept: (c) => acceptFor("/life-plan", c),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(lifePlanInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);

@@ -2,7 +2,6 @@ import Budget from "@/components/simulation/Budget";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { budgetInitialFromQuery } from "@/lib/budget";
 
 const TITLE = "購入予算の逆算";
 const DESCRIPTION =
@@ -10,12 +9,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/budget" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd data={webApplicationJsonLd({ name: TITLE, description: DESCRIPTION, path: "/budget" })} />
@@ -24,7 +18,7 @@ export default async function Page({
       <p className="lead">
         毎月の返済額と頭金から、買える物件価格の目安を調べます。借入額に頭金を足した予算の合計から、諸費用を除いた金額を物件価格として表示します。
       </p>
-      <Budget initialValues={budgetInitialFromQuery(sp)} />
+      <Budget />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

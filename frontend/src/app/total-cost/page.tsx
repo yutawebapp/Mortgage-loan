@@ -2,7 +2,6 @@ import TotalCost from "@/components/simulation/TotalCost";
 import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
-import { totalCostInitialFromQuery } from "@/lib/totalCost";
 
 const TITLE = "住居費の総額シミュレーター";
 const DESCRIPTION =
@@ -10,12 +9,7 @@ const DESCRIPTION =
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/total-cost" });
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
+export default function Page() {
   return (
     <main className="wide">
       <JsonLd data={webApplicationJsonLd({ name: TITLE, description: DESCRIPTION, path: "/total-cost" })} />
@@ -24,7 +18,7 @@ export default async function Page({
       <p className="lead">
         ローンの返済額だけでなく、頭金・諸費用・管理費・修繕積立金・税金・保険料まで含めて、住まいにかかる費用の総額と月平均の目安を調べます。
       </p>
-      <TotalCost initialValues={totalCostInitialFromQuery(sp)} />
+      <TotalCost />
       <section className="about" aria-labelledby="about-h">
         <h2 id="about-h">この試算について</h2>
         <p>

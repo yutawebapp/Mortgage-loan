@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { queryRecordFromSearch } from "./urlQuery";
 import {
   SHARED_KEYS,
   STORAGE_KEY,
@@ -42,8 +43,9 @@ function removeStored() {
 /**
  * ツール間で共通の借入条件を localStorage に保存・復元する。
  *
- * - 復元はマウント後の effect でのみ行う（描画中に localStorage を読まない＝hydration 安全）。
- *   URLクエリで指定された項目は上書きしない（URLが優先）。
+ * - 復元・URL読み取りはマウント後の effect でのみ行う（描画中に localStorage / window を読まない＝hydration 安全）。
+ *   URLクエリ（window.location.search の共通キー）で指定された項目は上書きしない（URLが優先）。
+ *   URLの値そのものの適用は呼び出し側（各ツールの useUrlInitialValues）が行う。
  * - 保存するのは、ユーザーが markEdited(key) で編集した項目だけ。URLクエリや既定値から来ただけの項目は保存しない。
  *   そのため、共有リンクや次に調べるリンクを開いても保存値は書き換わらない。
  * - 保存は有効な値だけを、変更後 500ms のデバウンスで書く。無効な項目は既存の保存値を残す。
@@ -51,18 +53,15 @@ function removeStored() {
  *   clearSaved で保存を消すと、ユーザーが再び編集するまで保存しない。
  * - 呼び出し側は、フォームの値を変えるたびに markEdited(key) を呼ぶこと。
  *
- * @param fromUrl  URLクエリ由来の共通条件（sanitizeShared でよい）
  * @param current  現在のフォームの共通条件（有効な値だけ、sanitizeShared 済みでなくても可）
  * @param apply    保存値をフォームへ反映する（例: setForm(f => ({ ...f, ...patch }))）
  * @param accept   遷移先が受け取れる値に絞る（例: acceptFor("/rate-scenario", c)）。省略時は全部受け取る。
  */
 export function useSharedConditions({
-  fromUrl,
   current,
   apply,
   accept,
 }: {
-  fromUrl: SharedConditions;
   current: SharedConditions;
   apply: (patch: SharedConditions) => void;
   accept?: (c: SharedConditions) => SharedConditions;
@@ -70,7 +69,6 @@ export function useSharedConditions({
   const [restored, setRestored] = useState<SharedKey[]>([]);
   const [hasSaved, setHasSaved] = useState(false);
 
-  const fromUrlRef = useRef(fromUrl);
   const currentRef = useRef(current);
   const applyRef = useRef(apply);
   const acceptRef = useRef(accept);
@@ -80,7 +78,6 @@ export function useSharedConditions({
 
   // 参照の更新は effect で行う（描画中に ref を書かない）。定義順に実行される。
   useEffect(() => {
-    fromUrlRef.current = fromUrl;
     currentRef.current = current;
     applyRef.current = apply;
     acceptRef.current = accept;
@@ -89,7 +86,8 @@ export function useSharedConditions({
   // マウント後に一度だけ保存値を適用する。
   useEffect(() => {
     const stored = readStored();
-    const url = sanitizeShared(fromUrlRef.current);
+    // URLの共通キーは、マウント時点の window.location から読む（描画中には読まない）
+    const url = sanitizeShared(queryRecordFromSearch(window.location.search));
     const patch: SharedConditions = {};
     for (const k of SHARED_KEYS) {
       if (stored[k] === undefined) continue;

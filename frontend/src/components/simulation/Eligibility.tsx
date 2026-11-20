@@ -24,6 +24,8 @@ import { STEP_MAN_LARGE, STEP_PERCENT_WHOLE, STEP_RATE } from "@/lib/inputSteps"
 import { NumberField } from "./NumberField";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
 import SavedConditionsNotice from "./SavedConditionsNotice";
+import { eligibilityInitialFromQuery } from "@/lib/eligibility";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: EligibilityResponse; error?: string };
 
@@ -55,11 +57,12 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
   // 共通条件（金利・返済期間のみ。借入額は借入可能額の出力なので共有しない）
   const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared(initialValues ?? {}),
     current: sharedNow,
     apply: (patch) => setForm((f) => ({ ...f, rate: patch.rate ?? f.rate, years: patch.years ?? f.years })),
     accept: (c) => acceptFor("/eligibility", c),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(eligibilityInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);

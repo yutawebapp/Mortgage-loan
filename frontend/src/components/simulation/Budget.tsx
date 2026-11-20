@@ -12,6 +12,8 @@ import { STEP_MAN_LARGE, STEP_MAN_MONTHLY, STEP_PERCENT, STEP_RATE } from "@/lib
 import { NumberField } from "./NumberField";
 import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
+import { budgetInitialFromQuery } from "@/lib/budget";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: BudgetResponse; error?: string; req: BudgetRequest };
 
@@ -37,11 +39,12 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
   // 共通条件（金利・返済期間のみ。借入額は出力なので共有しない）
   const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared(initialValues ?? {}),
     current: sharedNow,
     apply: (patch) => setForm((f) => ({ ...f, rate: patch.rate ?? f.rate, years: patch.years ?? f.years })),
     accept: (c) => acceptFor("/budget", c),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(budgetInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);

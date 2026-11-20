@@ -17,6 +17,8 @@ import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { prepaymentInitialFromQuery } from "@/lib/prepayment";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: PrepaymentResponse; error?: string };
 
@@ -51,11 +53,12 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
   // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値
   const sharedNow: SharedConditions = sanitizeShared(form);
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
-    fromUrl: sanitizeShared(initialValues ?? {}),
     current: sharedNow,
     apply: (patch) => setForm((f) => ({ ...f, ...patch })),
     accept: (c) => acceptFor("/prepayment", c),
   });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(prepaymentInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
