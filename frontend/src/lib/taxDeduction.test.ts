@@ -11,6 +11,7 @@ import {
   taxDeductionInitialFromQuery,
   validateTaxDeduction,
   hasTwoDebtors,
+  pairSimulationHref,
   splitPrincipal,
   twoPersonNoteTexts,
 } from "./taxDeduction";
@@ -181,6 +182,51 @@ describe("formatting helpers", () => {
   });
   it("simulationHref reuses the shared helper (principal in 万円)", () => {
     expect(simulationHref(30_000_000, 1.2, 35)).toBe("/simulation?principal=3000&rate=1.2&years=35");
+  });
+});
+
+describe("pairSimulationHref", () => {
+  const snap = {
+    principal: 30_000_000,
+    annualRatePercent: 1.2,
+    years: 35,
+    mode: "PAIR_LOAN" as const,
+    shareAPercent: 60,
+  };
+
+  it("carries principal (万円), rate, years, pair=1 and share for PAIR_LOAN / JOINT_DEBT", () => {
+    expect(pairSimulationHref(snap)).toBe("/simulation?principal=3000&rate=1.2&years=35&pair=1&share=60");
+    expect(pairSimulationHref({ ...snap, mode: "JOINT_DEBT", shareAPercent: 50 })).toBe(
+      "/simulation?principal=3000&rate=1.2&years=35&pair=1&share=50",
+    );
+  });
+
+  it("accepts the share bounds 1 and 99", () => {
+    expect(pairSimulationHref({ ...snap, shareAPercent: 1 })).toContain("&share=1");
+    expect(pairSimulationHref({ ...snap, shareAPercent: 99 })).toContain("&share=99");
+  });
+
+  it("omits share when it is out of 1..99, non-integer, or missing (pair=1 stays)", () => {
+    for (const s of [0, 100, 50.5, undefined]) {
+      expect(pairSimulationHref({ ...snap, shareAPercent: s })).toBe(
+        "/simulation?principal=3000&rate=1.2&years=35&pair=1",
+      );
+    }
+  });
+
+  it("returns null for SINGLE, JOINT_GUARANTEE, and a missing mode", () => {
+    expect(pairSimulationHref({ ...snap, mode: "SINGLE" })).toBeNull();
+    expect(pairSimulationHref({ ...snap, mode: "JOINT_GUARANTEE" })).toBeNull();
+    expect(pairSimulationHref({ principal: 30_000_000, annualRatePercent: 1.2, years: 35, shareAPercent: 60 })).toBeNull();
+  });
+
+  it("floors principal to 万円 and drops it when outside 1万円..10億円", () => {
+    expect(pairSimulationHref({ ...snap, principal: 12_345_678 })).toBe(
+      "/simulation?principal=1234&rate=1.2&years=35&pair=1&share=60",
+    );
+    expect(pairSimulationHref({ ...snap, principal: 9_999 })).toBe(
+      "/simulation?rate=1.2&years=35&pair=1&share=60",
+    );
   });
 });
 

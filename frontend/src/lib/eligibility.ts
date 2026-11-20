@@ -1,5 +1,5 @@
 import type { EligibilityRequest } from "./api/eligibility";
-import { isTwoPerson, type BorrowerMode } from "./borrowerMode";
+import { hasSplitRatio, isTwoPerson, type BorrowerMode } from "./borrowerMode";
 
 export type EligibilityForm = {
   incomeMan: string;
@@ -113,13 +113,22 @@ export function manLabel(yenAmount: number): string {
   return `${Math.floor(yenAmount / 10000).toLocaleString("ja-JP")}万円`;
 }
 
-/** Link to the simulator. principal is omitted when outside the simulator's accepted range. */
-export function simulationHref(maxPrincipalYen: number, rate: number, years: number): string {
+/**
+ * Link to the simulator. principal is omitted when outside the simulator's accepted range.
+ * opts.mode が PAIR_LOAN / JOINT_DEBT のときだけ pair=1 を付ける（負担割合は付けない）。
+ */
+export function simulationHref(
+  maxPrincipalYen: number,
+  rate: number,
+  years: number,
+  opts?: { mode?: BorrowerMode },
+): string {
   const p = new URLSearchParams();
   const man = Math.floor(maxPrincipalYen / 10000);
   if (man >= 1 && man <= 100000) p.set("principal", String(man));
   p.set("rate", String(rate));
   p.set("years", String(years));
+  if (opts?.mode && hasSplitRatio(opts.mode)) p.set("pair", "1");
   return `/simulation?${p.toString()}`;
 }
 

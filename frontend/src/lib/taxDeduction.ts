@@ -1,6 +1,7 @@
 import type { EnergyClass, HousingType, TaxDeductionRequest } from "./api/taxDeduction";
 import type { RepaymentMethod } from "./api/simulation";
 import type { BorrowerMode } from "./borrowerMode";
+import { hrefWith } from "./sharedConditions";
 
 export type TaxDeductionForm = {
   housingType: HousingType;
@@ -196,6 +197,27 @@ export function isHttpUrl(s: string): boolean {
 }
 
 export { simulationHref } from "./eligibility";
+
+/**
+ * 二人で借りる結果から /simulation へのリンク（負担割合つき）。
+ * 結果を出したリクエストのスナップショットから作る（入力中のフォーム値は使わない）。
+ * PAIR_LOAN / JOINT_DEBT 以外は null。share は 1〜99 の整数のときだけ付ける。
+ */
+export function pairSimulationHref(
+  req: Pick<TaxDeductionRequest, "principal" | "annualRatePercent" | "years" | "shareAPercent"> & {
+    mode?: BorrowerMode;
+  },
+): string | null {
+  if (!hasTwoDebtors(req.mode ?? "SINGLE")) return null;
+  const extra: Record<string, string> = { pair: "1" };
+  const s = req.shareAPercent;
+  if (s !== undefined && Number.isInteger(s) && s >= 1 && s <= 99) extra.share = String(s);
+  return hrefWith(
+    "/simulation",
+    { principalMan: String(Math.floor(req.principal / 10000)), rate: String(req.annualRatePercent), years: String(req.years) },
+    extra,
+  );
+}
 
 /** 連帯保証のときに、結果の上に必ず出す説明。 */
 export const GUARANTOR_NOTE =

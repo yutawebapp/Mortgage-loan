@@ -307,7 +307,9 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
               <p className="cta">
                 <Link
                   className="btn-link"
-                  href={simulationHref(data.atScreeningRate.maxPrincipal, request.annualRatePercent, request.years)}
+                  href={simulationHref(data.atScreeningRate.maxPrincipal, request.annualRatePercent, request.years, {
+                    mode: shownMode,
+                  })}
                 >
                   この金額で返済額を試算する
                 </Link>

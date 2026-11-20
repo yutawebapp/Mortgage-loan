@@ -23,6 +23,7 @@ import {
   legacyExceptionLabel,
   manOrYen,
   hasTwoDebtors,
+  pairSimulationHref,
   simulationHref,
   splitPrincipal,
   twoPersonNoteTexts,
@@ -38,8 +39,10 @@ import { PERSON_LABEL } from "@/lib/borrowerMode";
 import { NumberField } from "./NumberField";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
 import SavedConditionsNotice from "./SavedConditionsNotice";
+import NextSteps, { type NextStep } from "./NextSteps";
 
-type Outcome = { key: string; data?: TaxDeductionResponse; error?: string };
+/** request は、その結果を出したリクエストのスナップショット（入力中の値は混ぜない）。 */
+type Outcome = { key: string; data?: TaxDeductionResponse; request?: TaxDeductionRequest; error?: string };
 
 const initial: TaxDeductionForm = {
   housingType: "NEW",
@@ -146,7 +149,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
     const body: TaxDeductionRequest = request;
     const timer = setTimeout(() => {
       calculateTaxDeduction(body, ctrl.signal)
-        .then((data) => setOutcome({ key, data }))
+        .then((data) => setOutcome({ key, data, request: body }))
         .catch((e: unknown) => {
           if (ctrl.signal.aborted) return;
           setOutcome({ key, error: errorMessage(e) });
@@ -172,6 +175,18 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
   const data = current?.data ?? (request ? outcome?.data : undefined);
   const stale = !!data && loading;
   const shown = data && request ? request : null;
+  // 結果に対応するリクエストのスナップショット（data が無いときは undefined）
+  const resultRequest = data ? outcome?.request : undefined;
+  const pairNext = resultRequest ? pairSimulationHref(resultRequest) : null;
+  const nextSteps: NextStep[] = pairNext
+    ? [
+        {
+          href: pairNext,
+          label: "二人の負担割合ごとの返済額を見る",
+          hint: "借入額・金利・返済期間に、あなたの負担割合を加えた状態で、お二人それぞれの返済額の目安を確認できます。",
+        },
+      ]
+    : [];
 
   const legacyKind = legacyExceptionKind(form);
 
@@ -660,6 +675,8 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
             </p>
           </div>
         )}
+
+        {data && nextSteps.length > 0 && <NextSteps items={nextSteps} />}
 
         <p className="disclaimer">
           試算結果は目安です。実際の控除額は、住宅の要件、扶養親族や各種控除の状況、年末の借入残高などによって異なります。確定申告や年末調整の際は、税務署等でご確認ください。

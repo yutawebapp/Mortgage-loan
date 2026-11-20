@@ -17,6 +17,9 @@ export const BORROWER_MODES: { value: BorrowerMode; label: string; desc: string 
 
 export const isTwoPerson = (m: BorrowerMode) => m !== "SINGLE";
 
+/** 二人で負担割合を決めるローン（ペアローン・収入合算（連帯債務））。 */
+export const hasSplitRatio = (m: BorrowerMode) => m === "PAIR_LOAN" || m === "JOINT_DEBT";
+
 const MODES: readonly string[] = ["SINGLE", "PAIR_LOAN", "JOINT_DEBT", "JOINT_GUARANTEE"];
 /** 想定外の値は SINGLE として扱う。 */
 export function asBorrowerMode(s: unknown): BorrowerMode {

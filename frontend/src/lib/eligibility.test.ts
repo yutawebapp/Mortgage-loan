@@ -126,6 +126,25 @@ describe("simulationHref", () => {
   });
 });
 
+describe("simulationHref pair flag", () => {
+  it("adds pair=1 only for PAIR_LOAN and JOINT_DEBT (no ratio)", () => {
+    expect(simulationHref(30_000_000, 1.2, 35, { mode: "PAIR_LOAN" })).toBe(
+      "/simulation?principal=3000&rate=1.2&years=35&pair=1",
+    );
+    expect(simulationHref(30_000_000, 1.2, 35, { mode: "JOINT_DEBT" })).toBe(
+      "/simulation?principal=3000&rate=1.2&years=35&pair=1",
+    );
+  });
+
+  it("adds nothing for SINGLE and JOINT_GUARANTEE, and without opts", () => {
+    expect(simulationHref(30_000_000, 1.2, 35, { mode: "SINGLE" })).toBe("/simulation?principal=3000&rate=1.2&years=35");
+    expect(simulationHref(30_000_000, 1.2, 35, { mode: "JOINT_GUARANTEE" })).toBe(
+      "/simulation?principal=3000&rate=1.2&years=35",
+    );
+    expect(simulationHref(30_000_000, 1.2, 35)).toBe("/simulation?principal=3000&rate=1.2&years=35");
+  });
+});
+
 describe("two-person modes (eligibility)", () => {
   const two = (o: Partial<EligibilityForm>) => withOverrides({ mode: "JOINT_DEBT", partnerIncomeMan: "400", ...o });
   const guarantee = (pct: string) => validateEligibility(two({ mode: "JOINT_GUARANTEE", partnerCountPercent: pct }));
