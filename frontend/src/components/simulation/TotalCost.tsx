@@ -12,9 +12,11 @@ import {
   approxManLabel,
   applyOwnershipPreset,
   assumptionMessages,
+  estimatePropertyTax,
   noteMessages,
   sharePercent,
   validateTotalCost,
+  updateTotalCostInput,
   type TotalCostForm,
   type TotalCostPropertyType,
 } from "@/lib/totalCost";
@@ -31,7 +33,6 @@ import {
   DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN,
   DEFAULT_METHOD,
   DEFAULT_PRICE_MAN,
-  DEFAULT_PROPERTY_TAX_YEARLY_YEN,
   DEFAULT_RATE,
   DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
   DEFAULT_YEARS,
@@ -53,7 +54,7 @@ const initial: TotalCostForm = {
   method: DEFAULT_METHOD,
   managementFee: String(DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN),
   repairReserve: String(DEFAULT_REPAIR_RESERVE_MONTHLY_YEN),
-  propertyTax: String(DEFAULT_PROPERTY_TAX_YEARLY_YEN),
+  propertyTax: estimatePropertyTax(DEFAULT_PRICE_MAN)!,
   insurance: String(DEFAULT_INSURANCE_YEARLY_YEN),
 };
 
@@ -68,18 +69,19 @@ function errorMessage(e: unknown): string {
 type FieldKey = keyof Omit<TotalCostForm, "method">;
 
 export default function TotalCost() {
-  const [form, setForm] = useState<TotalCostForm>(initial);
+  const [input, setInput] = useState({ form: initial, taxFollowsPrice: true });
+  const { form } = input;
   const [propertyType, setPropertyType] = useState<TotalCostPropertyType>("house");
   // 共通条件は金利・返済期間のみ。このツールの principal は物件価格なので、借入額（principalMan）は受け取らない・渡さない。
   const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
     current: sharedNow,
-    apply: (patch) => setForm((f) => ({ ...f, rate: patch.rate ?? f.rate, years: patch.years ?? f.years })),
+    apply: (patch) => setInput((s) => updateTotalCostInput(s, { ...(patch.rate !== undefined && { rate: patch.rate }), ...(patch.years !== undefined && { years: patch.years }) })),
     accept: (c) => acceptFor("/total-cost", c),
   });
   // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
-  useUrlInitialValues(totalCostInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
-  useUrlInitialValues(totalCostExtraFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
+  useUrlInitialValues(totalCostInitialFromQuery, (patch) => setInput((s) => updateTotalCostInput(s, patch)));
+  useUrlInitialValues(totalCostExtraFromQuery, (patch) => setInput((s) => updateTotalCostInput(s, patch)));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -109,7 +111,7 @@ export default function TotalCost() {
 
   const set = <K extends keyof TotalCostForm>(k: K, v: TotalCostForm[K]) => {
     markEdited(k);
-    setForm((f) => ({ ...f, [k]: v }));
+    setInput((s) => updateTotalCostInput(s, { [k]: v }));
   };
   const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
   const err = (k: FieldKey) => (touched[k] || outcome ? errors[k] : undefined);
@@ -226,18 +228,18 @@ export default function TotalCost() {
             <label className="radio">
               <input type="radio" name="tc-property-type" checked={propertyType === "house"} onChange={() => {
                 setPropertyType("house");
-                setForm((f) => applyOwnershipPreset(f, "house"));
+                setInput((s) => ({ form: applyOwnershipPreset(s.form, "house"), taxFollowsPrice: true }));
               }} />
               戸建て
             </label>
             <label className="radio">
               <input type="radio" name="tc-property-type" checked={propertyType === "apartment"} onChange={() => {
                 setPropertyType("apartment");
-                setForm((f) => applyOwnershipPreset(f, "apartment"));
+                setInput((s) => ({ form: applyOwnershipPreset(s.form, "apartment"), taxFollowsPrice: true }));
               }} />
               マンション
             </label>
-            <p className="hint" id="tc-preset-hint">切り替えると、入力済みの管理費・修繕費・固定資産税等・保険料はすべて種別ごとの仮置き値に置き換わります。物件種別は共有リンクに含まれません。</p>
+            <p className="hint" id="tc-preset-hint">切り替えると、入力済みの管理費・修繕費・保険料は種別ごとの仮置き値に、固定資産税等は物件価格に連動した目安に置き換わります。物件種別は共有リンクに含まれません。</p>
           </fieldset>
           <p className="hint">保有コストの初期値は目安です。物件や地域に合わせて変更してください。</p>
           {field("managementFee", "管理費（月額）", "円", {
@@ -251,7 +253,7 @@ export default function TotalCost() {
           {field("propertyTax", "固定資産税・都市計画税（年額）", "円", {
             step: STEP_YEN_YEARLY,
             inputMode: "numeric",
-            hint: "毎年同額として計算し、新築住宅の固定資産税の減額措置などによる変動は含みません。",
+            hint: "初期値は物件価格の0.3%を千円単位で丸めた仮の目安です。手入力後は価格に追従しません。毎年同額として計算し、新築の減額措置や経年による変動は含みません。",
           })}
           {field("insurance", "火災・地震保険料（年額）", "円", {
             step: STEP_YEN_YEARLY,

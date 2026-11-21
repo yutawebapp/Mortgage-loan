@@ -45,26 +45,24 @@ export const DEFAULT_METHOD = "EQUAL_PAYMENT" as const;
 // - 管理費 0円/月: 戸建ては管理組合がないため。
 // - 修繕・メンテナンス積立 17,000円/月: 戸建ての目安 15,000〜20,000円/月の中間。民間のメンテナンス試算
 //   （さくら事務所等の30年で約1,000〜1,200万円という試算）をもとにした目安で、公的機関の直接の基準ではない。
-// - 固定資産税・都市計画税 200,000円/年: 戸建ての目安 15万〜25万円/年の中間。標準税率（固定資産税1.4%・
-//   都市計画税0.3%）と新築軽減の終了後をふまえた大まかな値。地域・土地建物の評価で大きく変わる。
+// - 固定資産税・都市計画税 200,000円/年: 賃貸比較・ライフプラン向けの従来の仮置き値。
 // - 火災・地震保険料 40,000円/年: 戸建ての目安 年2.5万〜5万円の中間（損害保険料率算出機構等の目安）。構造・地域で大きく変わる。
 export const DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN = 0;
 export const DEFAULT_REPAIR_RESERVE_MONTHLY_YEN = 17_000;
 export const DEFAULT_PROPERTY_TAX_YEARLY_YEN = 200_000;
 export const DEFAULT_INSURANCE_YEARLY_YEN = 40_000;
 
-/** 住居費の総額ツール用の保有コストの仮置き値（円/月、円/年）。 */
+/** 住居費の総額ツール用の保有コストの仮置き値（円/月、円/年）。税は物件価格から算出。 */
+export const TOTAL_COST_PROPERTY_TAX_PRICE_RATE = 0.003;
 export const TOTAL_COST_OWNERSHIP_PRESETS = {
   house: {
     managementFee: DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN,
     repairReserve: DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
-    propertyTax: DEFAULT_PROPERTY_TAX_YEARLY_YEN,
     insurance: DEFAULT_INSURANCE_YEARLY_YEN,
   },
   apartment: {
     managementFee: 12_000,
     repairReserve: 18_000,
-    propertyTax: 150_000,
     insurance: 20_000,
   },
 } as const;

@@ -1,6 +1,6 @@
 import type { TotalCostRequest } from "./api/totalCost";
 import type { RepaymentMethod } from "./api/simulation";
-import { TOTAL_COST_OWNERSHIP_PRESETS } from "./defaults";
+import { TOTAL_COST_OWNERSHIP_PRESETS, TOTAL_COST_PROPERTY_TAX_PRICE_RATE } from "./defaults";
 
 export type TotalCostForm = {
   priceMan: string;
@@ -19,6 +19,26 @@ export type TotalCostErrors = Partial<Record<Exclude<keyof TotalCostForm, "metho
 
 export type TotalCostPropertyType = keyof typeof TOTAL_COST_OWNERSHIP_PRESETS;
 
+/** 価格（万円）の0.3%を千円単位で四捨五入。不正・範囲外なら更新しない。 */
+export function estimatePropertyTax(priceMan: string): string | null {
+  const price = priceMan.trim() === "" ? NaN : Number(priceMan);
+  const priceYen = Math.round(price * 10_000);
+  if (!Number.isFinite(price) || priceYen < 1 || priceYen > 1_000_000_000) return null;
+  return String(Math.round(price * 10_000 * TOTAL_COST_PROPERTY_TAX_PRICE_RATE / 1_000) * 1_000);
+}
+
+export type TotalCostInputState = { form: TotalCostForm; taxFollowsPrice: boolean };
+
+/** 価格更新やURLの税額復元時に、追従状態を一緒に更新する。 */
+export function updateTotalCostInput(state: TotalCostInputState, patch: Partial<TotalCostForm>): TotalCostInputState {
+  const form = { ...state.form, ...patch };
+  const taxFollowsPrice = patch.propertyTax !== undefined ? false : state.taxFollowsPrice;
+  if (taxFollowsPrice && patch.priceMan !== undefined) {
+    form.propertyTax = estimatePropertyTax(form.priceMan) ?? form.propertyTax;
+  }
+  return { form, taxFollowsPrice };
+}
+
 /** 保有コスト4項目だけを選択した種別の仮置き値に置き換える。 */
 export function applyOwnershipPreset(form: TotalCostForm, type: TotalCostPropertyType): TotalCostForm {
   const preset = TOTAL_COST_OWNERSHIP_PRESETS[type];
@@ -26,7 +46,7 @@ export function applyOwnershipPreset(form: TotalCostForm, type: TotalCostPropert
     ...form,
     managementFee: String(preset.managementFee),
     repairReserve: String(preset.repairReserve),
-    propertyTax: String(preset.propertyTax),
+    propertyTax: estimatePropertyTax(form.priceMan) ?? form.propertyTax,
     insurance: String(preset.insurance),
   };
 }

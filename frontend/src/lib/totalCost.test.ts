@@ -11,10 +11,12 @@ import {
   assumptionMessages,
   derivedLoan,
   estimateClosingCost,
+  estimatePropertyTax,
   noteMessages,
   sharePercent,
   simulationHref,
   totalCostInitialFromQuery,
+  updateTotalCostInput,
   validateTotalCost,
 } from "./totalCost";
 
@@ -27,7 +29,7 @@ const base: TotalCostForm = {
   method: "EQUAL_PAYMENT",
   managementFee: "0",
   repairReserve: "17000",
-  propertyTax: "200000",
+  propertyTax: "120000",
   insurance: "40000",
 };
 const w = (o: Partial<TotalCostForm>): TotalCostForm => ({ ...base, ...o });
@@ -35,10 +37,10 @@ const w = (o: Partial<TotalCostForm>): TotalCostForm => ({ ...base, ...o });
 describe("ownership cost presets", () => {
   it("defines the unchanged house defaults and the apartment estimates in yen", () => {
     expect(TOTAL_COST_OWNERSHIP_PRESETS.house).toEqual({
-      managementFee: 0, repairReserve: 17_000, propertyTax: 200_000, insurance: 40_000,
+      managementFee: 0, repairReserve: 17_000, insurance: 40_000,
     });
     expect(TOTAL_COST_OWNERSHIP_PRESETS.apartment).toEqual({
-      managementFee: 12_000, repairReserve: 18_000, propertyTax: 150_000, insurance: 20_000,
+      managementFee: 12_000, repairReserve: 18_000, insurance: 20_000,
     });
     expect(DEFAULT_HOUSING_MONTHLY_YEN).toBe(17_000);
     expect(DEFAULT_HOUSING_TAX_YEARLY_YEN).toBe(240_000);
@@ -49,7 +51,40 @@ describe("ownership cost presets", () => {
     const apartment = applyOwnershipPreset(edited, "apartment");
     expect(apartment).toEqual({ ...edited, managementFee: "12000", repairReserve: "18000", propertyTax: "150000", insurance: "20000" });
     expect(edited.managementFee).toBe("9");
-    expect(applyOwnershipPreset(apartment, "house")).toEqual({ ...edited, managementFee: "0", repairReserve: "17000", propertyTax: "200000", insurance: "40000" });
+    expect(applyOwnershipPreset(apartment, "house")).toEqual({ ...edited, managementFee: "0", repairReserve: "17000", propertyTax: "150000", insurance: "40000" });
+    expect(applyOwnershipPreset(w({ priceMan: "", propertyTax: "123" }), "house").propertyTax).toBe("123");
+  });
+});
+
+describe("price-linked property tax", () => {
+  it("rounds the 0.3% estimate to the nearest 1,000 yen, with halves up", () => {
+    expect(estimatePropertyTax("4000")).toBe("120000");
+    expect(estimatePropertyTax("4016.6")).toBe("120000");
+    expect(estimatePropertyTax("4016.6667")).toBe("121000");
+    expect(estimatePropertyTax("50")).toBe("2000");
+    for (const invalid of ["", "abc", "0", "-1", "100001", "Infinity"]) expect(estimatePropertyTax(invalid)).toBeNull();
+  });
+
+  it("follows valid price changes until manually edited, including an edit equal to the default", () => {
+    let state = { form: base, taxFollowsPrice: true };
+    state = updateTotalCostInput(state, { priceMan: "5000" });
+    expect(state.form.propertyTax).toBe("150000");
+    state = updateTotalCostInput(state, { priceMan: "" });
+    expect(state.form.propertyTax).toBe("150000");
+    state = updateTotalCostInput(state, { propertyTax: "150000" });
+    state = updateTotalCostInput(state, { priceMan: "6000" });
+    expect(state.form.propertyTax).toBe("150000");
+    state = { form: applyOwnershipPreset(state.form, "apartment"), taxFollowsPrice: true };
+    expect(state.form.propertyTax).toBe("180000");
+    expect(updateTotalCostInput(state, { priceMan: "7000" }).form.propertyTax).toBe("210000");
+  });
+
+  it("prioritizes URL tax, including zero, and uses URL price when tax is absent", () => {
+    const state = { form: base, taxFollowsPrice: true };
+    expect(updateTotalCostInput(state, { priceMan: "5000" }).form.propertyTax).toBe("150000");
+    const fromUrl = updateTotalCostInput(state, { priceMan: "5000", propertyTax: "0" });
+    expect(fromUrl.form.propertyTax).toBe("0");
+    expect(updateTotalCostInput(fromUrl, { priceMan: "6000" }).form.propertyTax).toBe("0");
   });
 });
 
@@ -67,7 +102,7 @@ describe("validateTotalCost", () => {
       method: "EQUAL_PAYMENT",
       monthlyManagementFee: 0,
       monthlyRepairReserve: 17_000,
-      annualPropertyTax: 200_000,
+      annualPropertyTax: 120_000,
       annualInsurance: 40_000,
     });
   });

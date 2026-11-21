@@ -2,6 +2,30 @@ import { expect, test } from "@playwright/test";
 import type { BudgetResponse } from "../src/lib/api/budget";
 import type { TaxDeductionResponse } from "../src/lib/api/taxDeduction";
 
+test("住居費の固定資産税は価格に追従し、手入力と共有URLを優先する", async ({ page }) => {
+  await page.goto("/total-cost");
+  const price = page.getByLabel("物件価格", { exact: true });
+  const tax = page.getByLabel("固定資産税・都市計画税（年額）");
+  await expect(tax).toHaveValue("120000");
+  await price.fill("5000");
+  await expect(tax).toHaveValue("150000");
+  await tax.fill("99999");
+  await price.fill("6000");
+  await expect(tax).toHaveValue("99999");
+  await page.getByLabel("マンション", { exact: true }).check();
+  await expect(tax).toHaveValue("180000");
+  await price.fill("7000");
+  await expect(tax).toHaveValue("210000");
+  await page.goto("/total-cost?principal=5000&tax=12345");
+  await expect(price).toHaveValue("5000");
+  await expect(tax).toHaveValue("12345");
+  await price.fill("6000");
+  await expect(tax).toHaveValue("12345");
+  await page.goto("/total-cost?principal=5000");
+  await expect(price).toHaveValue("5000");
+  await expect(tax).toHaveValue("150000");
+});
+
 test("購入予算から結果の借入額・金利・期間を返済画面へ渡す", async ({ page }) => {
   await page.goto("/budget");
   await page.getByLabel("金利（年率）").fill("1.7");
