@@ -76,6 +76,20 @@ cd backend && ./mvnw test      # JUnit 5。DB のテストは Testcontainers の
 cd frontend && npm test && npm run lint && npm run build
 ```
 
+画面と実 API の回帰・契約テストは別途実行します。テスト専用の Compose プロジェクトと DB を使用します。
+
+```bash
+DB_PASSWORD=e2e_test docker compose -p mortgage-e2e up --build -d --wait db backend
+cd frontend
+PLAYWRIGHT_BROWSERS_PATH="$PWD/../tmp/playwright-browsers" npx playwright install chromium
+npm run e2e:typecheck
+TMPDIR="$PWD/../tmp" PLAYWRIGHT_BROWSERS_PATH="$PWD/../tmp/playwright-browsers" npm run e2e
+cd ..
+DB_PASSWORD=e2e_test docker compose -p mortgage-e2e down -v
+```
+
+ポート 3000 / 5432 / 8080 を使用します。実 API の主要レスポンスを手書き型に対応する検査器で検証します（全入力・全 API の網羅ではありません）。
+
 ## ドキュメント
 
 設計と仕様は [docs/design.md](docs/design.md) を参照してください。

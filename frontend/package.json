@@ -9,7 +9,9 @@
     "lint": "eslint",
     "gen:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/lib/api/schema.d.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "e2e:typecheck": "tsc -p tsconfig.e2e.json --noEmit --incremental false"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -17,6 +19,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

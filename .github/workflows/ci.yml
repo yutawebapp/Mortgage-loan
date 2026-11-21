@@ -44,3 +44,25 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: e2e_test_only
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/tmp/playwright-browsers
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: docker compose -p mortgage-e2e up --build -d --wait db backend
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run e2e:typecheck && npm run e2e
+        working-directory: frontend
+      - if: always()
+        run: docker compose -p mortgage-e2e down -v
