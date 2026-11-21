@@ -263,12 +263,13 @@ th.left, tbody th { text-align: left; }
   .nav-caret { width: 6px; height: 6px; margin-top: -3px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform 0.15s; }
   .nav-group.is-open .nav-caret { margin-top: 3px; transform: rotate(-135deg); }
   .nav-sub { display: none; position: absolute; top: 100%; left: 0; z-index: 20; min-width: 17rem; padding: 6px; background: var(--brand-deep); border: 1px solid rgba(255, 255, 255, 0.2); border-top: 3px solid var(--accent); border-radius: 0 0 8px 8px; box-shadow: 0 8px 20px rgba(7, 31, 58, 0.4); }
-  .nav-group.is-open .nav-sub { display: block; }
+  .nav-group.is-open .nav-sub { display: block; animation: nav-sub-in 0.14s ease-out; }
   .nav-sub a { display: flex; padding: 0 10px; border-radius: 6px; border-bottom: 0; }
   .nav-sub a:hover { background: rgba(255, 255, 255, 0.1); text-decoration: none; }
   .nav-sub a[aria-current="page"] { background: rgba(255, 255, 255, 0.14); }
 }
-@media (prefers-reduced-motion: reduce) { .nav-caret { transition: none; } }
+@keyframes nav-sub-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .nav-caret { transition: none; } .nav-group.is-open .nav-sub { animation: none; } }
 
 /* フッター：ヘッダーと同じグループ分けで、見出し付きの短いリストを並べる */
 .footer-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
