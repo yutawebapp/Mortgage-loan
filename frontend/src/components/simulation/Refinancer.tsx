@@ -14,6 +14,7 @@ import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
 import { refinanceInitialFromQuery } from "@/lib/refinance";
 import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
+import { DEFAULT_REFINANCE_COSTS_MAN } from "@/lib/defaults";
 
 type Outcome = { key: string; data?: RefinanceResponse; error?: string };
 
@@ -24,7 +25,7 @@ const initial: RefinanceForm = {
   newRate: "1.0",
   newYears: "30",
   method: "EQUAL_PAYMENT",
-  costsMan: "0",
+  costsMan: DEFAULT_REFINANCE_COSTS_MAN,
 };
 
 function errorMessage(e: unknown): string {
@@ -180,7 +181,7 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
         </fieldset>
         {field("costsMan", "借り換え諸費用", "万円", form.costsMan, (v) => set("costsMan", v), {
           step: STEP_MAN_LARGE,
-          hint: "事務手数料・保証料・登記費用・繰上返済手数料などの合計の目安です。わからない場合は0のままでも試算できます。",
+          hint: "初期値は借入額の2〜3%程度（約75万円）の目安です。金融機関により大きく異なります（事務手数料が借入額の2.2%の銀行、定額の手数料＋保証料の銀行など）。事務手数料・抵当権設定の登録免許税（借入額の0.4%）・司法書士報酬・印紙税・繰上返済手数料などが含まれることがあります。現在のローンの保証料が戻る場合があり、その分は差し引いて入力してください。わからない場合は0と入力しても試算できます。",
         })}
       </form>
 

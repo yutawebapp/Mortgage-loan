@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_REFINANCE_COSTS_MAN } from "./defaults";
 import {
   type RefinanceForm,
   diffPhrase,
@@ -68,6 +69,16 @@ describe("validateRefinance", () => {
     expect(r.request).toBeNull();
     expect(r.errors.balanceMan).toBe("現在の残債を入力してください。");
     expect(r.errors.costsMan).toBe("借り換え諸費用を入力してください（なければ0）。");
+  });
+});
+
+describe("default refinance closing costs", () => {
+  it("defaults to 75万円 (about 2.5% of the 3,000万円 default balance)", () => {
+    expect(DEFAULT_REFINANCE_COSTS_MAN).toBe("75");
+    expect(validateRefinance(withOverrides({ costsMan: DEFAULT_REFINANCE_COSTS_MAN })).request?.refinanceCosts).toBe(
+      750_000,
+    );
+    expect(Number(DEFAULT_REFINANCE_COSTS_MAN) / 3000).toBeCloseTo(0.025, 10);
   });
 });
 
