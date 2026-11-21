@@ -49,27 +49,19 @@ public final class RateRiseCalculator {
         RepaymentResult stage1 = RepaymentCalculator.calculate(
                 principal, startRatePercent, years, method, BigDecimal.ZERO);
         List<ScheduleRow> stage1Rows = stage1.schedule();
-        BigDecimal balanceAtRise = stage1Rows.get(riseMonth - 1).balance();
-        BigDecimal stage1Interest = sumInterest(stage1Rows.subList(0, riseMonth));
 
         // Baseline: the plain schedule, no rise.
         List<BigDecimal> basePayments = payments(stage1Rows);
         BigDecimal baseInterest = sumInterest(stage1Rows);
         RateRiseScenario baseline = toScenario(BigDecimal.ZERO, startRatePercent,
-                basePayments, baseInterest, riseMonth, baseInterest);
+                basePayments, baseInterest, riseMonth, baseInterest, basePayments.get(riseMonth));
 
         List<RateRiseScenario> scenarios = new ArrayList<>(risePoints.size());
         for (BigDecimal rise : risePoints) {
             BigDecimal rateAfter = startRatePercent.add(rise);
-            RepaymentResult stage2 = RepaymentCalculator.calculate(
-                    balanceAtRise, rateAfter, years - riseAfterYears, method, BigDecimal.ZERO);
-
-            List<BigDecimal> payments = new ArrayList<>(years * MONTHS_PER_YEAR);
-            payments.addAll(basePayments.subList(0, riseMonth));
-            payments.addAll(payments(stage2.schedule()));
-
-            BigDecimal totalInterest = stage1Interest.add(stage2.totalInterest());
-            scenarios.add(toScenario(rise, rateAfter, payments, totalInterest, riseMonth, baseInterest));
+            RateSwitchSchedule.Result switched = RateSwitchSchedule.calculate(stage1, rateAfter, years, method, riseAfterYears);
+            scenarios.add(toScenario(rise, rateAfter, switched.payments(), switched.totalInterest(), riseMonth, baseInterest,
+                    basePayments.get(riseMonth)));
         }
         return new RateRiseComparison(baseline, List.copyOf(scenarios));
     }
@@ -79,7 +71,8 @@ public final class RateRiseCalculator {
                                                List<BigDecimal> payments,
                                                BigDecimal totalInterest,
                                                int riseMonth,
-                                               BigDecimal baselineInterest) {
+                                               BigDecimal baselineInterest,
+                                               BigDecimal baselinePaymentAfter) {
         BigDecimal totalPayment = payments.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal before = payments.get(riseMonth - 1);
         BigDecimal after = payments.get(riseMonth);
@@ -89,6 +82,7 @@ public final class RateRiseCalculator {
                 before,
                 after,
                 after.subtract(before),
+                after.subtract(baselinePaymentAfter),
                 totalPayment,
                 totalInterest,
                 totalInterest.subtract(baselineInterest),

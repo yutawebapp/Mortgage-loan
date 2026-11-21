@@ -11,6 +11,7 @@ import java.util.List;
  * @param monthlyPaymentBefore    payment of month riseAfterYears*12 (last payment at the old rate)
  * @param monthlyPaymentAfter     payment of the month after that (first payment at the new rate)
  * @param monthlyPaymentIncrease  monthlyPaymentAfter - monthlyPaymentBefore (may be negative)
+ * @param monthlyPaymentDifferenceVsBaseline monthlyPaymentAfter - baseline payment in the same month
  * @param totalPayment            sum of all monthly payments
  * @param totalInterest           totalPayment - principal
  * @param extraInterestVsBaseline totalInterest - baseline totalInterest
@@ -22,6 +23,7 @@ public record RateRiseScenario(
         BigDecimal monthlyPaymentBefore,
         BigDecimal monthlyPaymentAfter,
         BigDecimal monthlyPaymentIncrease,
+        BigDecimal monthlyPaymentDifferenceVsBaseline,
         BigDecimal totalPayment,
         BigDecimal totalInterest,
         BigDecimal extraInterestVsBaseline,

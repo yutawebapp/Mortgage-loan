@@ -99,7 +99,7 @@ export function signedYen(n: number): string {
 type Q = string | string[] | undefined;
 
 /** Initial form values from ?principal= (万円), ?rate= (0..20), ?years= (2..50). Invalid values are ignored. */
-export function rateScenarioInitialFromQuery(q: { rate?: Q; principal?: Q; years?: Q }): Partial<RateScenarioForm> {
+export function rateScenarioInitialFromQuery(q: { rate?: Q; principal?: Q; years?: Q; method?: Q }): Partial<RateScenarioForm> {
   const out: Partial<RateScenarioForm> = {};
   const dec = (v: Q) => (typeof v === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(v) ? v : null);
   const rate = dec(q.rate);
@@ -108,5 +108,6 @@ export function rateScenarioInitialFromQuery(q: { rate?: Q; principal?: Q; years
   if (principal !== null && Number(principal) >= 1 && Number(principal) <= 100000) out.principalMan = principal;
   const years = typeof q.years === "string" && /^\d{1,2}$/.test(q.years) ? Number(q.years) : null;
   if (years !== null && years >= 2 && years <= 50) out.years = String(years);
+  if (q.method === "EQUAL_PAYMENT" || q.method === "EQUAL_PRINCIPAL") out.method = q.method;
   return out;
 }

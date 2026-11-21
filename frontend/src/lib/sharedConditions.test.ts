@@ -7,9 +7,12 @@ import {
   decodeStored,
   encodeStored,
   hrefWith,
+  isSharedKey,
   normalizeSharedValue,
   sanitizeShared,
   toSearchParams,
+  simulationExtraFromQuery,
+  totalCostExtraFromQuery,
   type SharedKey,
 } from "./sharedConditions";
 import { budgetInitialFromQuery } from "./budget";
@@ -21,6 +24,8 @@ import { rateTypesInitialFromQuery } from "./rateTypes";
 import { initialFromQuery as simulationInitialFromQuery } from "./simulation";
 import { taxDeductionInitialFromQuery } from "./taxDeduction";
 import { totalCostInitialFromQuery } from "./totalCost";
+import { refinanceInitialFromQuery } from "./refinance";
+import { pairInitialFromQuery } from "./simulation";
 
 describe("normalizeSharedValue", () => {
   it("accepts values inside the shared ranges", () => {
@@ -106,7 +111,7 @@ describe("hrefWith for the simulation tool lane (prepayment / rate-scenario / ra
     expect(hrefWith("/rate-types", { rate: "1.2" })).toBe("/rate-types");
   });
 
-  it("refinance is not in the map, so no shared key is passed (its rate means 借り換え後の金利)", () => {
+  it("refinance receives no shared key (rate means 借り換え後の金利)", () => {
     expect(hrefWith("/refinance", c)).toBe("/refinance");
   });
 });
@@ -169,6 +174,43 @@ describe("share link (ShareLinkButton) round-trip", () => {
   });
 });
 
+describe("URL-only condition round trips", () => {
+  const queryOf = (url: string) => Object.fromEntries(new URL(url, "https://ex.test").searchParams.entries());
+  it("rate comparison switches preserve valid loan terms and the variable rate in both directions", () => {
+    const fromScenario = queryOf(hrefWith("/rate-types", { principalMan: "3000.1234", rate: "1.25", years: "35" }, { variableRate: "1.25", method: "EQUAL_PRINCIPAL" }));
+    expect(rateTypesInitialFromQuery(fromScenario)).toEqual({ principalMan: "3000.1234", variableRate: "1.25", years: "35", method: "EQUAL_PRINCIPAL" });
+    const fromTypes = queryOf(hrefWith("/rate-scenario", { principalMan: "3000.1234", rate: "1.25", years: "35" }, { method: "EQUAL_PRINCIPAL" }));
+    expect(rateScenarioInitialFromQuery(fromTypes)).toEqual({ principalMan: "3000.1234", rate: "1.25", years: "35", method: "EQUAL_PRINCIPAL" });
+    expect(rateTypesInitialFromQuery({ variableRate: "-1", method: "bad" })).toEqual({});
+    expect(rateScenarioInitialFromQuery({ method: ["EQUAL_PAYMENT"] })).toEqual({});
+  });
+  it("budget to total cost carries the result price and matching purchase conditions", () => {
+    const q = queryOf(hrefWith("/total-cost", { rate: "1.2", years: "35" }, { principal: "4000.1234", down: "500", closing: "8" }));
+    expect(totalCostInitialFromQuery(q)).toEqual({ priceMan: "4000.1234", rate: "1.2", years: "35" });
+    expect(totalCostExtraFromQuery(q)).toEqual({ downMan: "500", closingRate: "8" });
+  });
+  it("simulation shares method, bonus including zero, and pair share", () => {
+    const q = queryOf(buildShareUrl("https://ex.test", "/simulation", { principalMan: "4000", rate: "1", years: "35" }, { method: "EQUAL_PRINCIPAL", bonus: "0", share: "60" }));
+    expect(simulationInitialFromQuery(q)).toEqual({ principalMan: "4000", rate: "1", years: "35" });
+    expect(simulationExtraFromQuery(q)).toEqual({ method: "EQUAL_PRINCIPAL", useBonus: true, bonusMan: "0" });
+    expect(pairInitialFromQuery(q)).toEqual({ enabled: true, selfPercent: "60" });
+  });
+  it("total cost shares all cost and loan inputs", () => {
+    const q = queryOf(buildShareUrl("https://ex.test", "/total-cost", { rate: "1", years: "30" }, { principal: "4000", down: "400", closing: "10", method: "EQUAL_PRINCIPAL", management: "0", repair: "17000", tax: "200000", insurance: "40000" }));
+    expect(totalCostInitialFromQuery(q)).toEqual({ priceMan: "4000", rate: "1", years: "30" });
+    expect(totalCostExtraFromQuery(q)).toEqual({ downMan: "400", closingRate: "10", method: "EQUAL_PRINCIPAL", managementFee: "0", repairReserve: "17000", propertyTax: "200000", insurance: "40000" });
+  });
+  it("ignores malformed or out-of-range URL-only fields", () => {
+    expect(simulationExtraFromQuery({ method: "bad", bonus: "-1" })).toEqual({});
+    expect(totalCostExtraFromQuery({ down: "100001", closing: "30.1", method: ["EQUAL_PAYMENT"], tax: "1.5", insurance: "10000001" })).toEqual({});
+  });
+  it("prepayment to refinance passes current rate and method, never principal or years", () => {
+    const q = queryOf(hrefWith("/refinance", { principalMan: "4000", rate: "1.2", years: "35" }, { currentRate: "1.2", method: "EQUAL_PRINCIPAL" }));
+    expect(q).toEqual({ currentRate: "1.2", method: "EQUAL_PRINCIPAL" });
+    expect(refinanceInitialFromQuery(q)).toEqual({ currentRate: "1.2", method: "EQUAL_PRINCIPAL" });
+  });
+});
+
 /**
  * 契約テスト: SHARED_QUERY_KEYS_BY_PATH の各遷移先について、実際の受け取りパーサに値を通す。
  * 「パーサが受け取った値」と「リンクに載る値」が一致すること（受け取る値は同じ・拒否する値はリンクに載らない）を確認する。
@@ -186,6 +228,7 @@ const PARSERS: Record<string, Parser> = {
   "/tax-deduction": taxDeductionInitialFromQuery,
   "/life-plan": lifePlanInitialFromQuery,
   "/rate-types": rateTypesInitialFromQuery,
+  "/refinance": refinanceInitialFromQuery,
 };
 
 /** 受け取りパーサを接続していない遷移先（あれば PARSERS に移す）。 */
@@ -210,7 +253,7 @@ describe("contract: every shared key a target reads round-trips through the targ
   });
 
   for (const path of Object.keys(PARSERS)) {
-    for (const key of SHARED_QUERY_KEYS_BY_PATH[path] ?? []) {
+    for (const key of (SHARED_QUERY_KEYS_BY_PATH[path] ?? []).filter(isSharedKey)) {
       for (const raw of SAMPLES[key]) {
         it(`${path} ${QUERY_KEY[key]}=${raw}`, () => {
           const field = FIELD_BY_PATH[path]?.[key] ?? key;

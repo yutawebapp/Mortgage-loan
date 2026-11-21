@@ -38,11 +38,11 @@ export default function RefinanceChart({
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby="rf-t rf-d" className="chart">
       <title id="rf-t">借り換えによる累計の差額のグラフ</title>
       <desc id="rf-d">
-        借り換え諸費用を含めた、現在のまま返済する場合との支払額の差の累計です。0円より上は借り換えの方が支払いが少なく、下は多い状態を表します。
+        借り換え諸費用を含めた、現在のまま返済する場合との現金支出の差の累計です。残債は含みません。0円より上は借り換えの方がそれまでの支出が少なく、下は多い状態を表します。
         {breakEvenMonth !== null
-          ? `${monthsLabel(breakEvenMonth)}に0円を上回ります。`
-          : "この条件では0円を上回りません。"}
-        最終的な差は{yen(last.net)}です。
+          ? `${monthsLabel(breakEvenMonth)}に初めて0円以上になります。`
+          : "返済期間中は0円以上になりません。"}
+        完済までの総額差（現在のまま − 借り換え後）は{yen(last.net)}です。
       </desc>
       <g className="chart-axis">
         {yTicks.map((v) => (
@@ -66,7 +66,7 @@ export default function RefinanceChart({
       <polyline points={line} className="chart-line" fill="none" />
       {breakEvenMonth !== null && (
         <g>
-          <title>{`損益分岐点：${monthsLabel(breakEvenMonth)}`}</title>
+          <title>{`累計支出が初めて同額以下：${monthsLabel(breakEvenMonth)}`}</title>
           <line x1={x(breakEvenMonth)} x2={x(breakEvenMonth)} y1={M.t} y2={M.t + ih} className="chart-be-line" />
           <circle cx={x(breakEvenMonth)} cy={beY} r={5} className="chart-be-dot" />
           <text
@@ -75,7 +75,7 @@ export default function RefinanceChart({
             textAnchor={x(breakEvenMonth) > W * 0.7 ? "end" : "start"}
             className="chart-be-label"
           >
-            損益分岐点
+            累計支出が同額以下
           </text>
         </g>
       )}

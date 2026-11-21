@@ -107,13 +107,15 @@ export function validateRateTypes(v: RateTypesForm): { request: RateTypesRequest
 type Q = string | string[] | undefined;
 
 /** Initial form values from ?principal= (万円) and ?years= (2..50). Invalid values are ignored. */
-export function rateTypesInitialFromQuery(q: { principal?: Q; years?: Q }): Partial<RateTypesForm> {
+export function rateTypesInitialFromQuery(q: { principal?: Q; years?: Q; variableRate?: Q; method?: Q }): Partial<RateTypesForm> {
   const out: Partial<RateTypesForm> = {};
   const principal =
     typeof q.principal === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(q.principal) ? q.principal : null;
   if (principal !== null && Number(principal) >= 1 && Number(principal) <= 100000) out.principalMan = principal;
   const years = typeof q.years === "string" && /^\d{1,2}$/.test(q.years) ? Number(q.years) : null;
   if (years !== null && years >= 2 && years <= 50) out.years = String(years);
+  if (typeof q.variableRate === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(q.variableRate) && Number(q.variableRate) <= 20) out.variableRate = q.variableRate;
+  if (q.method === "EQUAL_PAYMENT" || q.method === "EQUAL_PRINCIPAL") out.method = q.method;
   return out;
 }
 

@@ -85,8 +85,7 @@ export default function Refinancer() {
 
   const current = outcome && outcome.key === key ? outcome : null;
   const loading = !!request && !current;
-  const data = current?.data ?? (request ? outcome?.data : undefined);
-  const stale = !!data && loading;
+  const data = current?.data;
   const yearsDiffer = !!request && request.newYears !== request.remainingYears;
 
   function field(
@@ -197,12 +196,12 @@ export default function Refinancer() {
         )}
 
         {data && request && (
-          <div className={stale ? "stale" : undefined}>
+          <div>
             <div className="verdict">
               <p className="big">
                 {data.totalSaving === 0
-                  ? "借り換えによる総支払額の差はない試算です"
-                  : `借り換えにより総支払額が${diffPhrase(data.totalSaving)}試算です`}
+                  ? "完済までの総支払額に差はない試算です"
+                  : `完済までの総支払額は借り換えにより${diffPhrase(data.totalSaving)}試算です`}
               </p>
               <p className="hint">諸費用を含む、現在のまま返済する場合との差</p>
             </div>
@@ -213,15 +212,15 @@ export default function Refinancer() {
                 <dd className="big">{diffPhrase(data.monthlySaving)}</dd>
               </div>
               <div>
-                <dt>損益分岐点</dt>
+                <dt>累計の現金支出が初めて同額以下になる時期</dt>
                 <dd className="big">
                   {data.breakEvenMonth !== null
                     ? monthsLabel(data.breakEvenMonth)
-                    : "この条件では諸費用を回収できません"}
+                    : "返済期間中にはありません"}
                 </dd>
               </div>
             </dl>
-            <p className="hint">損益分岐点：支払いの減少分が諸費用を上回り始める時期の目安です。</p>
+            <p className="hint">借り換え諸費用を含む累計支出が、現在のままの場合と初めて同額以下になる時期です。残債を含まず、その後の支出や完済までの総額で有利になることを示すものではありません。</p>
 
             {yearsDiffer && (
               <p className="note" role="note">
@@ -272,9 +271,9 @@ export default function Refinancer() {
               <p className="hint">毎月の返済額は返済開始時点の金額です（以降は減ります）。</p>
             )}
 
-            <h3>累計の差額の推移</h3>
+            <h3>累計の現金支出の差の推移</h3>
             <RefinanceChart points={data.cumulativeSaving} breakEvenMonth={data.breakEvenMonth} />
-            <p className="hint">0円より上は借り換えの方が支払いが少ない状態です。</p>
+            <p className="hint">0円より上は借り換えの方がそれまでの支出が少ない状態です。残債は含みません。</p>
           </div>
         )}
 

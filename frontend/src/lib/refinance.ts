@@ -72,11 +72,14 @@ export function validateRefinance(v: RefinanceForm): { request: RefinanceRequest
 
 type Q = string | string[] | undefined;
 
-/** Initial 借り換え後の金利 from ?rate= (0..20). Invalid values are ignored. */
-export function refinanceInitialFromQuery(q: { rate?: Q }): Partial<RefinanceForm> {
-  const r = q.rate;
-  if (typeof r === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(r) && Number(r) <= 20) return { newRate: r };
-  return {};
+/** rate は借り換え後、currentRate は現在の金利。残債・残期間は別途入力する。 */
+export function refinanceInitialFromQuery(q: { rate?: Q; currentRate?: Q; method?: Q }): Partial<RefinanceForm> {
+  const out: Partial<RefinanceForm> = {};
+  const validRate = (r: Q): r is string => typeof r === "string" && /^\d{1,9}(\.\d{1,6})?$/.test(r) && Number(r) <= 20;
+  if (validRate(q.rate)) out.newRate = q.rate;
+  if (validRate(q.currentRate)) out.currentRate = q.currentRate;
+  if (q.method === "EQUAL_PAYMENT" || q.method === "EQUAL_PRINCIPAL") out.method = q.method;
+  return out;
 }
 
 export function monthsLabel(month: number): string {

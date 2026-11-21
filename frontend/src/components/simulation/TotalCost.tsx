@@ -13,12 +13,11 @@ import {
   assumptionMessages,
   noteMessages,
   sharePercent,
-  simulationHref,
   validateTotalCost,
   type TotalCostForm,
 } from "@/lib/totalCost";
 import { yen } from "@/lib/simulation";
-import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { acceptFor, hrefWith, sanitizeShared, totalCostExtraFromQuery, type SharedConditions } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import TotalCostChart from "./TotalCostChart";
 import { STEP_MAN_LARGE, STEP_PERCENT, STEP_RATE, STEP_YEN_MONTHLY, STEP_YEN_YEARLY } from "@/lib/inputSteps";
@@ -77,6 +76,7 @@ export default function TotalCost() {
   });
   // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
   useUrlInitialValues(totalCostInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
+  useUrlInitialValues(totalCostExtraFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [retry, setRetry] = useState(0);
@@ -127,13 +127,13 @@ export default function TotalCost() {
   const priceManStr = shown ? String(shown.propertyPrice / 10000) : null;
   const loanManStr = data && data.loanPrincipal >= 10000 ? String(data.loanPrincipal / 10000) : null;
   const nextSteps: NextStep[] = [];
-  if (priceManStr)
+  if (priceManStr && shown && shown.propertyPrice >= 10000 && sharedShown.rate && sharedShown.years)
     nextSteps.push({
       href: hrefWith("/rent-vs-buy", sharedShown, { principal: priceManStr }),
       label: "マイホームと賃貸の支出を比べる",
-      hint: "同じ物件価格での、賃貸の累計支出との推移",
+      hint: "物件価格・金利・期間を引き継ぎます。その他の条件は別途確認してください。",
     });
-  if (loanManStr)
+  if (loanManStr && sharedShown.rate && sharedShown.years)
     nextSteps.push({
       href: hrefWith("/tax-deduction", sharedShown, { principal: loanManStr }),
       label: "住宅ローン控除の目安を調べる",
@@ -347,22 +347,24 @@ export default function TotalCost() {
               ))}
             </ul>
 
-            <p className="cta cta-row">
-              <Link className="btn-link" href={simulationHref(data.loanPrincipal, shown.annualRatePercent, shown.years)}>
+            {loanManStr && sharedShown.rate && sharedShown.years && <><p className="cta cta-row">
+              <Link className="btn-link" href={hrefWith("/simulation", { principalMan: String(data.loanPrincipal / 10000), rate: String(shown.annualRatePercent), years: String(shown.years) }, { method: shown.method })}>
                 この条件で返済額を詳しく試算する
               </Link>
             </p>
+            <p className="hint">返済額の試算には借入額・金利・期間・返済方式を引き継ぎます。</p></>}
             <NextSteps items={nextSteps} />
           </div>
         )}
 
-        {shown && priceManStr && (
+        {shown && priceManStr && shown.propertyPrice >= 10000 && sharedShown.rate && sharedShown.years && (
           <div className="result-actions">
             <ShareLinkButton
               conditions={sharedShown}
-              extra={{ principal: priceManStr }}
-              label="主な条件（物件価格・金利・期間）のリンクをコピー"
+              extra={{ principal: priceManStr, down: String(shown.downPayment / 10000), closing: String(shown.closingCostRatePercent ?? 0), method: shown.method, management: String(shown.monthlyManagementFee ?? 0), repair: String(shown.monthlyRepairReserve ?? 0), tax: String(shown.annualPropertyTax ?? 0), insurance: String(shown.annualInsurance ?? 0) }}
+              label="この条件のリンクをコピー"
             />
+            <p className="hint">物件価格・頭金・諸費用率・金利・期間・返済方式・保有コストを共有します。</p>
           </div>
         )}
 

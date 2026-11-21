@@ -45,6 +45,8 @@ class RateRiseCalculatorTest {
         assertThat(l(s.monthlyPaymentBefore())).isEqualTo(77_876L);
         assertThat(l(s.monthlyPaymentAfter())).isEqualTo(89_831L);
         assertThat(l(s.monthlyPaymentIncrease())).isEqualTo(11_955L);
+        assertThat(l(s.monthlyPaymentDifferenceVsBaseline())).isEqualTo(11_955L);
+        assertThat(l(base.monthlyPaymentDifferenceVsBaseline())).isZero();
         assertThat(l(s.totalPayment())).isEqualTo(37_011_608L);
         assertThat(l(s.totalInterest())).isEqualTo(7_011_608L);
         assertThat(l(s.extraInterestVsBaseline())).isEqualTo(4_303_861L);
@@ -109,10 +111,26 @@ class RateRiseCalculatorTest {
         assertThat(l(s.monthlyPaymentBefore())).isEqualTo(82_173L);
         assertThat(l(s.monthlyPaymentAfter())).isEqualTo(103_572L);
         assertThat(l(s.monthlyPaymentIncrease())).isEqualTo(21_399L);
+        assertThat(l(r.baseline().monthlyPaymentAfter())).isEqualTo(82_143L);
+        assertThat(l(r.baseline().monthlyPaymentIncrease())).isEqualTo(-30L);
+        assertThat(l(r.baseline().monthlyPaymentDifferenceVsBaseline())).isZero();
+        assertThat(l(s.monthlyPaymentDifferenceVsBaseline())).isEqualTo(21_429L);
         assertThat(l(s.totalPayment())).isEqualTo(36_499_081L);
         assertThat(l(s.totalInterest())).isEqualTo(6_499_081L);
         assertThat(l(s.extraInterestVsBaseline())).isEqualTo(3_867_840L);
         assertThat(s.monthlyPayments()).hasSize(420);
+    }
+
+    @Test
+    void equalPrincipalSmallRiseCanLowerPaymentBetweenMonthsWhileExceedingBaseline() {
+        // Independent Decimal HALF_UP: month 60 = 82,173, month 61 baseline = 82,143,
+        // month 61 at 0.501% = 82,165.
+        RateRiseScenario s = calc("30000000", "0.5", 35, RepaymentMethod.EQUAL_PRINCIPAL, 5, "0.001")
+                .scenarios().get(0);
+        assertThat(l(s.monthlyPaymentBefore())).isEqualTo(82_173L);
+        assertThat(l(s.monthlyPaymentAfter())).isEqualTo(82_165L);
+        assertThat(l(s.monthlyPaymentIncrease())).isEqualTo(-8L);
+        assertThat(l(s.monthlyPaymentDifferenceVsBaseline())).isEqualTo(22L);
     }
 
     @Test

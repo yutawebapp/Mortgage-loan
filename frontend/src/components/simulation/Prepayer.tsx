@@ -96,8 +96,7 @@ export default function Prepayer() {
 
   const current = outcome && outcome.key === key ? outcome : null;
   const loading = !!request && !current;
-  const data = current?.data ?? (request ? outcome?.data : undefined);
-  const stale = !!data && loading;
+  const data = current?.data;
   // Results belong to the request they were computed for, not to the form as currently edited.
   const shown = data && request ? request : null;
 
@@ -119,13 +118,13 @@ export default function Prepayer() {
     );
   }
 
-  const nextSteps: NextStep[] = [
+  const nextSteps: NextStep[] = current?.data && request && sharedNow.rate ? [
     {
-      href: hrefWith("/refinance", sharedNow),
+      href: hrefWith("/refinance", {}, { currentRate: sharedNow.rate, method: request.method }),
       label: "借り換えと比べる",
-      hint: "返済額・総支払額の目安を比較",
+      hint: "現在の金利・返済方式を引き継ぎます。現在の残債・残り期間は別途入力してください。",
     },
-  ];
+  ] : [];
 
   const timingError = err("afterYears") ?? err("afterMonths");
   const timingErrorId = err("afterYears") ? "afterYears-err" : "afterMonths-err";
@@ -249,7 +248,7 @@ export default function Prepayer() {
         )}
 
         {data && shown && (
-          <div className={stale ? "stale" : undefined}>
+          <div>
             <div className="verdict">
               <p className="hint">利息の軽減額（目安）</p>
               <p className="big">約{yen(data.interestSaving)}</p>
@@ -337,7 +336,7 @@ export default function Prepayer() {
           </div>
         )}
 
-        {request && (
+        {data && shown && (
           <div className="result-actions">
             <ShareLinkButton conditions={sharedNow} />
           </div>

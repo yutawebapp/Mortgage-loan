@@ -17,6 +17,7 @@ public record RateScenarioResponse(ScenarioResult baseline, List<ScenarioResult>
      * @param monthlyPaymentBefore    payment of month riseAfterYears*12 (at the old rate)
      * @param monthlyPaymentAfter     payment of the following month (first at the new rate)
      * @param monthlyPaymentIncrease  monthlyPaymentAfter - monthlyPaymentBefore (may be negative)
+     * @param monthlyPaymentDifferenceVsBaseline monthlyPaymentAfter - baseline payment in the same month
      * @param totalPayment            sum of all monthly payments
      * @param totalInterest           total interest over the loan
      * @param extraInterestVsBaseline totalInterest - baseline totalInterest
@@ -28,6 +29,7 @@ public record RateScenarioResponse(ScenarioResult baseline, List<ScenarioResult>
             long monthlyPaymentBefore,
             long monthlyPaymentAfter,
             long monthlyPaymentIncrease,
+            long monthlyPaymentDifferenceVsBaseline,
             long totalPayment,
             long totalInterest,
             long extraInterestVsBaseline,

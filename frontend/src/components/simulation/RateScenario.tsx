@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ApiError,
   calculateRateScenarios,
@@ -19,7 +20,6 @@ import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/li
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import RateScenarioChart, { seriesName } from "./RateScenarioChart";
 import ShareLinkButton from "./ShareLinkButton";
-import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
@@ -103,8 +103,7 @@ export default function RateScenario() {
 
   const current = outcome && outcome.key === key ? outcome : null;
   const loading = !!request && !current;
-  const data = current?.data ?? (request ? outcome?.data : undefined);
-  const stale = !!data && loading;
+  const data = current?.data;
 
   function field(
     id: "principalMan" | "rate" | "years" | "riseAfterYears",
@@ -134,15 +133,13 @@ export default function RateScenario() {
   const pointsErr = err("risePoints");
 
   const rows = data ? [data.baseline, ...data.scenarios] : [];
-  const nextSteps: NextStep[] = [
-    {
-      href: hrefWith("/rate-types", sharedNow),
-      label: "金利タイプごとに比べる",
-      hint: "同じ条件で金利タイプを比較",
-    },
-  ];
-
   return (
+    <>
+    <nav aria-label="金利の比較方法" className="cta-row">
+      <span aria-current="page">据え置き・上昇幅を比べる</span>
+      <Link className="btn-link secondary" href={hrefWith("/rate-types", sharedNow, { ...(sharedNow.rate !== undefined ? { variableRate: sharedNow.rate } : {}), method: form.method })}>固定タイプと比べる</Link>
+    </nav>
+    <p className="hint">切り替え先には借入金額・当初の変動金利・返済期間・返済方式を引き継ぎます。有効な値のみ引き継ぎます。</p>
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利上昇シミュレーションの条件">
         <h2>ローンの条件</h2>
@@ -242,7 +239,7 @@ export default function RateScenario() {
         )}
 
         {data && request && (
-          <div className={stale ? "stale" : undefined}>
+          <div>
             <div className="table-wrap plain" tabIndex={0} role="region" aria-label="金利上昇シナリオの比較表（横にスクロールできます）">
               <table className="compare">
                 <caption className="sr-only">金利上昇シナリオ別の返済額の比較</caption>
@@ -251,7 +248,8 @@ export default function RateScenario() {
                     <th scope="col">シナリオ</th>
                     <th scope="col">上昇後の金利</th>
                     <th scope="col">毎月の返済額（上昇前 → 上昇後）</th>
-                    <th scope="col">毎月の増加額</th>
+                    <th scope="col">切替直前→直後の変化</th>
+                    <th scope="col">据え置きとの差（切替直後の同じ月）</th>
                     <th scope="col">総返済額</th>
                     <th scope="col">追加の利息</th>
                   </tr>
@@ -264,7 +262,8 @@ export default function RateScenario() {
                       <td>
                         {n(r.monthlyPaymentBefore)}円 → {n(r.monthlyPaymentAfter)}円
                       </td>
-                      <td className="diff">{i === 0 ? "―" : signedYen(r.monthlyPaymentIncrease)}</td>
+                      <td className="diff">{signedYen(r.monthlyPaymentIncrease)}</td>
+                      <td className="diff">{signedYen(r.monthlyPaymentDifferenceVsBaseline)}</td>
                       <td>{yen(r.totalPayment)}</td>
                       <td className="diff">{i === 0 ? "―" : signedYen(r.extraInterestVsBaseline)}</td>
                     </tr>
@@ -273,7 +272,7 @@ export default function RateScenario() {
               </table>
             </div>
             <p className="hint">
-              増加額・追加の利息は、金利が変わらない場合との差です。
+              切替直前→直後の変化は異なる月の差です。据え置きとの差は切替直後の同じ月、追加の利息は完済までの比較です。
               {request.method === "EQUAL_PRINCIPAL" &&
                 "元金均等返済では、上昇後の金額が上昇前より小さく表示されることがあります。"}
             </p>
@@ -285,11 +284,10 @@ export default function RateScenario() {
               riseAfterYears={request.riseAfterYears}
             />
             <p className="hint">点線は金利が上昇する時期。</p>
-            <NextSteps items={nextSteps} />
           </div>
         )}
 
-        {request && (
+        {data && request && (
           <div className="result-actions">
             <ShareLinkButton conditions={sharedNow} />
           </div>
@@ -300,5 +298,6 @@ export default function RateScenario() {
         </p>
       </section>
     </div>
+    </>
   );
 }

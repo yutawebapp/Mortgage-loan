@@ -99,6 +99,18 @@ class RefinanceComparatorTest {
     }
 
     @Test
+    void temporaryCashFlowAdvantageDoesNotMeanFinalSaving() {
+        // Independently: 100,000 vs 50,000 yen/month; costs 750,000 yen.
+        RefinanceComparison r = compare("12000000", "0", 10, "0", 20, "750000");
+        assertThat(r.breakEvenMonth()).isEqualTo(15);
+        assertThat(l(r.cumulativeSaving().get(13).net())).isEqualTo(-50_000L);
+        assertThat(l(r.cumulativeSaving().get(14).net())).isZero();
+        assertThat(l(r.cumulativeSaving().get(119).net())).isEqualTo(5_250_000L);
+        assertThat(l(r.cumulativeSaving().get(239).net())).isEqualTo(-750_000L);
+        assertThat(l(r.totalSaving())).isEqualTo(-750_000L);
+    }
+
+    @Test
     void costsAreNotAddedToNewLoanPrincipal() {
         RefinanceComparison without = compare("25000000", "2.0", 25, "0.8", 25, "0");
         RefinanceComparison with = compare("25000000", "2.0", 25, "0.8", 25, "500000");

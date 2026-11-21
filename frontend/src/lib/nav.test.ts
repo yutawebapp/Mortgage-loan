@@ -20,6 +20,13 @@ describe("NAV_GROUPS", () => {
   it("navGroupTools resolves labels and drops unknown hrefs", () => {
     expect(navGroupTools(["/budget", "/nope"])).toEqual([{ href: "/budget", label: "購入予算の逆算" }]);
   });
+
+  it("offers one public entry for both rate comparisons", () => {
+    const all = NAV_GROUPS.flatMap((g) => [...g.hrefs]);
+    expect(all).toContain("/rate-scenario");
+    expect(all).not.toContain("/rate-types");
+    expect(navGroupTools(["/rate-scenario"])).toEqual([{ href: "/rate-scenario", label: "金利を比べる" }]);
+  });
 });
 
 describe("isActivePath", () => {

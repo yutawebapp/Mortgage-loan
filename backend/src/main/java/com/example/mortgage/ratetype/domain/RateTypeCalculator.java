@@ -4,6 +4,7 @@ import com.example.mortgage.simulation.domain.RepaymentCalculator;
 import com.example.mortgage.simulation.domain.RepaymentMethod;
 import com.example.mortgage.simulation.domain.RepaymentResult;
 import com.example.mortgage.simulation.domain.RepaymentResult.ScheduleRow;
+import com.example.mortgage.ratescenario.domain.RateSwitchSchedule;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -79,13 +80,7 @@ public final class RateTypeCalculator {
                                                         BigDecimal fullFixedTotal) {
         int switchMonth = switchYears * MONTHS_PER_YEAR;
         RepaymentResult stage1 = RepaymentCalculator.calculate(principal, rateFirst, years, method, BigDecimal.ZERO);
-        BigDecimal balanceAtSwitch = stage1.schedule().get(switchMonth - 1).balance();
-        RepaymentResult stage2 = RepaymentCalculator.calculate(
-                balanceAtSwitch, rateAfter, years - switchYears, method, BigDecimal.ZERO);
-
-        List<BigDecimal> payments = new ArrayList<>(years * MONTHS_PER_YEAR);
-        payments.addAll(payments(stage1.schedule().subList(0, switchMonth)));
-        payments.addAll(payments(stage2.schedule()));
+        List<BigDecimal> payments = RateSwitchSchedule.calculate(stage1, rateAfter, years, method, switchYears).payments();
 
         BigDecimal total = sum(payments);
         return new RateTypeComparison.Case(

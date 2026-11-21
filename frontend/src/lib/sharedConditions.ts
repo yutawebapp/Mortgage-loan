@@ -1,3 +1,4 @@
+import type { RepaymentMethod } from "./api/simulation";
 /**
  * 共通の借入条件（ツールをまたいで引き継ぐ条件）。純粋ロジックのみ（DOM・ストレージに触れない）。
  *
@@ -9,7 +10,7 @@
  *   useUrlInitialValues（マウント後）、保存値は useSharedConditions がマウント後に適用する。
  *   優先順位は URLクエリ > 保存値 > ツールの既定値。
  * - 渡す側: `hrefWith(path, c, extra)` でリンク、`buildShareUrl` で共有URL（ShareLinkButton）を作る。
- *   渡すのは SHARED_QUERY_KEYS_BY_PATH に登録された遷移先が読むキーだけ。
+ *   共通条件は SHARED_QUERY_KEYS_BY_PATH の登録項目に絞る。URL専用の extra は呼び出し側で受け手に合わせる。
  *   意味が違うキー（例: /total-cost の principal は物件価格）は extra で明示的に渡す。
  * - 受け取り側は acceptFor(path, c) で、そのページが受け取るキー・範囲に絞ってから使う（保存値の復元も同じ）。
  *   下限が違う値（/rate-scenario・/rate-types の年数は2年以上）もここで落とす。
@@ -114,6 +115,7 @@ export function acceptFor(path: string, c: SharedConditions): SharedConditions {
   const clean = sanitizeShared(c);
   const out: SharedConditions = {};
   for (const k of allowed) {
+    if (!isSharedKey(k)) continue;
     if (clean[k] !== undefined) out[k] = clean[k];
   }
   const min = TARGET_YEARS_MIN[path];
@@ -122,26 +124,68 @@ export function acceptFor(path: string, c: SharedConditions): SharedConditions {
 }
 
 /**
- * 遷移先ごとに渡してよい共通キー（その遷移先の xxxInitialFromQuery が読むキー）。
- * 未登録のパスには何も渡さない。新しい遷移先を接続するときはここに1行足す。
+ * 遷移先ごとの共通キーとURL専用キー。URL専用キーは保存対象ではなく、受け手が別途検証する。
+ * 未登録のパスには共通条件を渡さない。新しい遷移先を接続するときはここに1行足す。
  */
-export const SHARED_QUERY_KEYS_BY_PATH: Record<string, readonly SharedKey[]> = {
-  "/simulation": ["principalMan", "rate", "years"],
+type UrlOnlyKey = "principal" | "method" | "bonus" | "share" | "down" | "closing" | "management" | "repair" | "tax" | "insurance" | "currentRate" | "variableRate";
+export const SHARED_QUERY_KEYS_BY_PATH: Record<string, readonly (SharedKey | UrlOnlyKey)[]> = {
+  "/simulation": ["principalMan", "rate", "years", "method", "bonus", "share"],
   "/prepayment": ["principalMan", "rate", "years"],
-  "/rate-scenario": ["principalMan", "rate", "years"],
+  "/rate-scenario": ["principalMan", "rate", "years", "method"],
   // /total-cost の principal は物件価格（priceMan）として読まれるため、借入額（principalMan）は渡さない。
-  "/total-cost": ["rate", "years"],
+  "/total-cost": ["rate", "years", "principal", "down", "closing", "method", "management", "repair", "tax", "insurance"],
   // /rent-vs-buy も principal を物件価格として読むため、rate/years のみ。物件価格は呼び出し側の extra で渡す。
-  "/rent-vs-buy": ["rate", "years"],
+  "/rent-vs-buy": ["rate", "years", "principal"],
   // eligibility は principal を読まない
   "/eligibility": ["rate", "years"],
   "/tax-deduction": ["principalMan", "rate", "years"],
   "/life-plan": ["principalMan", "rate", "years"],
   // /budget は受け取るだけ（リンクは出さない）。保存値の復元で使う。
   "/budget": ["rate", "years"],
-  // rate-types は金利が4つ（変動・固定期間・固定後・全期間固定）あるため rate は渡さない
-  "/rate-types": ["principalMan", "years"],
+  // 変動金利は金利ツール間のみ URL 専用で引き継ぐ。保存された共通金利は適用しない。
+  "/rate-types": ["principalMan", "years", "variableRate", "method"],
+  "/refinance": ["currentRate", "method"],
 };
+
+/** URL専用の条件は保存しない。各受け側で値を検証して適用する。 */
+type QueryValue = string | string[] | undefined;
+type Query = Record<string, QueryValue>;
+const decimalInRange = (raw: QueryValue, max: number): string | undefined =>
+  typeof raw === "string" && DECIMAL.test(raw) && Number(raw) <= max ? raw : undefined;
+const methodFrom = (raw: QueryValue): RepaymentMethod | undefined =>
+  raw === "EQUAL_PAYMENT" || raw === "EQUAL_PRINCIPAL" ? raw : undefined;
+
+export function simulationExtraFromQuery(q: Query) {
+  const method = methodFrom(q.method);
+  const bonus = decimalInRange(q.bonus, 100000);
+  return {
+    ...(method ? { method } : {}),
+    ...(bonus !== undefined ? { useBonus: true, bonusMan: bonus } : {}),
+  };
+}
+
+export function totalCostExtraFromQuery(q: Query) {
+  const method = methodFrom(q.method);
+  const downMan = decimalInRange(q.down, 100000);
+  const closingRate = decimalInRange(q.closing, 30);
+  const whole = (raw: QueryValue, max: number) => {
+    const value = decimalInRange(raw, max);
+    return value !== undefined && /^\d+$/.test(value) ? value : undefined;
+  };
+  const managementFee = whole(q.management, 1000000);
+  const repairReserve = whole(q.repair, 1000000);
+  const propertyTax = whole(q.tax, 10000000);
+  const insurance = whole(q.insurance, 10000000);
+  return {
+    ...(method ? { method } : {}),
+    ...(downMan !== undefined ? { downMan } : {}),
+    ...(closingRate !== undefined ? { closingRate } : {}),
+    ...(managementFee !== undefined ? { managementFee } : {}),
+    ...(repairReserve !== undefined ? { repairReserve } : {}),
+    ...(propertyTax !== undefined ? { propertyTax } : {}),
+    ...(insurance !== undefined ? { insurance } : {}),
+  };
+}
 
 /** 遷移先ツールへのリンク（相対パス）。対象外のキーや受け取れない値は含めない。extra は呼び出し側の任意クエリ。 */
 export function hrefWith(path: string, c: SharedConditions, extra?: Record<string, string>): string {

@@ -83,6 +83,11 @@ describe("default refinance closing costs", () => {
 });
 
 describe("refinanceInitialFromQuery", () => {
+  it("takes current rate and method separately from the new rate", () => {
+    expect(refinanceInitialFromQuery({ rate: "0.8", currentRate: "1.2", method: "EQUAL_PRINCIPAL" })).toEqual({ newRate: "0.8", currentRate: "1.2", method: "EQUAL_PRINCIPAL" });
+    expect(refinanceInitialFromQuery({ currentRate: "20.1", method: "bad" })).toEqual({});
+    expect(refinanceInitialFromQuery({ currentRate: ["1"], method: ["EQUAL_PAYMENT"] })).toEqual({});
+  });
   it("takes a valid ?rate= as newRate", () => {
     expect(refinanceInitialFromQuery({ rate: "0.75" })).toEqual({ newRate: "0.75" });
     expect(refinanceInitialFromQuery({ rate: "20" })).toEqual({ newRate: "20" });

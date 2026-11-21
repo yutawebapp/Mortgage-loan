@@ -32,6 +32,7 @@ class RateScenarioControllerTest {
                 .andExpect(jsonPath("$.baseline.risePoints").value(0))
                 .andExpect(jsonPath("$.baseline.totalInterest").value(2707747))
                 .andExpect(jsonPath("$.baseline.extraInterestVsBaseline").value(0))
+                .andExpect(jsonPath("$.baseline.monthlyPaymentDifferenceVsBaseline").value(0))
                 .andExpect(jsonPath("$.baseline.monthlyPayments.length()").value(420))
                 .andExpect(jsonPath("$.scenarios.length()").value(1))
                 .andExpect(jsonPath("$.scenarios[0].risePoints").value(1.0))
@@ -39,10 +40,22 @@ class RateScenarioControllerTest {
                 .andExpect(jsonPath("$.scenarios[0].monthlyPaymentBefore").value(77876))
                 .andExpect(jsonPath("$.scenarios[0].monthlyPaymentAfter").value(89831))
                 .andExpect(jsonPath("$.scenarios[0].monthlyPaymentIncrease").value(11955))
+                .andExpect(jsonPath("$.scenarios[0].monthlyPaymentDifferenceVsBaseline").value(11955))
                 .andExpect(jsonPath("$.scenarios[0].totalPayment").value(37011608))
                 .andExpect(jsonPath("$.scenarios[0].totalInterest").value(7011608))
                 .andExpect(jsonPath("$.scenarios[0].extraInterestVsBaseline").value(4303861))
                 .andExpect(jsonPath("$.scenarios[0].monthlyPayments.length()").value(420));
+    }
+
+    @Test
+    void equalPrincipal_differentMonthChangeAndSameMonthBaselineDifference() throws Exception {
+        String body = VALID.replace("EQUAL_PAYMENT", "EQUAL_PRINCIPAL").replace("[1.0]", "[0.001]");
+        mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.baseline.monthlyPaymentIncrease").value(-30))
+                .andExpect(jsonPath("$.baseline.monthlyPaymentDifferenceVsBaseline").value(0))
+                .andExpect(jsonPath("$.scenarios[0].monthlyPaymentIncrease").value(-8))
+                .andExpect(jsonPath("$.scenarios[0].monthlyPaymentDifferenceVsBaseline").value(22));
     }
 
     @Test

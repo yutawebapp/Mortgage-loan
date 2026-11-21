@@ -6,11 +6,6 @@ export const TOOLS = [
     description: "借入金額・金利・返済期間から、毎月の返済額と総返済額の目安を試算します。",
   },
   {
-    href: "/products",
-    label: "金融機関・商品比較",
-    description: "金利タイプや並び順で絞り込み、金融機関・商品の金利と金利更新日を見比べられます。",
-  },
-  {
     href: "/refinance",
     label: "借り換え診断",
     description: "現在のローンと借り換え後の返済額を比べ、諸費用を取り戻せる時期の目安を試算します。",
@@ -52,13 +47,8 @@ export const TOOLS = [
   },
   {
     href: "/rate-scenario",
-    label: "金利上昇シミュレーション",
-    description: "変動金利で金利が上昇した場合の、毎月の返済額と総返済額の変化を上昇幅ごとに比べられます。",
-  },
-  {
-    href: "/rate-types",
-    label: "金利タイプの比較",
-    description: "変動金利・固定期間選択型・全期間固定を、同じ借入条件で並べて、返済額の違いを仮の金利で比べられます。",
+    label: "金利を比べる",
+    description: "金利の据え置き・上昇幅や固定タイプによる返済額の違いを、仮の条件で比べられます。",
   },
 ] as const;
 
@@ -67,9 +57,10 @@ type ToolHref = (typeof TOOLS)[number]["href"];
 // ヘッダーのメニューのまとめ方。使う目的が近いツールを1つのプルダウンにまとめる。
 // ツールが1つだけのグループは、プルダウンにせず、そのままリンクで表示する。
 export const NAV_GROUPS: readonly { label: string; intro: string; hrefs: readonly ToolHref[] }[] = [
-  { label: "借りる前に", intro: "借りられる額や、買える予算、住まいの費用の目安を調べます。", hrefs: ["/eligibility", "/budget", "/total-cost", "/rent-vs-buy", "/life-plan", "/tax-deduction"] },
-  { label: "返済を試算", intro: "毎月の返済額や、繰上げ返済・借り換えの効果を試算します。", hrefs: ["/simulation", "/prepayment", "/refinance"] },
-  { label: "金利を比べる", intro: "金融機関・商品の金利や、金利タイプ・金利上昇の影響を比べます。", hrefs: ["/products", "/rate-types", "/rate-scenario"] },
+  { label: "購入を考える", intro: "購入予算から返済額、住居費の順に目安を確認します。", hrefs: ["/budget", "/simulation", "/total-cost"] },
+  { label: "返済を見直す", intro: "借り換えや繰上げ返済の効果を試算します。", hrefs: ["/refinance", "/prepayment"] },
+  { label: "金利・控除", intro: "金利の影響や住宅ローン控除の目安を確認します。", hrefs: ["/rate-scenario", "/tax-deduction"] },
+  { label: "さらに調べる", intro: "購入予算の参考や家計の見通しを確認します。", hrefs: ["/eligibility", "/rent-vs-buy", "/life-plan"] },
 ];
 
 // サイト情報のページ（フッターと、各ページのパンくずで使う）。

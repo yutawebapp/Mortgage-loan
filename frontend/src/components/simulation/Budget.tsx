@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, calculateBudget, type BudgetRequest, type BudgetResponse } from "@/lib/api/budget";
-import { manLabel, simulationHref, validateBudget, type BudgetForm } from "@/lib/budget";
+import { manLabel, validateBudget, type BudgetForm } from "@/lib/budget";
 import { yen } from "@/lib/simulation";
 import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
@@ -98,15 +98,14 @@ export default function Budget() {
     : {};
   const stale = !!data && loading;
 
-  // 次に調べる: 計算した物件価格（万円未満切り捨て）を総額試算の物件価格として渡す
-  const maxPriceMan = data ? Math.floor(data.maxPropertyPrice / 10000) : 0;
+  // 表示中の結果の物件価格を円単位で引き継ぐ。
+  const maxPriceMan = data ? data.maxPropertyPrice / 10000 : 0;
   const nextSteps: NextStep[] =
-    maxPriceMan >= 1
-      ? [
+    maxPriceMan >= 1 && maxPriceMan <= 100000 && shown && data && sharedShown.rate && sharedShown.years ? [
           {
-            href: hrefWith("/total-cost", sharedShown, { principal: String(maxPriceMan) }),
+            href: hrefWith("/total-cost", sharedShown, { principal: String(maxPriceMan), down: String(data.downPayment / 10000), closing: String(data.closingCostRatePercent) }),
             label: "住居費の総額を試算",
-            hint: "この物件価格で、諸費用や管理費などを含めた住居費の総額の目安を確認できます。",
+            hint: "物件価格・頭金・諸費用率・金利・期間を引き継ぎます。管理費などは別途確認してください。",
           },
         ]
       : [];
@@ -248,10 +247,10 @@ export default function Budget() {
             )}
 
             <p className="cta cta-row">
-              {data.maxLoanAmount > 0 && (
+              {data.maxLoanAmount >= 10000 && data.maxLoanAmount <= 1000000000 && shown && sharedShown.rate && sharedShown.years && (
                 <Link
                   className="btn-link"
-                  href={simulationHref(data.maxLoanAmount, request.annualRatePercent, request.years)}
+                  href={hrefWith("/simulation", { principalMan: String(data.maxLoanAmount / 10000), rate: String(shown.annualRatePercent), years: String(shown.years) })}
                 >
                   この借入額で返済額を試算する
                 </Link>
@@ -260,6 +259,7 @@ export default function Budget() {
                 年収から借入可能額を調べる
               </Link>
             </p>
+            {data.maxLoanAmount >= 10000 && data.maxLoanAmount <= 1000000000 && sharedShown.rate && sharedShown.years && <p className="hint">返済額の試算には、借入額・金利・返済期間を引き継ぎます。</p>}
             <NextSteps items={nextSteps} />
           </div>
         )}

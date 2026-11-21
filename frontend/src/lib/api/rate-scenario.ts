@@ -18,8 +18,10 @@ export type RateScenarioResult = {
   rateAfterPercent: number;
   monthlyPaymentBefore: number;
   monthlyPaymentAfter: number;
-  /** 元金均等では負（減る）になることがある */
+  /** 切替直前から直後の変化。元金均等では負になることがある */
   monthlyPaymentIncrease: number;
+  /** 切替直後の同じ月の据え置きとの差 */
+  monthlyPaymentDifferenceVsBaseline: number;
   totalPayment: number;
   totalInterest: number;
   extraInterestVsBaseline: number;

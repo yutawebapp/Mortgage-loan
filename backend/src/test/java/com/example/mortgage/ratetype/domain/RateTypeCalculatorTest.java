@@ -2,6 +2,7 @@ package com.example.mortgage.ratetype.domain;
 
 import com.example.mortgage.simulation.domain.RepaymentCalculator;
 import com.example.mortgage.simulation.domain.RepaymentMethod;
+import com.example.mortgage.ratescenario.domain.RateRiseCalculator;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -573,6 +574,24 @@ class RateTypeCalculatorTest {
                 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1752852L, 1753144L);
     }
 
+
+    @Test
+    void variableRiseMatchesRateScenarioForBothRepaymentMethods() {
+        for (RepaymentMethod method : RepaymentMethod.values()) {
+            var type = calc("30000000", 35, method, "0.5", 5, "1.0", 10, "1.0", "0.5", "2.0").cases().get(1);
+            var scenario = RateRiseCalculator.compare(new BigDecimal("30000000"), new BigDecimal("0.5"),
+                    35, method, 5, List.of(new BigDecimal("1.0"))).scenarios().get(0);
+            assertThat(type.monthlyPaymentBeforeSwitch()).isEqualByComparingTo(scenario.monthlyPaymentBefore());
+            assertThat(type.monthlyPaymentAfterSwitch()).isEqualByComparingTo(scenario.monthlyPaymentAfter());
+            assertThat(type.totalPayment()).isEqualByComparingTo(scenario.totalPayment());
+            assertThat(type.totalInterest()).isEqualByComparingTo(scenario.totalInterest());
+            for (int year = 0; year < 35; year++) {
+                BigDecimal total = scenario.monthlyPayments().subList(year * 12, (year + 1) * 12)
+                        .stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+                assertThat(type.yearlyPayments().get(year)).isEqualByComparingTo(total);
+            }
+        }
+    }
 
     @Test
     void variableFlat_equalsPlainRepaymentCalculator() {

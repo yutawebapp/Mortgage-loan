@@ -9,8 +9,6 @@ import {
   formatRate,
   isStale,
   rateTypeLabel,
-  refinanceHref,
-  simulateHref,
 } from "@/lib/products";
 import { Disclaimer, SampleNotice, StaleBadge } from "@/components/products/Notices";
 import SourceLink from "@/components/products/SourceLink";
@@ -101,15 +99,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               <div><dt>出典</dt><dd><SourceLink url={p.rateSourceUrl} /></dd></div>
             </dl>
             {isStale(p.rateEffectiveFrom) && <p><StaleBadge /></p>}
-            <p>
-              <Link className="btn-link" href={simulateHref(p.annualRatePercent)}>
-                この金利で返済額を試算する
-              </Link>
-              {" "}
-              <Link className="btn-link" href={refinanceHref(p.annualRatePercent)}>
-                この金利で借り換えを試算する
-              </Link>
-            </p>
           </section>
 
           <section className="card" aria-labelledby="fee-h">

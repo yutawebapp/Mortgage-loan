@@ -13,7 +13,6 @@ import {
   caseName,
   noteTexts,
   rateLabel,
-  rateScenarioHref,
   signedMan,
   switchLabel,
   validateRateTypes,
@@ -21,7 +20,7 @@ import {
 } from "@/lib/rateTypes";
 import { simulationHref } from "@/lib/eligibility";
 import { yen } from "@/lib/simulation";
-import { acceptFor, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
@@ -127,6 +126,12 @@ export default function RateTypes() {
   const rateHint = "0〜20%";
 
   return (
+    <>
+    <nav aria-label="金利の比較方法" className="cta-row">
+      <Link className="btn-link secondary" href={hrefWith("/rate-scenario", sanitizeShared({ ...sharedNow, rate: form.variableRate }), { method: form.method })}>据え置き・上昇幅を比べる</Link>
+      <span aria-current="page">固定タイプと比べる</span>
+    </nav>
+    <p className="hint">切り替え先には借入金額・変動金利・返済期間・返済方式を引き継ぎます。有効な値のみ引き継ぎます。</p>
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利タイプ比較の条件">
         <fieldset className="fs-group">
@@ -303,9 +308,6 @@ export default function RateTypes() {
             )}
 
             <div className="cta-row">
-              <Link className="btn-link" href={rateScenarioHref(request.principal, request.variableRatePercent, request.years)}>
-                変動金利が複数回上がる場合を詳しく見る
-              </Link>
               <Link
                 className="btn-link secondary"
                 href={simulationHref(request.principal, request.fullFixedRatePercent, request.years)}
@@ -321,5 +323,6 @@ export default function RateTypes() {
         </p>
       </section>
     </div>
+    </>
   );
 }

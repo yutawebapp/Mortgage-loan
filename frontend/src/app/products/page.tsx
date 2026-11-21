@@ -13,9 +13,7 @@ import {
   parseRateType,
   parseSort,
   rateTypeLabel,
-  refinanceHref,
   SAMPLE_DATA_NOINDEX,
-  simulateHref,
 } from "@/lib/products";
 import { Disclaimer, SampleNotice, StaleBadge } from "@/components/products/Notices";
 import SourceLink from "@/components/products/SourceLink";
@@ -141,12 +139,6 @@ export default async function Page({ searchParams }: { searchParams: SP }) {
                   <p className="product-actions">
                     <Link href={`/products/${p.id}`}>
                       詳細を見る<span className="sr-only">（{p.productName}）</span>
-                    </Link>
-                    <Link href={simulateHref(p.annualRatePercent)}>
-                      この金利で返済額を試算する<span className="sr-only">（{p.productName}）</span>
-                    </Link>
-                    <Link href={refinanceHref(p.annualRatePercent)}>
-                      この金利で借り換えを試算する<span className="sr-only">（{p.productName}）</span>
                     </Link>
                   </p>
                 </li>

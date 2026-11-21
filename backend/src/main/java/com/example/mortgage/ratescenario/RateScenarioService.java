@@ -33,6 +33,7 @@ public class RateScenarioService {
                 s.monthlyPaymentBefore().longValueExact(),
                 s.monthlyPaymentAfter().longValueExact(),
                 s.monthlyPaymentIncrease().longValueExact(),
+                s.monthlyPaymentDifferenceVsBaseline().longValueExact(),
                 s.totalPayment().longValueExact(),
                 s.totalInterest().longValueExact(),
                 s.extraInterestVsBaseline().longValueExact(),

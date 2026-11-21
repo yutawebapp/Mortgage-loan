@@ -35,6 +35,7 @@ import {
 import {
   hrefWith,
   sanitizeShared,
+  simulationExtraFromQuery,
   type SharedConditions,
 } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
@@ -91,11 +92,12 @@ export default function Simulator() {
   });
   // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
   useUrlInitialValues(initialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
+  useUrlInitialValues(simulationExtraFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [view, setView] = useState<"year" | "month">("year");
   const [retry, setRetry] = useState(0);
-  // 二人で借りる設定は共通条件には含めない。URLクエリ（pair / share）からは初期値として読むが、共有リンクには書き出さない。
+  // 二人で借りる設定は保存しないが、共有URLには含める。
   const [pair, setPair] = useState<PairOptions>(initialPair);
   // pair / share がURLにあるときだけ、マウント後に二人で借りる設定を読む
   useUrlInitialValues(
@@ -276,22 +278,26 @@ export default function Simulator() {
       }),
     );
   }
+  const sharedShown = shown ? sanitizeShared({ principalMan: String(shown.principal / 10000), rate: String(shown.annualRatePercent), years: String(shown.years) }) : {};
   const nextSteps: NextStep[] = [
+    ...(sharedShown.principalMan && sharedShown.rate && sharedShown.years ? [
     {
-      href: hrefWith("/prepayment", sharedNow),
+      href: hrefWith("/prepayment", sharedShown),
       label: "繰上げ返済の効果を試算",
-      hint: "期間・利息の目安を比較",
-    },
+      hint: "借入額・金利・期間を引き継ぎます。返済方式は別途確認してください。",
+    }] : []),
+    ...(sharedShown.principalMan && sharedShown.rate && sharedShown.years && Number(sharedShown.years) >= 2 ? [
     {
-      href: hrefWith("/rate-scenario", sharedNow),
+      href: hrefWith("/rate-scenario", sharedShown),
       label: "金利が上がった場合を試算",
-      hint: "毎月返済額の目安",
-    },
+      hint: "借入額・金利・期間を引き継ぎます。",
+    }] : []),
+    ...(sharedShown.rate && sharedShown.years ? [
     {
-      href: hrefWith("/total-cost", sharedNow),
+      href: hrefWith("/total-cost", sharedShown, shown ? { method: shown.method } : {}),
       label: "住居費の総額を試算",
-      hint: "諸費用を含む総額の目安",
-    },
+      hint: "金利・期間・返済方式を引き継ぎます。物件価格や頭金は別途入力してください。",
+    }] : []),
   ];
 
   function field(
@@ -805,9 +811,10 @@ export default function Simulator() {
           </div>
         )}
 
-        {request && (
+        {shown && sharedShown.principalMan && sharedShown.rate && sharedShown.years && (
           <div className="result-actions no-print">
-            <ShareLinkButton conditions={sharedNow} />
+            <ShareLinkButton conditions={sharedShown} extra={{ method: shown.method, ...(shown.bonusAmount !== undefined ? { bonus: String(shown.bonusAmount / 10000) } : {}), ...(shown.selfSharePercent !== undefined ? { share: String(shown.selfSharePercent) } : {}) }} />
+            <p className="hint">表示中の借入額・金利・期間・返済方式・ボーナス設定・負担割合を共有します。比較プランと年齢は含みません。</p>
           </div>
         )}
 
