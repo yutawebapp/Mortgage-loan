@@ -43,8 +43,8 @@ function diffCell(n: number): string {
   return `${Math.abs(n).toLocaleString("ja-JP")}円${n > 0 ? "少ない" : "多い"}`;
 }
 
-export default function Refinancer({ initialValues }: { initialValues?: Partial<RefinanceForm> }) {
-  const [form, setForm] = useState<RefinanceForm>({ ...initial, ...initialValues });
+export default function Refinancer() {
+  const [form, setForm] = useState<RefinanceForm>(initial);
   // URLクエリの値はマウント後に一度だけ適用する（URL > 既定値）
   useUrlInitialValues(refinanceInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
   const [newYearsEdited, setNewYearsEdited] = useState(false);

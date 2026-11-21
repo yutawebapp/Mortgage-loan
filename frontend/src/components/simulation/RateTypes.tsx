@@ -43,8 +43,8 @@ function errorMessage(e: unknown): string {
 
 const n = (v: number) => v.toLocaleString("ja-JP");
 
-export default function RateTypes({ initialValues }: { initialValues?: Partial<RateTypesForm> }) {
-  const [form, setForm] = useState<RateTypesForm>({ ...RATE_TYPES_DEFAULTS, ...initialValues });
+export default function RateTypes() {
+  const [form, setForm] = useState<RateTypesForm>(RATE_TYPES_DEFAULTS);
   // 共通条件は借入金額と返済期間のみ（金利は4つあるため共通化しない）。年は2年以上のみ適用する。
   const sharedNow: SharedConditions = sanitizeShared({ principalMan: form.principalMan, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({

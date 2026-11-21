@@ -42,8 +42,8 @@ function errorMessage(e: unknown): string {
   return "通信に失敗しました。ネットワークの状態を確認して再度お試しください。";
 }
 
-export default function Budget({ initialValues }: { initialValues?: Partial<BudgetForm> }) {
-  const [form, setForm] = useState<BudgetForm>({ ...initial, ...initialValues });
+export default function Budget() {
+  const [form, setForm] = useState<BudgetForm>(initial);
   // 共通条件（金利・返済期間のみ。借入額は出力なので共有しない）
   const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({

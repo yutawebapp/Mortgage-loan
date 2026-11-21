@@ -31,7 +31,7 @@ import {
   STEP_YEN_MONTHLY,
   STEP_YEN_YEARLY,
 } from "@/lib/inputSteps";
-import { acceptFor, sanitizeShared } from "@/lib/sharedConditions";
+import { acceptFor, hrefWith, sanitizeShared } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import { NumberField } from "./NumberField";
 import {
@@ -81,8 +81,8 @@ function errorMessage(e: unknown): string {
 
 const cell = (n: number) => n.toLocaleString("ja-JP");
 
-export default function LifePlan({ initialValues }: { initialValues?: Partial<LifePlanForm> }) {
-  const [form, setForm] = useState<LifePlanForm>({ ...initial, ...initialValues });
+export default function LifePlan() {
+  const [form, setForm] = useState<LifePlanForm>(initial);
   // 共通条件: 借入額（principalMan ↔ フォームの loanMan）・金利・返済期間
   const sharedNow = sanitizeShared({ principalMan: form.loanMan, rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
@@ -315,7 +315,6 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
             <p className="hint">ここの住居費は、住宅ローンの有無にかかわらず毎年の支出に加えます。</p>
             {field("upfrontMan", "購入時に貯蓄から払う額（頭金・諸費用）", "万円", {
               step: STEP_MAN_LARGE,
-              
             })}
             <fieldset className="field">
               <legend>返済方式</legend>
@@ -392,7 +391,6 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
               <section className="lp-card" aria-label="上限年齢の貯蓄">
                 <h3>{endAge}歳の時点の貯蓄</h3>
                 <p className="lp-val">約{manApprox(s.savingsAtEnd)}</p>
-                
               </section>
               <section className="lp-card" aria-label="住宅ローン">
                 <h3>住宅ローンの完済</h3>
@@ -510,7 +508,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
               <Link className="btn-link secondary" href="/rent-vs-buy">
                 マイホームと賃貸を比べる
               </Link>
-              <Link className="btn-link secondary" href="/simulation">
+              <Link className="btn-link secondary" href={hrefWith("/simulation", sharedNow)}>
                 返済額を試算する
               </Link>
             </p>

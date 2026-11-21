@@ -50,8 +50,8 @@ function errorMessage(e: unknown): string {
 
 const n = (v: number) => v.toLocaleString("ja-JP");
 
-export default function RateScenario({ initialValues }: { initialValues?: Partial<RateScenarioForm> }) {
-  const [form, setForm] = useState<RateScenarioForm>({ ...initial, ...initialValues });
+export default function RateScenario() {
+  const [form, setForm] = useState<RateScenarioForm>(initial);
   // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値。年は2年以上のみ適用する。
   const sharedNow: SharedConditions = sanitizeShared(form);
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({

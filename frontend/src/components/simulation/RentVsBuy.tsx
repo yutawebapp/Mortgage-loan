@@ -85,8 +85,8 @@ function errorMessage(e: unknown): string {
 
 type FieldKey = keyof Omit<RentVsBuyForm, "method">;
 
-export default function RentVsBuy({ initialValues }: { initialValues?: Partial<RentVsBuyForm> }) {
-  const [form, setForm] = useState<RentVsBuyForm>({ ...initial, ...initialValues });
+export default function RentVsBuy() {
+  const [form, setForm] = useState<RentVsBuyForm>(initial);
   // 共通条件は金利・返済期間のみ。このツールの principal は物件価格なので、借入額（principalMan）は受け取らない・渡さない。
   const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
@@ -295,7 +295,6 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
             })}
             {field("renewalMonths", "更新料（家賃の何か月分）", "か月", {
               step: STEP_MONTHS,
-              
             })}
             {field("renewalInterval", "更新の間隔", "年", {
               step: "1",

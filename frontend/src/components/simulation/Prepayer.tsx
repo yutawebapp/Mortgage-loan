@@ -49,8 +49,8 @@ function diffCell(n: number): string {
   return `${Math.abs(n).toLocaleString("ja-JP")}円${n > 0 ? "少ない" : "多い"}`;
 }
 
-export default function Prepayer({ initialValues }: { initialValues?: Partial<PrepaymentForm> }) {
-  const [form, setForm] = useState<PrepaymentForm>({ ...initial, ...initialValues });
+export default function Prepayer() {
+  const [form, setForm] = useState<PrepaymentForm>(initial);
   // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値
   const sharedNow: SharedConditions = sanitizeShared(form);
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({

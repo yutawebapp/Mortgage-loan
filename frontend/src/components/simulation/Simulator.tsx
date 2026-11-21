@@ -81,18 +81,8 @@ function errorMessage(e: unknown): string {
   return "通信に失敗しました。ネットワークの状態を確認して再度お試しください。";
 }
 
-export default function Simulator({
-  initialValues,
-  initialPair: initialPairFromUrl,
-}: {
-  initialValues?: Partial<FormValues>;
-  /** URLクエリ（pair / share）から決めた二人で借りる設定の初期値。 */
-  initialPair?: PairOptions;
-}) {
-  const [form, setForm] = useState<FormValues>({
-    ...initial,
-    ...initialValues,
-  });
+export default function Simulator() {
+  const [form, setForm] = useState<FormValues>(initial);
   // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値
   const sharedNow: SharedConditions = sanitizeShared(form);
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
@@ -106,7 +96,7 @@ export default function Simulator({
   const [view, setView] = useState<"year" | "month">("year");
   const [retry, setRetry] = useState(0);
   // 二人で借りる設定は共通条件には含めない。URLクエリ（pair / share）からは初期値として読むが、共有リンクには書き出さない。
-  const [pair, setPair] = useState<PairOptions>(initialPairFromUrl ?? initialPair);
+  const [pair, setPair] = useState<PairOptions>(initialPair);
   // pair / share がURLにあるときだけ、マウント後に二人で借りる設定を読む
   useUrlInitialValues(
     (q) => (q.pair !== undefined || q.share !== undefined ? pairInitialFromQuery(q) : null),

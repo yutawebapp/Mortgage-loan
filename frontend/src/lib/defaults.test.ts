@@ -47,7 +47,7 @@ describe("unified default values", () => {
     expect(price).toBeCloseTo(40_099_443, -1);
   });
 
-  it("ライフプランの住居費の初期値は、保有コストの各項目の合計と一致する（マンションの目安）", () => {
+  it("ライフプランの住居費の初期値は、保有コストの各項目の合計と一致する（戸建ての目安）", () => {
     // 期待値は直接の数値（管理費0 + 修繕・メンテナンス費17,000 = 17,000 / 固定資産税等200,000 + 保険40,000 = 240,000）
     expect(DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN).toBe(0);
     expect(DEFAULT_REPAIR_RESERVE_MONTHLY_YEN).toBe(17_000);

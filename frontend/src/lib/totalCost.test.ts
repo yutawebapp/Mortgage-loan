@@ -59,6 +59,7 @@ describe("validateTotalCost", () => {
     expect(validateTotalCost(w({ managementFee: "1000001" })).errors.managementFee).toBeDefined();
     expect(validateTotalCost(w({ managementFee: "1000000" })).errors.managementFee).toBeUndefined();
     expect(validateTotalCost(w({ repairReserve: "-1" })).errors.repairReserve).toBeDefined();
+    expect(validateTotalCost(w({ repairReserve: "-1" })).errors.repairReserve).toContain("修繕・メンテナンス費");
     expect(validateTotalCost(w({ propertyTax: "10000001" })).errors.propertyTax).toBeDefined();
     expect(validateTotalCost(w({ insurance: "100.5" })).errors.insurance).toBeDefined();
   });

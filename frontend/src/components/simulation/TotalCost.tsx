@@ -66,8 +66,8 @@ function errorMessage(e: unknown): string {
 
 type FieldKey = keyof Omit<TotalCostForm, "method">;
 
-export default function TotalCost({ initialValues }: { initialValues?: Partial<TotalCostForm> }) {
-  const [form, setForm] = useState<TotalCostForm>({ ...initial, ...initialValues });
+export default function TotalCost() {
+  const [form, setForm] = useState<TotalCostForm>(initial);
   // 共通条件は金利・返済期間のみ。このツールの principal は物件価格なので、借入額（principalMan）は受け取らない・渡さない。
   const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
@@ -230,7 +230,6 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
           {field("propertyTax", "固定資産税・都市計画税（年額）", "円", {
             step: STEP_YEN_YEARLY,
             inputMode: "numeric",
-            
           })}
           {field("insurance", "火災・地震保険料（年額）", "円", {
             step: STEP_YEN_YEARLY,

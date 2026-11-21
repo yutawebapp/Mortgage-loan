@@ -117,7 +117,7 @@ export function validateRentVsBuy(v: RentVsBuyForm): {
     errors.years = "返済期間は1〜50年の整数で入力してください。";
 
   const mgmt = yenField(v.managementFee, 0, 1_000_000, "管理費", "managementFee", errors);
-  const repair = yenField(v.repairReserve, 0, 1_000_000, "修繕積立金", "repairReserve", errors);
+  const repair = yenField(v.repairReserve, 0, 1_000_000, "修繕・メンテナンス費", "repairReserve", errors);
   const tax = yenField(v.propertyTax, 0, 10_000_000, "固定資産税・都市計画税", "propertyTax", errors);
   const ins = yenField(v.insurance, 0, 10_000_000, "保険料", "insurance", errors);
 
@@ -216,7 +216,7 @@ const NOTE_TEXT: Record<string, string> = {
   TAX_DEDUCTION_NOT_INCLUDED: "住宅ローン控除による税の軽減は含みません。",
   SAME_HOME_CONDITIONS_NOT_ASSURED: "マイホームと賃貸で、広さ・立地・設備が同じとは限りません。",
   OWNERSHIP_COSTS_CONTINUE_AFTER_LOAN:
-    "ローンの完済後も、管理費・修繕積立金・税金などは続く前提で計算しています。",
+    "ローンの完済後も、管理費・修繕積立金・修繕費・税金などは続く前提で計算しています。",
 };
 
 const ASSUMPTION_TEXT: Record<string, string> = {

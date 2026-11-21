@@ -80,7 +80,7 @@ export function validateTotalCost(v: TotalCostForm): {
     errors.years = "返済期間は1〜50年の整数で入力してください。";
 
   const mgmt = costField(v.managementFee, 1_000_000, "管理費", "managementFee", errors);
-  const repair = costField(v.repairReserve, 1_000_000, "修繕積立金", "repairReserve", errors);
+  const repair = costField(v.repairReserve, 1_000_000, "修繕・メンテナンス費", "repairReserve", errors);
   const tax = costField(v.propertyTax, 10_000_000, "固定資産税・都市計画税", "propertyTax", errors);
   const ins = costField(v.insurance, 10_000_000, "保険料", "insurance", errors);
 

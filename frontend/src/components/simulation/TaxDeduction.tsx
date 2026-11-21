@@ -117,8 +117,8 @@ function PersonCard({ p }: { p: TaxDeductionPerson }) {
   );
 }
 
-export default function TaxDeduction({ initialValues }: { initialValues?: Partial<TaxDeductionForm> }) {
-  const [form, setForm] = useState<TaxDeductionForm>({ ...initial, ...initialValues });
+export default function TaxDeduction() {
+  const [form, setForm] = useState<TaxDeductionForm>(initial);
   // 共通条件: 借入金額（principalMan）・金利・返済期間
   const sharedNow = sanitizeShared({ principalMan: form.principalMan, rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
