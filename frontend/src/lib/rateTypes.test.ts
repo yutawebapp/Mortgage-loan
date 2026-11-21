@@ -20,10 +20,10 @@ describe("validateRateTypes", () => {
     const { request, errors } = validateRateTypes(RATE_TYPES_DEFAULTS);
     expect(errors).toEqual({});
     expect(request).toEqual({
-      principal: 30_000_000,
+      principal: 40_000_000,
       years: 35,
       method: "EQUAL_PAYMENT",
-      variableRatePercent: 0.7,
+      variableRatePercent: 1.2,
       variableRiseAfterYears: 5,
       variableRisePoints: 1,
       fixedPeriodYears: 10,

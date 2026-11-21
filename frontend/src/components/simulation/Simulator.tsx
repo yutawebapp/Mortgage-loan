@@ -49,6 +49,7 @@ import {
   STEP_RATE,
 } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 
 // 結果は、それを作った計算条件（request）と試算日を一緒に持つ（表示中の条件を画面・印刷・CSVで揃えるため）。
 type Outcome = {
@@ -63,10 +64,10 @@ type Outcome = {
 type PlanBForm = { rate: string; years: string; method: RepaymentMethod };
 
 const initial: FormValues = {
-  principalMan: "3000",
-  rate: "1.2",
-  years: "35",
-  method: "EQUAL_PAYMENT",
+  principalMan: DEFAULT_PRINCIPAL_MAN,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
+  method: DEFAULT_METHOD,
   useBonus: false,
   bonusMan: "0",
 };
@@ -344,7 +345,7 @@ export default function Simulator({
           (v) => set("principalMan", v),
           {
             step: STEP_MAN_LARGE,
-            hint: "例：3000万円 ＝ 30,000,000円",
+            hint: "例：4000万円 ＝ 40,000,000円",
           },
         )}
         {field("rate", "金利（年率）", "%", form.rate, (v) => set("rate", v), {

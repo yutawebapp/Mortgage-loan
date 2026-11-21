@@ -8,8 +8,16 @@ import { yen } from "@/lib/simulation";
 import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import BudgetChart from "./BudgetChart";
-import { STEP_MAN_LARGE, STEP_MAN_MONTHLY, STEP_PERCENT, STEP_RATE } from "@/lib/inputSteps";
+import { STEP_MAN_LARGE, STEP_PERCENT, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import {
+  DEFAULT_CLOSING_RATE,
+  DEFAULT_DOWN_MAN,
+  DEFAULT_INCOME_MAN,
+  DEFAULT_MONTHLY_MAN,
+  DEFAULT_RATE,
+  DEFAULT_YEARS,
+} from "@/lib/defaults";
 import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { budgetInitialFromQuery } from "@/lib/budget";
@@ -18,12 +26,12 @@ import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 type Outcome = { key: string; data?: BudgetResponse; error?: string; req: BudgetRequest };
 
 const initial: BudgetForm = {
-  downMan: "500",
-  monthlyMan: "10",
-  rate: "1.2",
-  years: "35",
-  closingRate: "10",
-  incomeMan: "",
+  downMan: DEFAULT_DOWN_MAN,
+  monthlyMan: DEFAULT_MONTHLY_MAN,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
+  closingRate: DEFAULT_CLOSING_RATE,
+  incomeMan: DEFAULT_INCOME_MAN,
 };
 
 function errorMessage(e: unknown): string {
@@ -134,7 +142,8 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
           hint: "自己資金から支払う金額です。なければ0で構いません。例：500万円 ＝ 5,000,000円",
         })}
         {field("monthlyMan", "希望する毎月の返済額", "万円", {
-          step: STEP_MAN_MONTHLY,
+          // 初期値 11.7万円は小数のため、増減幅だけ 0.1 にする（共有の STEP_MAN_MONTHLY は LifePlan と共通）。
+          step: "0.1",
           hint: "小数も入力できます。例：8.5万円 ＝ 85,000円",
         })}
 

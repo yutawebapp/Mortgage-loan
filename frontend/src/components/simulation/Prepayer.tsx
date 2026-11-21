@@ -17,16 +17,17 @@ import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 import { prepaymentInitialFromQuery } from "@/lib/prepayment";
 import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: PrepaymentResponse; error?: string };
 
 const initial: PrepaymentForm = {
-  principalMan: "3000",
-  rate: "1.2",
-  years: "35",
-  method: "EQUAL_PAYMENT",
+  principalMan: DEFAULT_PRINCIPAL_MAN,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
+  method: DEFAULT_METHOD,
   afterYears: "5",
   afterMonths: "0",
   prepayMan: "300",
@@ -133,7 +134,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="繰上げ返済の条件">
         <h2>現在のローン</h2>
-        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：3000万円 ＝ 30,000,000円" })}
+        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
         {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。繰上げ後も同じ金利で計算します。" })}
         {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
         <fieldset className="field">

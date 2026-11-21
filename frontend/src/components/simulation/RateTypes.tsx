@@ -131,7 +131,7 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利タイプ比較の条件">
         <fieldset className="fs-group">
           <legend>共通の借入条件</legend>
-          {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：3000万円 ＝ 30,000,000円" })}
+          {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
           {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年の整数で入力できます。" })}
           <fieldset className="field">
             <legend>返済方式</legend>
@@ -176,7 +176,7 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
           {field("variableRisePoints", "金利の上昇幅", "ポイント", {
             step: STEP_RATE_RISE,
             pre: "+",
-            hint: "「+1.0」は、金利が1.0ポイント上がる想定です（0.7%なら1.7%）。0より大きく10以下で入力できます。",
+            hint: "「+1.0」は、金利が1.0ポイント上がる想定です（1.2%なら2.2%）。0より大きく10以下で入力できます。",
           })}
         </fieldset>
 

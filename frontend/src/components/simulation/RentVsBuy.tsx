@@ -33,6 +33,14 @@ import {
   STEP_YEN_YEARLY,
 } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import {
+  DEFAULT_CLOSING_RATE,
+  DEFAULT_DOWN_MAN,
+  DEFAULT_METHOD,
+  DEFAULT_PRICE_MAN,
+  DEFAULT_RATE,
+  DEFAULT_YEARS,
+} from "@/lib/defaults";
 import RentVsBuyChart from "./RentVsBuyChart";
 import ShareLinkButton from "./ShareLinkButton";
 import NextSteps, { type NextStep } from "./NextSteps";
@@ -43,12 +51,12 @@ import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 type Outcome = { key: string; data?: RentVsBuyResponse; error?: string; req: RentVsBuyRequest };
 
 const initial: RentVsBuyForm = {
-  priceMan: "4000",
-  downMan: "400",
-  closingRate: "10",
-  rate: "1.2",
-  years: "35",
-  method: "EQUAL_PAYMENT",
+  priceMan: DEFAULT_PRICE_MAN,
+  downMan: DEFAULT_DOWN_MAN,
+  closingRate: DEFAULT_CLOSING_RATE,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
+  method: DEFAULT_METHOD,
   managementFee: "0",
   repairReserve: "0",
   propertyTax: "0",

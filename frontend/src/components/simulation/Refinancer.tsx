@@ -18,7 +18,7 @@ import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 type Outcome = { key: string; data?: RefinanceResponse; error?: string };
 
 const initial: RefinanceForm = {
-  balanceMan: "2500",
+  balanceMan: "3000",
   currentRate: "1.5",
   remainingYears: "30",
   newRate: "1.0",
@@ -118,7 +118,7 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
         <h2>現在のローン</h2>
         {field("balanceMan", "現在の残債", "万円", form.balanceMan, (v) => set("balanceMan", v), {
           step: STEP_MAN_LARGE,
-          hint: "例：2500万円 ＝ 25,000,000円",
+          hint: "例：3000万円 ＝ 30,000,000円",
         })}
         {field("currentRate", "現在の金利（年率）", "%", form.currentRate, (v) => set("currentRate", v), {
           step: STEP_RATE,

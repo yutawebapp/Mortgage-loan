@@ -34,6 +34,7 @@ import {
 import { acceptFor, sanitizeShared } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import { NumberField } from "./NumberField";
+import { DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 import { OutflowChart, SavingsChart } from "./LifePlanChart";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { lifePlanInitialFromQuery } from "@/lib/lifePlan";
@@ -41,14 +42,15 @@ import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: LifePlanResponse; error?: string };
 
+// 手取り年収の初期値 400万円は、年収500万円の手取りのおおよその目安（仮置き。税・社会保険料の公式な計算値ではない）。
 const initial: LifePlanForm = {
   age: "35",
-  takeHomeMan: "600",
+  takeHomeMan: "400",
   livingMan: "20",
   savingsMan: "500",
-  loanMan: "4000",
-  rate: "1.2",
-  years: "35",
+  loanMan: DEFAULT_PRINCIPAL_MAN,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
   children: [],
   retireAge: "65",
   pensionAge: "65",
@@ -187,7 +189,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
           {field("age", "あなたの年齢", "歳", { step: "1", inputMode: "numeric", hint: "18〜70歳の整数で入力できます。" })}
           {field("takeHomeMan", "手取り年収", "万円", {
             step: STEP_MAN_LARGE,
-            hint: "税金や社会保険料を引いた後の、1年間の金額です。例：600万円",
+            hint: "税金や社会保険料を引いた後の、1年間の金額です。初期値の400万円は年収500万円の手取りの仮の目安です（公式の計算値ではありません）。例：400万円",
           })}
           {field("livingMan", "毎月の生活費（住居費を除く）", "万円", {
             step: STEP_MAN_MONTHLY,

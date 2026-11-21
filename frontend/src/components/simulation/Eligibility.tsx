@@ -22,6 +22,7 @@ import { acceptFor, sanitizeShared } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import { STEP_MAN_LARGE, STEP_PERCENT_WHOLE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { DEFAULT_INCOME_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { eligibilityInitialFromQuery } from "@/lib/eligibility";
@@ -30,10 +31,10 @@ import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 type Outcome = { key: string; data?: EligibilityResponse; error?: string };
 
 const initial: EligibilityForm = {
-  incomeMan: "500",
+  incomeMan: DEFAULT_INCOME_MAN,
   otherMan: "0",
-  rate: "1.2",
-  years: "35",
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
   screeningRate: "3.5",
   mode: "SINGLE",
   partnerIncomeMan: "300",

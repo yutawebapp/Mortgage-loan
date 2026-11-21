@@ -37,6 +37,7 @@ import TaxDeductionChart from "./TaxDeductionChart";
 import { STEP_MAN_LARGE, STEP_PERCENT, STEP_PERCENT_WHOLE, STEP_RATE } from "@/lib/inputSteps";
 import { PERSON_LABEL } from "@/lib/borrowerMode";
 import { NumberField } from "./NumberField";
+import { DEFAULT_INCOME_MAN, DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 import { BorrowerModeSelector } from "./BorrowerModeFields";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { taxDeductionInitialFromQuery } from "@/lib/taxDeduction";
@@ -53,14 +54,14 @@ const initial: TaxDeductionForm = {
   childcare: false,
   floorAreaOver50: true,
   legacyException: false,
-  principalMan: "3000",
-  rate: "1.2",
-  years: "35",
-  method: "EQUAL_PAYMENT",
-  incomeMan: "600",
+  principalMan: DEFAULT_PRINCIPAL_MAN,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
+  method: DEFAULT_METHOD,
+  incomeMan: DEFAULT_INCOME_MAN,
   socialInsuranceRate: DEFAULT_SOCIAL_INSURANCE_RATE,
   mode: "SINGLE",
-  partnerIncomeMan: "400",
+  partnerIncomeMan: "300",
   partnerSocialInsuranceRate: DEFAULT_SOCIAL_INSURANCE_RATE,
   shareAPercent: "50",
   partnerChildcare: false,
@@ -361,7 +362,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
           )}
           {field("principalMan", two ? "借入金額（合計）" : "借入金額", "万円", {
             step: STEP_MAN_LARGE,
-            hint: "例：3000万円 ＝ 30,000,000円",
+            hint: "例：4000万円 ＝ 40,000,000円",
           })}
           {two &&
             field("shareAPercent", "あなたの負担割合（借入のうち、あなたの分）", "%", {

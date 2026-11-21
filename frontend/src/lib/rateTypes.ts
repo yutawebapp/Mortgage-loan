@@ -1,5 +1,6 @@
 import type { RateTypeCase, RateTypeCode, RateTypesRequest } from "./api/rateTypes";
 import type { RepaymentMethod } from "./api/simulation";
+import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "./defaults";
 import { signedYen } from "./rate-scenario";
 
 export type RateTypesForm = {
@@ -17,11 +18,12 @@ export type RateTypesForm = {
 
 export type RateTypesErrors = Partial<Record<Exclude<keyof RateTypesForm, "method">, string>>;
 
+// 固定期間・全期間固定の金利は金利タイプ比較の仮の値のため、共通の既定値（./defaults）には含めない。
 export const RATE_TYPES_DEFAULTS: RateTypesForm = {
-  principalMan: "3000",
-  years: "35",
-  method: "EQUAL_PAYMENT",
-  variableRate: "0.7",
+  principalMan: DEFAULT_PRINCIPAL_MAN,
+  years: DEFAULT_YEARS,
+  method: DEFAULT_METHOD,
+  variableRate: DEFAULT_RATE,
   variableRiseAfter: "5",
   variableRisePoints: "1",
   fixedPeriodYears: "10",

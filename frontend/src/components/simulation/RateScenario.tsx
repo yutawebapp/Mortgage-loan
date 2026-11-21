@@ -23,16 +23,17 @@ import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 import { rateScenarioInitialFromQuery } from "@/lib/rate-scenario";
 import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
 
 type Outcome = { key: string; data?: RateScenarioResponse; error?: string };
 
 const initial: RateScenarioForm = {
-  principalMan: "3000",
-  rate: "0.5",
-  years: "35",
-  method: "EQUAL_PAYMENT",
+  principalMan: DEFAULT_PRINCIPAL_MAN,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
+  method: DEFAULT_METHOD,
   riseAfterYears: "5",
   presets: [...RISE_PRESETS],
   custom: "",
@@ -145,7 +146,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利上昇シミュレーションの条件">
         <h2>ローンの条件</h2>
-        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：3000万円 ＝ 30,000,000円" })}
+        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
         {field("rate", "当初金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。変動金利型の現在の金利を想定します。" })}
         {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年の整数で入力できます。" })}
         <fieldset className="field">
