@@ -221,9 +221,9 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
           {field("managementFee", "管理費（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
-            hint: "初期値はマンションの目安。戸建ては0に",
+            hint: "初期値は戸建ての目安。マンションは管理費・修繕積立金を入力",
           })}
-          {field("repairReserve", "修繕積立金（月額）", "円", {
+          {field("repairReserve", "修繕・メンテナンス費（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
           })}

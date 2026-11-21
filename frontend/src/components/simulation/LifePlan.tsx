@@ -341,12 +341,12 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
             {field("housingMonthly", "毎月の住居費（ローン以外）", "円", {
               step: STEP_YEN_MONTHLY,
               inputMode: "numeric",
-              hint: "初期値はマンションの管理費・修繕積立金の目安（入力例）",
+              hint: "初期値は戸建ての目安。マンションは管理費・修繕積立金を入力",
             })}
             {field("housingTaxYearly", "毎年の住居費（固定資産税・保険など）", "円", {
               step: STEP_YEN_YEARLY,
               inputMode: "numeric",
-              hint: "初期値はマンションの固定資産税等・保険の目安（入力例）",
+              hint: "初期値は戸建ての目安（固定資産税・火災保険など）",
             })}
           </fieldset>
         </details>

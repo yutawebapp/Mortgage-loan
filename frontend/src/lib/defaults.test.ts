@@ -48,16 +48,16 @@ describe("unified default values", () => {
   });
 
   it("ライフプランの住居費の初期値は、保有コストの各項目の合計と一致する（マンションの目安）", () => {
-    // 期待値は直接の数値（管理費12,000 + 修繕積立金17,000 = 29,000 / 固定資産税等200,000 + 保険24,000 = 224,000）
-    expect(DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN).toBe(12_000);
+    // 期待値は直接の数値（管理費0 + 修繕・メンテナンス費17,000 = 17,000 / 固定資産税等200,000 + 保険40,000 = 240,000）
+    expect(DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN).toBe(0);
     expect(DEFAULT_REPAIR_RESERVE_MONTHLY_YEN).toBe(17_000);
     expect(DEFAULT_PROPERTY_TAX_YEARLY_YEN).toBe(200_000);
-    expect(DEFAULT_INSURANCE_YEARLY_YEN).toBe(24_000);
+    expect(DEFAULT_INSURANCE_YEARLY_YEN).toBe(40_000);
     expect(DEFAULT_HOUSING_MONTHLY_YEN).toBe(
       DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN + DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
     );
-    expect(DEFAULT_HOUSING_MONTHLY_YEN).toBe(29_000);
+    expect(DEFAULT_HOUSING_MONTHLY_YEN).toBe(17_000);
     expect(DEFAULT_HOUSING_TAX_YEARLY_YEN).toBe(DEFAULT_PROPERTY_TAX_YEARLY_YEN + DEFAULT_INSURANCE_YEARLY_YEN);
-    expect(DEFAULT_HOUSING_TAX_YEARLY_YEN).toBe(224_000);
+    expect(DEFAULT_HOUSING_TAX_YEARLY_YEN).toBe(240_000);
   });
 });

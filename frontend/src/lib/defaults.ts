@@ -40,20 +40,20 @@ export const DEFAULT_REFINANCE_COSTS_MAN = "75";
 /** 返済方式。 */
 export const DEFAULT_METHOD = "EQUAL_PAYMENT" as const;
 
-// 保有コストの初期値（円。すべて仮置きで、公式な計算値ではない）。
-// マンション（住戸面積 約70㎡）を想定した目安。戸建てでは管理費を0にし、修繕は別途見込む。
-// - 管理費 12,000円/月: 国土交通省「令和5年度マンション総合調査」の平均 約11,500円/月 を切り上げ。
-// - 修繕積立金 17,000円/月: 同調査の平均 約13,000円/月、および「修繕積立金ガイドライン」（令和6年6月改定）
-//   の平均 252円/㎡・月 × 約70㎡ ≈ 17,600円/月 の間。
-// - 固定資産税・都市計画税 200,000円/年: 標準税率（固定資産税 1.4% / 都市計画税 0.3%）と新築軽減の終了後を
-//   ふまえた大まかな平均。地域・特例で大きく変わる。
-// - 火災・地震保険料 24,000円/年: 損害保険料率算出機構などの目安。構造・地域で大きく変わる。
-export const DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN = 12_000;
+// 保有コストの初期値（円。すべて仮置きで、公式な計算値ではない）。戸建てを想定。
+// マンションなら管理費・修繕積立金を入力する（管理費は戸建てでは通常かからない）。
+// - 管理費 0円/月: 戸建ては管理組合がないため。
+// - 修繕・メンテナンス積立 17,000円/月: 戸建ての目安 15,000〜20,000円/月の中間。民間のメンテナンス試算
+//   （さくら事務所等の30年で約1,000〜1,200万円という試算）をもとにした目安で、公的機関の直接の基準ではない。
+// - 固定資産税・都市計画税 200,000円/年: 戸建ての目安 15万〜25万円/年の中間。標準税率（固定資産税1.4%・
+//   都市計画税0.3%）と新築軽減の終了後をふまえた大まかな値。地域・土地建物の評価で大きく変わる。
+// - 火災・地震保険料 40,000円/年: 戸建ての目安 年2.5万〜5万円の中間（損害保険料率算出機構等の目安）。構造・地域で大きく変わる。
+export const DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN = 0;
 export const DEFAULT_REPAIR_RESERVE_MONTHLY_YEN = 17_000;
 export const DEFAULT_PROPERTY_TAX_YEARLY_YEN = 200_000;
-export const DEFAULT_INSURANCE_YEARLY_YEN = 24_000;
+export const DEFAULT_INSURANCE_YEARLY_YEN = 40_000;
 
-/** ライフプランの「毎月の住居費（ローン以外）」の初期値（円/月）= 管理費 + 修繕積立金。 */
+/** ライフプランの「毎月の住居費（ローン以外）」の初期値（円/月）= 管理費 + 修繕・メンテナンス費。 */
 export const DEFAULT_HOUSING_MONTHLY_YEN = DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN + DEFAULT_REPAIR_RESERVE_MONTHLY_YEN;
 /** ライフプランの「毎年の住居費（固定資産税・保険など）」の初期値（円/年）= 固定資産税等 + 保険料。 */
 export const DEFAULT_HOUSING_TAX_YEARLY_YEN = DEFAULT_PROPERTY_TAX_YEARLY_YEN + DEFAULT_INSURANCE_YEARLY_YEN;
