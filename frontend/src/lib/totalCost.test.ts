@@ -57,6 +57,14 @@ describe("ownership cost presets", () => {
 });
 
 describe("price-linked property tax", () => {
+  it("不正な数値はAPIにも価格連動の税額にも使わない", () => {
+    for (const value of ["0x10", "1e3", "Infinity", "1.2.3", "--1", " ", "."]) {
+      expect(validateTotalCost(w({ priceMan: value })).request).toBeNull();
+      expect(validateTotalCost(w({ managementFee: value })).request).toBeNull();
+      expect(estimatePropertyTax(value)).toBeNull();
+    }
+    expect(validateTotalCost(w({ managementFee: "" })).request).not.toBeNull();
+  });
   it("rounds the 0.3% estimate to the nearest 1,000 yen, with halves up", () => {
     expect(estimatePropertyTax("4000")).toBe("120000");
     expect(estimatePropertyTax("4016.6")).toBe("120000");

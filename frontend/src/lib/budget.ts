@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { BudgetRequest } from "./api/budget";
 
 export type BudgetForm = {
@@ -11,7 +12,6 @@ export type BudgetForm = {
 
 export type BudgetErrors = Partial<Record<keyof BudgetForm, string>>;
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 export function validateBudget(v: BudgetForm): { request: BudgetRequest | null; errors: BudgetErrors } {
@@ -42,7 +42,7 @@ export function validateBudget(v: BudgetForm): { request: BudgetRequest | null; 
   else if (cr < 0 || cr > 30) errors.closingRate = "諸費用の割合は0%以上30%以下で入力してください。";
 
   let income: number | undefined;
-  if (v.incomeMan.trim() !== "") {
+  if (v.incomeMan !== "") {
     const incMan = num(v.incomeMan);
     income = toYen(incMan);
     if (!Number.isFinite(incMan) || income < 1 || income > 1_000_000_000)

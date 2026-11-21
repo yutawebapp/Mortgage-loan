@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { RateTypeCase, RateTypeCode, RateTypesRequest } from "./api/rateTypes";
 import type { RepaymentMethod } from "./api/simulation";
 import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "./defaults";
@@ -32,7 +33,6 @@ export const RATE_TYPES_DEFAULTS: RateTypesForm = {
   fullFixedRate: "1.8",
 };
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 function rateError(label: string, s: string): string | undefined {

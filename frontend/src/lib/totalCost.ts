@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { TotalCostRequest } from "./api/totalCost";
 import type { RepaymentMethod } from "./api/simulation";
 import { TOTAL_COST_OWNERSHIP_PRESETS, TOTAL_COST_PROPERTY_TAX_PRICE_RATE } from "./defaults";
@@ -21,7 +22,7 @@ export type TotalCostPropertyType = keyof typeof TOTAL_COST_OWNERSHIP_PRESETS;
 
 /** 価格（万円）の0.3%を千円単位で四捨五入。不正・範囲外なら更新しない。 */
 export function estimatePropertyTax(priceMan: string): string | null {
-  const price = priceMan.trim() === "" ? NaN : Number(priceMan);
+  const price = num(priceMan);
   const priceYen = Math.round(price * 10_000);
   if (!Number.isFinite(price) || priceYen < 1 || priceYen > 1_000_000_000) return null;
   return String(Math.round(price * 10_000 * TOTAL_COST_PROPERTY_TAX_PRICE_RATE / 1_000) * 1_000);
@@ -51,7 +52,6 @@ export function applyOwnershipPreset(form: TotalCostForm, type: TotalCostPropert
   };
 }
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 const MAX_YEN = 1_000_000_000;
 
@@ -63,8 +63,8 @@ function costField(
   key: keyof TotalCostErrors,
   errors: TotalCostErrors,
 ): number {
-  if (raw.trim() === "") return 0;
-  const n = Number(raw);
+  if (raw === "") return 0;
+  const n = num(raw);
   if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > max) {
     errors[key] = `${label}は0円以上${max.toLocaleString("ja-JP")}円以下の整数で入力してください。`;
     return 0;

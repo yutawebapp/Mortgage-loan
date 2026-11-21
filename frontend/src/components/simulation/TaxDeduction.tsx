@@ -1,5 +1,7 @@
 "use client";
 
+import { parseNumericInput } from "@/lib/numericInput";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -195,8 +197,8 @@ export default function TaxDeduction() {
   const shownMode = data?.mode ?? "SINGLE";
   const shownTwo = hasTwoDebtors(shownMode) && !!data?.persons;
   const assumptionIsPartner = shownTwo && data?.persons?.[0]?.eligible === false;
-  const shareNum = Number(form.shareAPercent);
-  const principalNum = Number(form.principalMan);
+  const shareNum = parseNumericInput(form.shareAPercent);
+  const principalNum = parseNumericInput(form.principalMan);
   const shareOk = form.shareAPercent.trim() !== "" && shareNum >= 1 && shareNum <= 99;
   const split =
     shareOk && form.principalMan.trim() !== "" && Number.isFinite(principalNum) && principalNum > 0

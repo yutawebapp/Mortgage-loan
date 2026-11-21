@@ -1,5 +1,7 @@
 "use client";
 
+import { parseNumericInput } from "@/lib/numericInput";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, calculateLifePlan, type LifePlanRequest, type LifePlanResponse } from "@/lib/api/lifePlan";
@@ -153,7 +155,7 @@ export default function LifePlan() {
   const data = request ? (current?.data ?? outcome?.data) : undefined;
   const stale = !!data && loading;
   const shown = data && request ? request : null;
-  const hasLoan = Number(form.loanMan) > 0;
+  const hasLoan = parseNumericInput(form.loanMan) > 0;
 
   function field(
     id: ScalarKey,

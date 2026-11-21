@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { NumericInput } from "./NumericInput";
 
 type Props = {
   /** input の id。ヒント・エラーの id は `${id}-hint` / `${id}-err` になる。 */
@@ -42,14 +43,13 @@ export function NumberField({
       <label htmlFor={id}>{label}</label>
       <div className="input-row">
         {pre && <span className="unit-pre">{pre}</span>}
-        <input
+        <NumericInput
           id={id}
-          type="number"
           inputMode={inputMode}
           step={step}
           min={min}
           value={value}
-          onChange={(ev) => onChange(ev.target.value)}
+          onChange={onChange}
           onBlur={onBlur}
           aria-invalid={error ? true : undefined}
           aria-describedby={`${id}-hint${error ? ` ${id}-err` : ""}`}

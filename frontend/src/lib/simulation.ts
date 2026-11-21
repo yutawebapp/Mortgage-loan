@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type {
   RepaymentRequest,
   RepaymentMethod,
@@ -24,7 +25,6 @@ export type FormErrors = Partial<
 export type PairOptions = { enabled: boolean; selfPercent: string };
 export const initialPair: PairOptions = { enabled: false, selfPercent: "50" };
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 export function validate(
@@ -206,14 +206,14 @@ export const AGE_MAX = 80;
 
 /** 現在の年齢の入力。空欄は未入力（null）、範囲外・小数は無効（null）。 */
 export function parseAge(s: string): number | null {
-  if (s.trim() === "") return null;
-  const n = Number(s);
+  if (s === "") return null;
+  const n = num(s);
   return Number.isInteger(n) && n >= AGE_MIN && n <= AGE_MAX ? n : null;
 }
 
 /** 年齢入力のエラー文。空欄・有効値はエラーなし。 */
 export function ageError(s: string): string | undefined {
-  if (s.trim() === "" || parseAge(s) !== null) return undefined;
+  if (s === "" || parseAge(s) !== null) return undefined;
   return `現在の年齢は${AGE_MIN}〜${AGE_MAX}の整数で入力してください。`;
 }
 

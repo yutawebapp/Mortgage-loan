@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { EnergyClass, FloorAreaCategory, HousingType, TaxDeductionRequest } from "./api/taxDeduction";
 import type { RepaymentMethod } from "./api/simulation";
 import type { BorrowerMode } from "./borrowerMode";
@@ -33,7 +34,6 @@ export type TaxDeductionErrors = Partial<Record<keyof TaxDeductionForm, string>>
 export const MOVE_IN_YEARS = [2026, 2027, 2028, 2029, 2030] as const;
 export const DEFAULT_SOCIAL_INSURANCE_RATE = "15";
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 /** 例外該当のチェックを表示する条件。新築で、性能が「その他」または「省エネ基準適合（2028年以降の入居）」のとき。 */

@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { PrepaymentRequest, PrepaymentType } from "./api/prepayment";
 import type { RepaymentMethod } from "./api/simulation";
 
@@ -18,7 +19,6 @@ export type PrepaymentErrors = Partial<
   Record<"principalMan" | "rate" | "years" | "afterYears" | "afterMonths" | "prepayMan", string>
 >;
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 /** 返済開始から◯年◯か月後 → 月数。 */

@@ -20,6 +20,12 @@ const base: RateScenarioForm = {
 const w = (o: Partial<RateScenarioForm>): RateScenarioForm => ({ ...base, ...o });
 
 describe("validateRateScenario", () => {
+  it("不正な任意上昇幅をAPIへ送らない", () => {
+    for (const value of ["0x10", "1e3", "Infinity", "1.2.3", "--1", " ", "."]) {
+      expect(validateRateScenario(w({ custom: value })).request).toBeNull();
+    }
+    expect(validateRateScenario(w({ custom: "" })).request).not.toBeNull();
+  });
   it("maps the form to the request with the default three rise points", () => {
     const { request, errors } = validateRateScenario(base);
     expect(errors).toEqual({});

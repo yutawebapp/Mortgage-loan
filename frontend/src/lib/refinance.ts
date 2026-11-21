@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { RefinanceRequest } from "./api/refinance";
 import type { RepaymentMethod } from "./api/simulation";
 
@@ -15,7 +16,6 @@ export type RefinanceErrors = Partial<
   Record<"balanceMan" | "currentRate" | "remainingYears" | "newRate" | "newYears" | "costsMan", string>
 >;
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 /** newYears is the effective value (already resolved from the default). */

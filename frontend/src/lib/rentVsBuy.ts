@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { RentVsBuyRequest, RentVsBuySummary } from "./api/rentVsBuy";
 import type { RepaymentMethod } from "./api/simulation";
 import { derivedLoan } from "./totalCost";
@@ -39,7 +40,6 @@ export const ADVANCED_KEYS: readonly (keyof RentVsBuyErrors)[] = [
   "saleCost",
 ];
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 const MAX_YEN = 1_000_000_000;
 
@@ -53,11 +53,11 @@ function yenField(
   errors: RentVsBuyErrors,
   required = false,
 ): number {
-  if (raw.trim() === "") {
+  if (raw === "") {
     if (required) errors[key] = `${label}を入力してください。`;
     return 0;
   }
-  const n = Number(raw);
+  const n = num(raw);
   if (!Number.isFinite(n) || !Number.isInteger(n) || n < min || n > max) {
     errors[key] = `${label}は${min.toLocaleString("ja-JP")}円以上${max.toLocaleString("ja-JP")}円以下の整数で入力してください。`;
     return 0;
@@ -75,8 +75,8 @@ function rangeField(
   key: keyof RentVsBuyErrors,
   errors: RentVsBuyErrors,
 ): number {
-  if (raw.trim() === "") return 0;
-  const n = Number(raw);
+  if (raw === "") return 0;
+  const n = num(raw);
   if (!Number.isFinite(n) || n < min || n > max) {
     errors[key] = `${label}は${min}${unit}以上${max}${unit}以下で入力してください。`;
     return 0;
@@ -126,9 +126,9 @@ export function validateRentVsBuy(v: RentVsBuyForm): {
   const renewalMonths = rangeField(v.renewalMonths, 0, 6, "更新料", "か月", "renewalMonths", errors);
 
   let interval = 2;
-  if (v.renewalInterval.trim() === "") errors.renewalInterval = "更新の間隔を入力してください。";
+  if (v.renewalInterval === "") errors.renewalInterval = "更新の間隔を入力してください。";
   else {
-    const n = Number(v.renewalInterval);
+    const n = num(v.renewalInterval);
     if (!Number.isInteger(n) || n < 1 || n > 5) errors.renewalInterval = "更新の間隔は1〜5年の整数で入力してください。";
     else interval = n;
   }

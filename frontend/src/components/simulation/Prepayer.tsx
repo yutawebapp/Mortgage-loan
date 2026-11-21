@@ -17,6 +17,7 @@ import NextSteps, { type NextStep } from "./NextSteps";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { NumericInput } from "./NumericInput";
 import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 import { prepaymentInitialFromQuery } from "@/lib/prepayment";
 import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
@@ -163,30 +164,28 @@ export default function Prepayer() {
           <legend>繰上げ返済をする時期</legend>
           <div className="input-row timing-row">
             <span className="unit-pre">返済開始から</span>
-            <input
+            <NumericInput
               id="afterYears"
-              type="number"
               inputMode="numeric"
               step={1}
               min={0}
               aria-label="繰上げ返済をする時期（年）"
               value={form.afterYears}
-              onChange={(ev) => set("afterYears", ev.target.value)}
+              onChange={(value) => set("afterYears", value)}
               onBlur={blur("afterYears")}
               aria-invalid={errors.afterYears && (touched.afterYears || outcome) ? true : undefined}
               aria-describedby={timingError ? timingErrorId : undefined}
             />
             <span className="unit">年</span>
-            <input
+            <NumericInput
               id="afterMonths"
-              type="number"
               inputMode="numeric"
               step={1}
               min={0}
               max={11}
               aria-label="繰上げ返済をする時期（か月）"
               value={form.afterMonths}
-              onChange={(ev) => set("afterMonths", ev.target.value)}
+              onChange={(value) => set("afterMonths", value)}
               onBlur={blur("afterMonths")}
               aria-invalid={errors.afterMonths && (touched.afterMonths || outcome) ? true : undefined}
               aria-describedby={timingError ? timingErrorId : undefined}

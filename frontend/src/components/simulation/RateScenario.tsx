@@ -23,6 +23,7 @@ import ShareLinkButton from "./ShareLinkButton";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { STEP_MAN_LARGE, STEP_RATE, STEP_RATE_RISE } from "@/lib/inputSteps";
 import { NumberField } from "./NumberField";
+import { NumericInput } from "./NumericInput";
 import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
 import { rateScenarioInitialFromQuery } from "@/lib/rate-scenario";
 import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
@@ -191,14 +192,13 @@ export default function RateScenario() {
             <label htmlFor="custom">上昇幅を自分で指定する（任意）</label>
             <div className="input-row">
               <span className="unit-pre">+</span>
-              <input
+              <NumericInput
                 id="custom"
-                type="number"
                 inputMode="decimal"
                 step={STEP_RATE_RISE}
                 min={0}
                 value={form.custom}
-                onChange={(ev) => set("custom", ev.target.value)}
+                onChange={(value) => set("custom", value)}
                 onBlur={blur("risePoints")}
                 aria-invalid={pointsErr ? true : undefined}
                 aria-describedby={pointsErr ? "rise-hint rise-err" : "rise-hint"}

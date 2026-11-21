@@ -37,6 +37,15 @@ const w = (o: Partial<LifePlanForm>): LifePlanForm => ({ ...base, ...o });
 const errs = (o: Partial<LifePlanForm>) => validateLifePlan(w(o)).errors;
 
 describe("validateLifePlan", () => {
+  it("不正な数値は必須・任意・子の年齢欄でAPIへ送らない", () => {
+    for (const value of ["0x10", "1e3", "Infinity", "1.2.3", "--1", " ", "."]) {
+      for (const key of ["age", "takeHomeMan", "growth", "housingMonthly"] as const) {
+        expect(validateLifePlan(w({ [key]: value })).request, `${key}: ${value}`).toBeNull();
+      }
+      expect(validateLifePlan(w({ children: [{ age: value, schoolPlan: "ALL_PUBLIC", university: "NATIONAL" }] })).request).toBeNull();
+    }
+    expect(validateLifePlan(w({ growth: "", housingMonthly: "" })).request).not.toBeNull();
+  });
   it("maps defaults to the request shape (万円 → 円)", () => {
     const { request, errors } = validateLifePlan(base);
     expect(errors).toEqual({});

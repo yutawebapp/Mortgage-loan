@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { EligibilityRequest } from "./api/eligibility";
 import { hasSplitRatio, isTwoPerson, type BorrowerMode } from "./borrowerMode";
 
@@ -16,7 +17,6 @@ export type EligibilityForm = {
 
 export type EligibilityErrors = Partial<Record<keyof EligibilityForm, string>>;
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 export function validateEligibility(v: EligibilityForm): {

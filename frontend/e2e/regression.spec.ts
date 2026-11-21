@@ -2,6 +2,30 @@ import { expect, test } from "@playwright/test";
 import type { BudgetResponse } from "../src/lib/api/budget";
 import type { TaxDeductionResponse } from "../src/lib/api/taxDeduction";
 
+test("全角数値を半角に変換して計算する", async ({ page }) => {
+  await page.goto("/budget");
+  const rate = page.getByLabel("金利（年率）");
+  const response = page.waitForResponse((r) =>
+    r.url().includes("/api/v1/simulations/budget") && r.ok() &&
+    r.request().postDataJSON().annualRatePercent === 1.25);
+  await rate.fill("１．２５");
+  await expect(rate).toHaveValue("1.25");
+  await response;
+  await expect(page.getByRole("status").filter({ hasText: "計算結果を更新しました" })).toBeVisible();
+  await rate.press("ArrowUp");
+  await expect(rate).toHaveValue("1.26");
+  await rate.press("ArrowDown");
+  await expect(rate).toHaveValue("1.25");
+  await rate.dispatchEvent("compositionstart");
+  await rate.fill("２．５");
+  await expect(rate).toHaveValue("２．５");
+  await rate.dispatchEvent("compositionend", { data: "２．５" });
+  await expect(rate).toHaveValue("2.5");
+  await rate.fill("0x10");
+  await expect(rate).toHaveValue("0x10");
+  await expect(page.getByRole("status").filter({ hasText: "入力内容に誤りがあります" })).toBeVisible();
+});
+
 test("住居費の固定資産税は価格に追従し、手入力と共有URLを優先する", async ({ page }) => {
   await page.goto("/total-cost");
   const price = page.getByLabel("物件価格", { exact: true });

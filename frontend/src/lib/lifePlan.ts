@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { LifePlanRequest, LifePlanSummary, SchoolPlan, UniversityPlan } from "./api/lifePlan";
 import type { RepaymentMethod } from "./api/simulation";
 
@@ -62,7 +63,6 @@ export const ADVANCED_KEYS: readonly ScalarKey[] = [
   "housingTaxYearly",
 ];
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 const MAX_YEN = 1_000_000_000;
 const MAX_MONTHLY = 10_000_000;
@@ -84,11 +84,11 @@ function manField(
   errors: LifePlanErrors,
   blankMeansError = true,
 ): number {
-  if (s.trim() === "") {
+  if (s === "") {
     if (blankMeansError) errors[key] = `${label}を入力してください（なければ0）。`;
     return 0;
   }
-  const n = Number(s);
+  const n = num(s);
   if (!Number.isFinite(n)) {
     errors[key] = `${label}を数字で入力してください。`;
     return 0;
@@ -102,8 +102,8 @@ function manField(
 }
 
 function yenField(s: string, max: number, label: string, key: ScalarKey, errors: LifePlanErrors): number {
-  if (s.trim() === "") return 0;
-  const n = Number(s);
+  if (s === "") return 0;
+  const n = num(s);
   if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > max) {
     errors[key] = `${label}は0円以上${max.toLocaleString("ja-JP")}円以下の整数で入力してください。`;
     return 0;
@@ -112,8 +112,8 @@ function yenField(s: string, max: number, label: string, key: ScalarKey, errors:
 }
 
 function pctField(s: string, max: number, label: string, key: ScalarKey, errors: LifePlanErrors): number {
-  if (s.trim() === "") return 0;
-  const n = Number(s);
+  if (s === "") return 0;
+  const n = num(s);
   if (!Number.isFinite(n) || n < 0 || n > max) {
     errors[key] = `${label}は0%以上${max}%以下で入力してください。`;
     return 0;
@@ -188,7 +188,7 @@ export function validateLifePlan(v: LifePlanForm): { request: LifePlanRequest | 
     request.method = v.method;
   }
   if (v.children.length > 0) {
-    request.children = v.children.map((c) => ({ age: Number(c.age), schoolPlan: c.schoolPlan, university: c.university }));
+    request.children = v.children.map((c) => ({ age: num(c.age), schoolPlan: c.schoolPlan, university: c.university }));
   }
   return { request, errors };
 }

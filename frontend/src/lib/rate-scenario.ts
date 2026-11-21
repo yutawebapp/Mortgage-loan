@@ -1,3 +1,4 @@
+import { parseNumericInput as num } from "./numericInput";
 import type { RateScenarioRequest } from "./api/rate-scenario";
 import type { RepaymentMethod } from "./api/simulation";
 
@@ -20,14 +21,13 @@ export type RateScenarioErrors = Partial<
   Record<"principalMan" | "rate" | "years" | "riseAfterYears" | "risePoints", string>
 >;
 
-const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);
 
 /** 上昇幅の一覧（プリセット＋任意値）。重複は除き、昇順に並べる。 */
 export function collectRisePoints(presets: number[], custom: string): number[] {
   const all = [...presets];
   const c = num(custom);
-  if (custom.trim() !== "" && Number.isFinite(c)) all.push(c);
+  if (custom !== "" && Number.isFinite(c)) all.push(c);
   return [...new Set(all)].sort((a, b) => a - b);
 }
 
@@ -58,7 +58,7 @@ export function validateRateScenario(v: RateScenarioForm): {
   else if (!errors.years && rise > years - 1)
     errors.riseAfterYears = `金利が上昇する時期は、返済期間（${years}年）より前の${years - 1}年後までで入力してください。`;
 
-  if (v.custom.trim() !== "") {
+  if (v.custom !== "") {
     const c = num(v.custom);
     if (!Number.isFinite(c) || c <= 0 || c > 10)
       errors.risePoints = "上昇幅（任意）は0より大きく10以下の数値で入力してください。";

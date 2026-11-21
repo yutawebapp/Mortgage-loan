@@ -19,6 +19,13 @@ const base: BudgetForm = {
 const w = (o: Partial<BudgetForm>): BudgetForm => ({ ...base, ...o });
 
 describe("validateBudget", () => {
+  it("不正な数値は必須欄・任意欄ともAPIへ送らない", () => {
+    for (const value of ["0x10", "1e3", "Infinity", "1.2.3", "--1", " ", "."]) {
+      expect(validateBudget(w({ monthlyMan: value })).request).toBeNull();
+      expect(validateBudget(w({ incomeMan: value })).request).toBeNull();
+    }
+    expect(validateBudget(w({ incomeMan: "" })).request).not.toBeNull();
+  });
   it("maps defaults to the request shape and omits annualIncome when blank", () => {
     const { request, errors } = validateBudget(base);
     expect(errors).toEqual({});
@@ -78,7 +85,8 @@ describe("validateBudget", () => {
   });
 
   it("optional income: blank ok, 0 and > 10億円 rejected", () => {
-    expect(validateBudget(w({ incomeMan: "  " })).errors.incomeMan).toBeUndefined();
+    expect(validateBudget(w({ incomeMan: "" })).errors.incomeMan).toBeUndefined();
+    expect(validateBudget(w({ incomeMan: "  " })).errors.incomeMan).toBeDefined();
     expect(validateBudget(w({ incomeMan: "0" })).errors.incomeMan).toBeDefined();
     expect(validateBudget(w({ incomeMan: "100000" })).errors.incomeMan).toBeUndefined();
     expect(validateBudget(w({ incomeMan: "100000.0001" })).errors.incomeMan).toBeDefined();

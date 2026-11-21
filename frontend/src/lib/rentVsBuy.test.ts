@@ -36,6 +36,14 @@ const w = (o: Partial<RentVsBuyForm>): RentVsBuyForm => ({ ...base, ...o });
 const errs = (o: Partial<RentVsBuyForm>) => validateRentVsBuy(w(o)).errors;
 
 describe("validateRentVsBuy", () => {
+  it("不正な数値は各種数値欄からAPIへ送らない", () => {
+    for (const value of ["0x10", "1e3", "Infinity", "1.2.3", "--1", " ", "."]) {
+      for (const key of ["priceMan", "managementFee", "assetChange", "renewalInterval"] as const) {
+        expect(validateRentVsBuy(w({ [key]: value })).request, `${key}: ${value}`).toBeNull();
+      }
+    }
+    expect(validateRentVsBuy(w({ managementFee: "", assetChange: "" })).request).not.toBeNull();
+  });
   it("maps defaults to the request shape and derives the loan", () => {
     const { request, errors, loanEstimate } = validateRentVsBuy(base);
     expect(errors).toEqual({});
