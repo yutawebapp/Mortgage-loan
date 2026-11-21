@@ -165,17 +165,17 @@ export function taxDeductionInitialFromQuery(q: { principal?: Q; rate?: Q; years
 
 const INELIGIBLE_MESSAGES: Record<string, string> = {
   NOT_ELIGIBLE_BY_RULE:
-    "この住宅の区分・入居年では、住宅ローン減税の対象外となる可能性があります。「例外に該当する」の項目が表示されている場合は、該当するかどうかを確認してください。",
+    "この住宅の区分・入居年では、住宅ローン減税の対象外となる可能性があります。「例外に該当する」の項目がある場合は確認してください。",
   TERM_UNDER_10_YEARS: "返済期間が10年未満のローンは、住宅ローン減税の対象外となる可能性があります。",
   AREA_40S_INCOME_OVER_LIMIT:
-    "床面積が40㎡台（約12.1〜15.1坪）の住宅は、所得が一定額を超えると対象外となる可能性があります。入力された年収では、この条件に当たる可能性があります。",
+    "床面積が40㎡台（約12.1〜15.1坪）の住宅は、所得が一定額を超えると対象外となる可能性があり、入力の年収が該当する可能性があります。",
   INCOME_OVER_20M: "年収が2,000万円を超える場合は、住宅ローン減税の対象外となる可能性があります。",
 };
 
 export function ineligibleMessage(code: string | null | undefined): string {
   return (
     (code && INELIGIBLE_MESSAGES[code]) ||
-    "入力された条件では、住宅ローン減税の対象外となる可能性があります。条件を変えて確認してください。"
+    "入力された条件では、住宅ローン減税の対象外となる可能性があります。"
   );
 }
 

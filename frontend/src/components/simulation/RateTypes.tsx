@@ -124,15 +124,15 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
     );
   }
 
-  const rateHint = "0〜20%で入力できます。";
+  const rateHint = "0〜20%";
 
   return (
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利タイプ比較の条件">
         <fieldset className="fs-group">
           <legend>共通の借入条件</legend>
-          {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
-          {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年の整数で入力できます。" })}
+          {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE })}
+          {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年" })}
           <fieldset className="field">
             <legend>返済方式</legend>
             <label className="radio">
@@ -153,15 +153,7 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
               />
               元金均等返済
             </label>
-            <p className="hint">
-              {form.method === "EQUAL_PAYMENT"
-                ? "毎月の返済額がほぼ一定になる方式です。"
-                : "毎月返す元金が一定で、返済額は少しずつ減っていく方式です。"}
-            </p>
           </fieldset>
-          <p className="info-msg" role="note">
-            以下の金利はすべて、比べるための仮の値です（初期値も実際の金利ではありません）。実際の金利は金融機関でご確認ください。
-          </p>
         </fieldset>
 
         <fieldset className="fs-group">
@@ -171,12 +163,12 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
             step: "1",
             inputMode: "numeric",
             pre: "返済開始から",
-            hint: "1年以上、返済期間より前の整数で入力できます。この時期に一度だけ金利が上がる想定です。",
+            hint: "1年以上・返済期間より前。一度だけ上がる想定",
           })}
           {field("variableRisePoints", "金利の上昇幅", "ポイント", {
             step: STEP_RATE_RISE,
             pre: "+",
-            hint: "「+1.0」は、金利が1.0ポイント上がる想定です（1.2%なら2.2%）。0より大きく10以下で入力できます。",
+            hint: "0より大きく10以下（例：+1.0で1.2%→2.2%）",
           })}
         </fieldset>
 
@@ -185,12 +177,12 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
           {field("fixedPeriodYears", "固定期間", "年", {
             step: "1",
             inputMode: "numeric",
-            hint: "1年以上、返済期間より短い整数で入力できます。",
+            hint: "1年以上・返済期間より短く",
           })}
           {field("fixedPeriodRate", "固定期間中の仮の金利（年率）", "%", { step: STEP_RATE, hint: rateHint })}
           {field("fixedPeriodAfterRate", "固定期間終了後の仮の金利（年率）", "%", {
             step: STEP_RATE,
-            hint: "終了後の金利は将来の水準によるため、仮の値を入れて比べます。",
+            hint: "将来の水準による仮の値",
           })}
         </fieldset>
 
@@ -204,7 +196,7 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
       <section className="results" aria-labelledby="result-h" aria-busy={loading}>
         <h2 id="result-h">試算結果</h2>
         <p className="note" role="note">
-          金利はすべて入力した仮の値で、将来の金利を予測するものではありません。どのタイプが良い・悪いと示すものでもなく、仮の金利のもとで返済額がどう変わるかを見るための試算です。
+          金利はすべて比較用の仮の値です（初期値も実際の金利ではありません）。タイプの優劣を示すものではありません。
         </p>
         <div aria-live="polite" role="status" className="status">
           {!request && "入力内容に誤りがあります。左（上）のエラーを確認してください。"}
@@ -263,9 +255,9 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
               })}
             </ul>
             <p className="hint">
-              バーは、4つのケースのうち総返済額が最も大きいものを100%とした長さです。「全期間固定との総返済額の差」は、全期間固定の総返済額を基準にした差額で、＋は総返済額が多く、−は少ない場合を表します。差は入力した仮の金利によって変わります。
+              バーは総返済額が最大のケースを100%とした長さです。差は全期間固定が基準で、＋が多く、−が少ない場合です。仮の金利によって変わります。
               {request.method === "EQUAL_PRINCIPAL" &&
-                "元金均等返済では毎月の返済額が少しずつ減るため、切り替え直後の金額が最初より小さく表示されることがあります。"}
+                "元金均等返済では、切り替え直後の金額が最初より小さく表示されることがあります。"}
             </p>
 
             <h3>年間返済額の推移</h3>
@@ -325,7 +317,7 @@ export default function RateTypes({ initialValues }: { initialValues?: Partial<R
         )}
 
         <p className="disclaimer">
-          試算結果は目安です。実際の返済額は、金融機関・商品・契約内容によって異なります。
+          試算結果は目安です。実際の返済額は金融機関・契約内容で異なります。
         </p>
       </section>
     </div>

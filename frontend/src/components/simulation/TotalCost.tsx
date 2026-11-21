@@ -127,13 +127,13 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
     nextSteps.push({
       href: hrefWith("/rent-vs-buy", sharedShown, { principal: priceManStr }),
       label: "賃貸と購入の支出を比べる",
-      hint: "同じ物件価格で、賃貸に住み続けた場合の累計支出と比べたときの推移を確認できます。",
+      hint: "同じ物件価格での、賃貸の累計支出との推移",
     });
   if (loanManStr)
     nextSteps.push({
       href: hrefWith("/tax-deduction", sharedShown, { principal: loanManStr }),
       label: "住宅ローン控除の目安を調べる",
-      hint: "この借入額・金利・返済期間で、控除額の目安を確認できます。",
+      hint: "この借入額・金利・期間での控除額の目安",
     });
 
   function field(
@@ -166,21 +166,20 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="住居費の条件">
         <fieldset className="fs-group">
           <legend>購入の条件</legend>
-          {field("priceMan", "物件価格", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
-          {field("downMan", "頭金", "万円", { step: STEP_MAN_LARGE, hint: "自己資金から支払う金額です。諸費用を現金で払う分も含めて入力してください。なければ0を入力してください。" })}
+          {field("priceMan", "物件価格", "万円", { step: STEP_MAN_LARGE })}
+          {field("downMan", "頭金", "万円", { step: STEP_MAN_LARGE, hint: "諸費用を現金で払う分も含めます" })}
           {field("closingRate", "諸費用の割合（物件価格に対して）", "%", {
             step: STEP_PERCENT,
-            hint: "諸費用（登記費用・仲介手数料・保証料・各種税など）は、物件価格の1割前後かかることが多いとされます。物件の種類や条件で大きく変わります。0〜30%で入力できます。",
+            hint: "仮置き。物件・条件で大きく変わります",
           })}
           {loanEstimate !== null && (
             <p className="info-msg" role="note">
               {loanEstimate > 0 ? (
                 <>
                   借入額の目安：<strong>{yen(loanEstimate)}</strong>
-                  （物件価格 ＋ 諸費用 − 頭金）
                 </>
               ) : (
-                "頭金で物件価格と諸費用をまかなえるため、住宅ローンの借入はない計算です。借入額が1円以上になるよう、頭金などを調整してください。"
+                "頭金で物件価格と諸費用をまかなえるため、借入はない計算です。"
               )}
             </p>
           )}
@@ -188,8 +187,8 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
 
         <fieldset className="fs-group">
           <legend>ローンの条件</legend>
-          {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。返済期間中は同じ金利として計算します。" })}
-          {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
+          {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "返済期間中は同じ金利として計算" })}
+          {field("years", "返済期間", "年", { step: "1", inputMode: "numeric" })}
           <fieldset className="field">
             <legend>返済方式</legend>
             <label className="radio">
@@ -210,34 +209,25 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
               />
               元金均等返済
             </label>
-            <p className="hint">
-              {form.method === "EQUAL_PAYMENT"
-                ? "毎月の返済額がほぼ一定になる方式です。"
-                : "毎月返す元金が一定で、返済額は少しずつ減っていく方式です。"}
-            </p>
           </fieldset>
         </fieldset>
 
         <fieldset className="fs-group">
           <legend>住んでからかかる費用（保有コスト）</legend>
-          <p className="hint">
-            わからない項目は0のままでも試算できます。戸建てでは管理費や修繕積立金がかからない場合もありますが、その場合は、将来の修繕の費用を自分で準備しておく必要があります。
-          </p>
-          {field("managementFee", "管理費（月額）", "円", { step: STEP_YEN_MONTHLY, inputMode: "numeric", hint: "マンションなどで毎月支払う費用です。" })}
+          {field("managementFee", "管理費（月額）", "円", { step: STEP_YEN_MONTHLY, inputMode: "numeric" })}
           {field("repairReserve", "修繕積立金（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
-            hint: "将来の大規模修繕に備えて毎月積み立てる費用です。",
           })}
           {field("propertyTax", "固定資産税・都市計画税（年額）", "円", {
             step: STEP_YEN_YEARLY,
             inputMode: "numeric",
-            hint: "毎年、自治体から納付書が届きます。金額がわからない場合は、物件の資料や不動産会社でご確認ください。",
+            
           })}
           {field("insurance", "火災・地震保険料（年額）", "円", {
             step: STEP_YEN_YEARLY,
             inputMode: "numeric",
-            hint: "数年分をまとめて払う場合は、1年あたりの金額に直して入力してください。",
+            hint: "数年分まとめて払う場合は1年あたりに換算",
           })}
         </fieldset>
         <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
@@ -254,7 +244,7 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
 
         {noLoan && (
           <p className="note" role="note">
-            頭金の額が、物件価格と諸費用の合計以上になっています。住宅ローンを借りない場合は、このページの試算の対象外です。
+            頭金が物件価格と諸費用の合計以上のため、試算の対象外です。
           </p>
         )}
 
@@ -272,9 +262,7 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
             <div className="verdict">
               <p className="hint">住まいにかかる費用の総額の目安</p>
               <p className="big">約{approxManLabel(data.totals.grandTotal)}</p>
-              <p className="hint">
-                {yen(data.totals.grandTotal)}（頭金 ＋ ローン返済額の合計 ＋ 返済期間中の保有コスト）
-              </p>
+              <p className="hint">{yen(data.totals.grandTotal)}</p>
             </div>
 
             <dl className="summary">
@@ -288,10 +276,10 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
               </div>
             </dl>
             <p className="hint">
-              月平均は、総額を返済期間（{shown.years}年＝{shown.years * 12}か月）で割った目安です。頭金も含まれます。
+              月平均は総額を{shown.years * 12}か月で割った値（頭金を含む）。
               {shown.method === "EQUAL_PAYMENT"
-                ? ` 毎月のローン返済額は${yen(data.totals.firstMonthLoanPayment)}です。`
-                : ` 1回目のローン返済額は${yen(data.totals.firstMonthLoanPayment)}で、その後は少しずつ減ります。`}
+                ? ` 毎月のローン返済額は${yen(data.totals.firstMonthLoanPayment)}。`
+                : ` 1回目のローン返済額は${yen(data.totals.firstMonthLoanPayment)}（以降は減少）。`}
             </p>
 
             <h3>総額の内訳</h3>
@@ -299,10 +287,10 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
 
             <h3>年ごとの支払い</h3>
             <TotalCostChart years={data.years} />
-            <p className="hint">1年あたりのローン返済額と保有コストを重ねたグラフです。頭金は含まれません。</p>
+            <p className="hint">頭金は含みません。</p>
 
             <details className="advanced">
-              <summary>年ごとの内訳の表を見る（{data.years.length}年分）</summary>
+              <summary>年ごとの表（{data.years.length}年分・累計は頭金を含む）</summary>
               <div className="table-wrap" tabIndex={0} role="region" aria-label="年ごとの内訳の表（横にスクロールできます）">
                 <table className="compare tc-year-table">
                   <caption className="sr-only">年ごとのローン返済額・保有コスト・累計・年末残高</caption>
@@ -333,7 +321,6 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
                 </table>
               </div>
             </details>
-            <p className="hint">累計には、頭金が含まれています。</p>
 
             {assumptions.length > 0 && (
               <>
@@ -351,17 +338,11 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
               {notes.map((n) => (
                 <li key={n}>{n}</li>
               ))}
-              <li>
-                住宅ローン控除の目安は、<Link href="/tax-deduction">住宅ローン控除シミュレーター</Link>で調べられます。
-              </li>
             </ul>
 
             <p className="cta cta-row">
               <Link className="btn-link" href={simulationHref(data.loanPrincipal, shown.annualRatePercent, shown.years)}>
                 この条件で返済額を詳しく試算する
-              </Link>
-              <Link className="btn-link secondary" href="/tax-deduction">
-                住宅ローン控除を調べる
               </Link>
             </p>
             <NextSteps items={nextSteps} />
@@ -379,7 +360,7 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
         )}
 
         <p className="disclaimer">
-          試算結果は目安です。実際の費用は、物件・地域・契約内容によって異なります。
+          目安です。実際の費用は物件・地域・契約内容により異なります。
         </p>
       </section>
     </div>

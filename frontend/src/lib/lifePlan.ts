@@ -239,15 +239,15 @@ export function loanSentence(s: LifePlanSummary, endAge: number): string {
 }
 
 export const ASSUMPTION_LINE =
-  "この結果は、入力した収入・支出などの前提によって変わります。将来を予測するものではありません。金額はすべて現在の価値で、物価の上昇は考慮していません。";
+  "入力した収入・支出などの前提で変わります。将来を予測するものではありません。";
 
 const NOTE_TEXT: Record<string, string> = {
-  TODAYS_YEN_NO_INFLATION: "物価の上昇や、収入・支出の変化は考慮しません。金額は現在の価値です。",
-  INCOME_AND_COSTS_ARE_USER_INPUTS: "収入や生活費などは、入力された金額をもとに計算しています。",
+  TODAYS_YEN_NO_INFLATION: "金額は現在の価値で、物価の上昇や収入・支出の変化は考慮しません。",
+  INCOME_AND_COSTS_ARE_USER_INPUTS: "収入や生活費は入力された金額をもとにしています。",
   EDUCATION_AVERAGES_NOT_INDIVIDUAL: "教育費は、文部科学省の調査による全国平均で、個別の費用とは異なります。",
   UNIVERSITY_TUITION_ONLY: "大学は学費のみです。仕送り・通学費・住居費は含みません。",
   SIMPLIFIED_EVEN_YEARLY_MODEL: "年単位の簡易計算です。月ごとの収支の波や、年の途中の出来事は反映しません。",
-  AGES_ARE_SCHOOL_YEAR_AGES: "お子さんの年齢は、その年度に通う学年に対応する年齢（4月1日時点）として計算しています。",
+  AGES_ARE_SCHOOL_YEAR_AGES: "お子さんの年齢は、その年度の学年に対応する年齢（4月1日時点）です。",
   PENSION_AMOUNT_IS_USER_INPUT: "年金額は入力値です。ねんきん定期便などでご確認ください。",
 };
 

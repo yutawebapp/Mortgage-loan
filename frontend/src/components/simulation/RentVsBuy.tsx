@@ -180,7 +180,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
         {
           href: hrefWith("/life-plan", sharedShown, { principal: loanManStr }),
           label: "ライフプランで貯蓄の推移を試算",
-          hint: "住宅ローンの返済や教育費などを含めて、年齢ごとの貯蓄の推移の目安を確認できます。",
+          hint: "ローン返済・教育費などを含めた貯蓄推移の目安",
         },
       ]
     : [];
@@ -190,51 +190,41 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="賃貸と購入の条件">
         <fieldset className="fs-group">
           <legend>購入の条件</legend>
-          {field("priceMan", "物件価格", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
-          {field("downMan", "頭金", "万円", {
-            step: STEP_MAN_LARGE,
-            hint: "自己資金から支払う金額です。なければ0を入力してください。",
-          })}
+          {field("priceMan", "物件価格", "万円", { step: STEP_MAN_LARGE })}
+          {field("downMan", "頭金", "万円", { step: STEP_MAN_LARGE })}
           {loanEstimate !== null && (
             <p className="info-msg" role="note">
               {loanEstimate > 0 ? (
                 <>
                   借入額の目安：<strong>{yen(loanEstimate)}</strong>
-                  （物件価格 ＋ 諸費用 − 頭金）
                 </>
               ) : (
-                "頭金で物件価格と諸費用をまかなえるため、住宅ローンの借入はない計算です。借入額が1円以上になるよう、頭金などを調整してください。"
+                "頭金で物件価格と諸費用をまかなえるため、借入はない計算です。"
               )}
             </p>
           )}
-          {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。返済期間中は同じ金利として計算します。" })}
-          {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
+          {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "返済期間中は同じ金利として計算" })}
+          {field("years", "返済期間", "年", { step: "1", inputMode: "numeric" })}
         </fieldset>
 
         <fieldset className="fs-group">
           <legend>住んでからかかる費用（保有コスト）</legend>
-          <p className="hint">
-            わからない項目は0のままでも試算できます。戸建てでは管理費や修繕積立金がかからない場合もありますが、その場合は、将来の修繕の費用を自分で準備しておく必要があります。
-          </p>
           {field("managementFee", "管理費（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
-            hint: "マンションなどで毎月支払う費用です。",
           })}
           {field("repairReserve", "修繕積立金（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
-            hint: "将来の大規模修繕に備えて毎月積み立てる費用です。",
           })}
           {field("propertyTax", "固定資産税・都市計画税（年額）", "円", {
             step: STEP_YEN_YEARLY,
             inputMode: "numeric",
-            hint: "毎年、自治体から納付書が届きます。",
           })}
           {field("insurance", "火災・地震保険料（年額）", "円", {
             step: STEP_YEN_YEARLY,
             inputMode: "numeric",
-            hint: "数年分をまとめて払う場合は、1年あたりの金額に直して入力してください。",
+            hint: "数年分まとめて払う場合は1年あたりに換算",
           })}
         </fieldset>
 
@@ -243,16 +233,16 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
           {field("rent", "家賃（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
-            hint: "管理費・共益費を含めた、毎月の支払額を入力してください。",
+            hint: "管理費・共益費を含む",
           })}
         </fieldset>
 
         <fieldset className="fs-group">
-          <legend>比べる期間</legend>
+          <legend>比較の設定</legend>
           {field("horizon", "比べる期間", "年", {
             step: "1",
             inputMode: "numeric",
-            hint: "1〜50年の整数で入力できます。返済期間より長くしてもかまいません。",
+            hint: "返済期間より長くても可",
           })}
         </fieldset>
 
@@ -267,7 +257,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
             <legend>購入の詳細</legend>
             {field("closingRate", "諸費用の割合（物件価格に対して）", "%", {
               step: STEP_PERCENT,
-              hint: "登記費用・仲介手数料・保証料・各種税などは、物件価格の1割前後かかることが多いとされます。0〜30%で入力できます。",
+              hint: "仮置き。物件・条件で大きく変わります",
             })}
             <fieldset className="field">
               <legend>返済方式</legend>
@@ -296,21 +286,20 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
             <legend>賃貸の詳細</legend>
             {field("rentGrowth", "家賃の年間上昇率", "%", {
               step: STEP_PERCENT,
-              hint: "0なら、家賃は変わらない想定です。0〜10%で入力できます。",
+              hint: "0なら変わらない想定",
             })}
             {field("renewalMonths", "更新料（家賃の何か月分）", "か月", {
               step: STEP_MONTHS,
-              hint: "更新料がなければ0のままで構いません。0〜6か月で入力できます。",
+              
             })}
             {field("renewalInterval", "更新の間隔", "年", {
               step: "1",
               inputMode: "numeric",
-              hint: "1〜5年の整数で入力できます。",
             })}
             {field("rentInitial", "入居時の初期費用", "円", {
               step: STEP_YEN_YEARLY,
               inputMode: "numeric",
-              hint: "敷金・礼金・仲介手数料・引っ越し費用などの合計です。",
+              hint: "敷金・礼金・仲介手数料・引っ越し費用など",
             })}
           </fieldset>
 
@@ -320,11 +309,11 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
               step: STEP_PERCENT,
               min: -10,
               inputMode: "text",
-              hint: "マイナスは値下がりです。将来の価値は大きく変わる可能性があり、ここでは仮の値です。−10〜10%で入力できます。",
+              hint: "マイナスは値下がり。仮の値で、実際は大きく変わります",
             })}
             {field("saleCost", "売却時にかかる費用の割合", "%", {
               step: STEP_PERCENT,
-              hint: "仲介手数料など、売却時の費用を、物件価値に対する割合で入力します。0〜10%で入力できます。",
+              hint: "仲介手数料など。物件価値に対する割合",
             })}
           </fieldset>
         </details>
@@ -342,7 +331,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
 
         {noLoan && (
           <p className="note" role="note">
-            頭金の額が、物件価格と諸費用の合計以上になっています。住宅ローンを借りない場合は、このページの試算の対象外です。
+            頭金が物件価格と諸費用の合計以上のため、試算の対象外です。
           </p>
         )}
 
@@ -362,7 +351,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
               <p className="rvb-headline">{sentences.cumulative}</p>
               <p className="rvb-headline sub">{sentences.net}</p>
               <p className="hint">
-                この結果は、物件の資産価値・家賃の変動・運用など、入力した前提によって変わります。将来を予測するものではありません。
+                入力した前提（物件価値・家賃の変動など）で変わります。将来を予測するものではありません。
               </p>
             </div>
 
@@ -389,22 +378,19 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
                   <dt>最終年の1年間の支出</dt>
                   <dd>{yen(last.rentYearOutlay)}</dd>
                 </dl>
-                <p className="hint">入居時の初期費用・家賃・更新料の合計です。</p>
+                <p className="hint">初期費用・家賃・更新料の合計</p>
               </section>
             </div>
             <p className="hint">
-              購入の累計支出は、頭金・ローンの返済額・保有コストの合計です。実質負担は、累計支出から、その時点で売却したと仮定したときに手元に残る額（想定の物件価値から売却費用とローン残高を引いた額）を差し引いた金額で、マイナスになることもあります。
+              購入の累計支出は頭金・ローン返済額・保有コストの合計。実質負担は、累計支出から「その時点で売却した場合に残る額（物件価値 − 売却費用 − ローン残高）」を引いた額で、マイナスになることもあります。
             </p>
 
-            <h3>支出の推移（グラフ）</h3>
+            <h3>支出の推移</h3>
             <RentVsBuyChart years={data.years} summary={data.summary} />
 
             {data.sensitivity.length > 0 && (
               <>
                 <h3>物件価値の変化率が違う場合</h3>
-                <p className="hint">
-                  物件価値の年間変化率を変えると、実質負担は大きく変わります。前提によって結果がどれだけ動くかの確認にお使いください。
-                </p>
                 <div className="table-wrap plain" tabIndex={0} role="region" aria-label="物件価値の変化率ごとの比較表">
                   <table className="compare rvb-sens">
                     <caption className="sr-only">物件価値の年間変化率ごとの、購入の実質負担と賃貸の累計支出の比較</caption>
@@ -485,9 +471,6 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
               {notes.map((n) => (
                 <li key={n}>{n}</li>
               ))}
-              <li>
-                住宅ローン控除の目安は、<Link href="/tax-deduction">住宅ローン控除シミュレーター</Link>で調べられます。
-              </li>
             </ul>
 
             <p className="cta cta-row">
@@ -513,7 +496,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
         )}
 
         <p className="disclaimer">
-          試算結果は目安です。実際の費用は、物件・地域・契約内容や将来の状況によって異なります。
+          目安です。実際の費用は物件・地域・契約内容や将来の状況により異なります。
         </p>
       </section>
     </div>

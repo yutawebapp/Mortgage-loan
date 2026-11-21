@@ -237,7 +237,7 @@ export default function Budget({ initialValues }: { initialValues?: Partial<Budg
                 <h3>年収に対する返済負担率</h3>
                 <dl className="summary">
                   <div>
-                    <dt>返済負担率（年間返済額 ÷ 年収）</dt>
+                    <dt>年間返済額 ÷ 年収</dt>
                     <dd className="big">{data.burdenRatioPercent}%</dd>
                   </div>
                 </dl>

@@ -290,17 +290,17 @@ export default function Simulator({
     {
       href: hrefWith("/prepayment", sharedNow),
       label: "繰上げ返済の効果を試算",
-      hint: "まとまった金額を返済に充てた場合の、期間や利息の目安を比べられます。",
+      hint: "期間・利息の目安を比較",
     },
     {
       href: hrefWith("/rate-scenario", sharedNow),
       label: "金利が上がった場合を試算",
-      hint: "金利が上昇したときの毎月の返済額の目安を確認できます。",
+      hint: "毎月返済額の目安",
     },
     {
       href: hrefWith("/total-cost", sharedNow),
       label: "住居費の総額を試算",
-      hint: "諸費用なども含めた住居費の総額の目安を確認できます。",
+      hint: "諸費用を含む総額の目安",
     },
   ];
 
@@ -343,19 +343,16 @@ export default function Simulator({
           "万円",
           form.principalMan,
           (v) => set("principalMan", v),
-          {
-            step: STEP_MAN_LARGE,
-            hint: "例：4000万円 ＝ 40,000,000円",
-          },
+          { step: STEP_MAN_LARGE },
         )}
         {field("rate", "金利（年率）", "%", form.rate, (v) => set("rate", v), {
           step: STEP_RATE,
-          hint: "0〜20%で入力できます。",
+          hint: "0〜20%",
         })}
         {field("years", "返済期間", "年", form.years, (v) => set("years", v), {
           step: "1",
           inputMode: "numeric",
-          hint: "1〜50年の整数で入力できます。",
+          hint: "1〜50年",
         })}
         <fieldset className="field">
           <legend>返済方式</legend>
@@ -377,11 +374,6 @@ export default function Simulator({
             />
             元金均等返済
           </label>
-          <p className="hint">
-            {form.method === "EQUAL_PAYMENT"
-              ? "毎月の返済額がほぼ一定になる方式です。"
-              : "毎月返す元金が一定で、返済額は少しずつ減っていく方式です。"}
-          </p>
         </fieldset>
         <div className="field">
           <label className="check">
@@ -400,10 +392,7 @@ export default function Simulator({
                 "万円",
                 form.bonusMan,
                 (v) => set("bonusMan", v),
-                {
-                  step: STEP_MAN_LARGE,
-                  hint: "借入金額のうち、ボーナス月（6か月ごと）に返す分です。",
-                },
+                { step: STEP_MAN_LARGE, hint: "借入金額のうち、ボーナス月に返す分" },
               )}
             </div>
           )}
@@ -417,7 +406,7 @@ export default function Simulator({
                 setPair((p) => ({ ...p, enabled: e.target.checked }))
               }
             />
-            二人で借りる（負担割合を分けて見る）
+            二人で借りる（負担割合を分ける）
           </label>
           {pair.enabled && (
             <div className="bonus-field">
@@ -430,7 +419,7 @@ export default function Simulator({
                 onBlur={blur("selfSharePercent")}
                 step={STEP_PERCENT_WHOLE}
                 inputMode="numeric"
-                hint="1〜99%の整数で入力できます。残りをパートナーの負担として計算します。"
+                hint="1〜99%。残りはパートナーの負担"
                 error={err("selfSharePercent")}
               />
             </div>
@@ -446,7 +435,7 @@ export default function Simulator({
           step="1"
           min={AGE_MIN}
           inputMode="numeric"
-          hint={`任意です。入力すると、完済時の年齢の目安を表示します。（${AGE_MIN}〜80歳の整数）`}
+          hint={`任意（${AGE_MIN}〜80歳）。完済時の年齢の目安を表示`}
           error={touched.age ? ageErr : undefined}
         />
         <div className="field">
@@ -473,7 +462,7 @@ export default function Simulator({
           <fieldset className="plan-compare-form">
             <legend>プランB</legend>
             <p className="hint">
-              借入金額とボーナス併用の設定は、プランAと同じです。二人の負担内訳はプランAだけに表示します。
+              借入金額・ボーナス併用はプランAと共通。二人の負担内訳はプランAのみ。
             </p>
             <div className="plan-compare-fields">
               <NumberField
@@ -484,7 +473,7 @@ export default function Simulator({
                 onChange={(v) => setPlanB((p) => (p ? { ...p, rate: v } : p))}
                 onBlur={() => {}}
                 step={STEP_RATE}
-                hint="0〜20%で入力できます。"
+                hint="0〜20%"
                 error={planBValidation?.errors.rate}
               />
               <NumberField
@@ -496,7 +485,7 @@ export default function Simulator({
                 onBlur={() => {}}
                 step="1"
                 inputMode="numeric"
-                hint="1〜50年の整数で入力できます。"
+                hint="1〜50年"
                 error={planBValidation?.errors.years}
               />
               <fieldset className="field">
@@ -590,16 +579,11 @@ export default function Simulator({
                 <dd>{yen(data.totalInterest)}</dd>
               </div>
             </dl>
-            {shown.method === "EQUAL_PRINCIPAL" && (
-              <p className="hint">
-                元金均等返済では、毎月の返済額は少しずつ減ります。
-              </p>
-            )}
             {payoffA !== null && (
               <>
                 <p>完済時の年齢の目安: {payoffA}歳</p>
                 <p className="hint">
-                  金融機関によって、完済時の年齢に上限が設けられていることがあります。
+                  完済時の年齢に上限がある金融機関もあります。
                 </p>
               </>
             )}
@@ -653,7 +637,7 @@ export default function Simulator({
                     </table>
                   </div>
                   <p className="hint plan-compare-note">
-                    返済方式や返済期間が違うと、総返済額や利息総額は単純に比べられないことがあります。試算結果は目安です。
+                    返済方式・期間が違うと、総額や利息は単純比較できません。
                   </p>
                   {payoffB !== null && (
                     <p>プランBの完済時の年齢の目安: {payoffB}歳</p>
@@ -730,11 +714,11 @@ export default function Simulator({
                 </div>
                 {pairNotesProvisional && (
                   <p className="hint">
-                    それぞれが自分の負担分を別のローンとして返す、簡易的な計算です。実際のペアローン・連帯債務の扱いは金融機関によって異なります。
+                    各自の負担分を別ローンとして返す簡易計算です。実際の扱いは金融機関で異なります。
                   </p>
                 )}
                 <p className="hint">
-                  円未満の四捨五入のため、二人の合計が全体の計算と数円ずれることがあります。
+                  四捨五入のため、二人の合計が全体と数円ずれることがあります。
                 </p>
               </div>
             )}
@@ -809,7 +793,6 @@ export default function Simulator({
                 </tbody>
               </table>
             </div>
-            <p className="hint">金額の単位は円です。</p>
             <div className="export-actions">
               <button
                 type="button"

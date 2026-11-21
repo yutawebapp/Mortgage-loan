@@ -213,7 +213,7 @@ const NOTE_TEXT: Record<string, string> = {
   ASSET_VALUE_IS_ASSUMPTION: "物件の将来の価値は、入力した仮の値です。実際は大きく変わります。",
   NO_INVESTMENT_RETURN_ON_DIFFERENCE:
     "購入と賃貸の支出の差を運用した場合の収益や、頭金を運用した場合の収益は含まれません。",
-  TAX_DEDUCTION_NOT_INCLUDED: "住宅ローン控除による税の軽減は含まれません。",
+  TAX_DEDUCTION_NOT_INCLUDED: "住宅ローン控除による税の軽減は含みません。",
   SAME_HOME_CONDITIONS_NOT_ASSURED: "賃貸と購入で、広さ・立地・設備が同じとは限りません。",
   OWNERSHIP_COSTS_CONTINUE_AFTER_LOAN:
     "ローンの完済後も、管理費・修繕積立金・税金などは続く前提で計算しています。",
@@ -221,7 +221,7 @@ const NOTE_TEXT: Record<string, string> = {
 
 const ASSUMPTION_TEXT: Record<string, string> = {
   CLOSING_COSTS_FINANCED_FROM_BUDGET:
-    "諸費用は、頭金と借入額を合わせた予算の中から支払う前提です。諸費用を現金で別に用意する場合は、頭金に含めて入力してください。",
+    "諸費用は頭金と借入額を合わせた予算の中から支払う前提です。現金で別に用意する場合は頭金に含めてください。",
 };
 
 const pick = (table: Record<string, string>, codes: readonly string[]) =>

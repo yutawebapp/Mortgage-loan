@@ -77,11 +77,11 @@ const ENERGY: { value: EnergyClass; label: string; desc: string }[] = [
   {
     value: "CERTIFIED",
     label: "認定住宅（長期優良住宅・低炭素住宅）",
-    desc: "「認定長期優良住宅」または「認定低炭素住宅」の認定を受けた住宅です。いわゆる「長期優良住宅」はこの区分です。",
+    desc: "認定長期優良住宅・認定低炭素住宅",
   },
-  { value: "ZEH", label: "ZEH水準省エネ住宅", desc: "断熱等級5以上かつ一次エネルギー消費量等級6以上の住宅です。" },
-  { value: "ENERGY_STANDARD", label: "省エネ基準適合住宅", desc: "断熱等級4以上かつ一次エネルギー消費量等級4以上の住宅です。" },
-  { value: "OTHER", label: "その他の住宅", desc: "上の3つに当てはまらない住宅です。" },
+  { value: "ZEH", label: "ZEH水準省エネ住宅", desc: "断熱等級5以上かつ一次エネルギー消費量等級6以上" },
+  { value: "ENERGY_STANDARD", label: "省エネ基準適合住宅", desc: "断熱等級4以上かつ一次エネルギー消費量等級4以上" },
+  { value: "OTHER", label: "その他の住宅", desc: "上記以外" },
 ];
 
 function errorMessage(e: unknown): string {
@@ -112,12 +112,7 @@ function PersonCard({ p }: { p: TaxDeductionPerson }) {
           </>
         ) : null}
       </dl>
-      {!(p.eligible && p.totals) && (
-        <p role="note">
-          <strong>対象外となる可能性があります。</strong>
-          {ineligibleMessage(p.ineligibleReason)}
-        </p>
-      )}
+      {!(p.eligible && p.totals) && <p role="note">{ineligibleMessage(p.ineligibleReason)}</p>}
     </section>
   );
 }
@@ -286,7 +281,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
             </div>
           </div>
           <p className="hint" style={{ marginTop: -10, marginBottom: 14 }}>
-            借入実行月は、1年目の年末残高を計算するために使います。
+            借入実行月は1年目の年末残高の計算に使います。
           </p>
 
           <div className="field">
@@ -300,8 +295,8 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               {two ? `${PERSON_LABEL.A}が子育て世帯・若者夫婦世帯に該当する` : "子育て世帯・若者夫婦世帯に該当する"}
             </label>
             <p className="hint check-hint" id="td-childcare-hint">
-              19歳未満の扶養親族がいる、または夫婦のいずれかが40歳未満の世帯です。入居年の12月31日時点で判定します。
-              {two && "控除を受ける人ごとに判定されます。"}
+              19歳未満の扶養親族がいる、または夫婦のいずれかが40歳未満の世帯（入居年の12月31日時点）。
+              {two && "控除を受ける人ごとに判定。"}
             </p>
           </div>
 
@@ -317,7 +312,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
                 {PERSON_LABEL.B}が子育て世帯・若者夫婦世帯に該当する
               </label>
               <p className="hint check-hint" id="td-partner-childcare-hint">
-                子育て世帯・若者夫婦世帯は、控除を受ける人ごとに判定されます（19歳未満の扶養親族がいる人、または夫婦のいずれかが40歳未満）。
+                定義は上記と同じ。
               </p>
             </div>
           )}
@@ -333,7 +328,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               床面積が50㎡以上（約15.1坪以上）である
             </label>
             <p className="hint check-hint" id="td-area-hint">
-              40㎡台（約12.1〜15.1坪）の住宅は、子育て世帯等の上乗せの対象外です。床面積は、登記簿（登記事項証明書）上の面積で判断されます。
+              40㎡台（約12.1〜15.1坪）は子育て世帯等の上乗せの対象外。登記簿上の面積で判断されます。
             </p>
           </div>
 
@@ -347,7 +342,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
                 />
                 {legacyExceptionLabel(legacyKind)}
               </label>
-              <p className="hint check-hint">この条件に当てはまる場合は、住宅ローン減税の対象になる可能性があります。</p>
+              <p className="hint check-hint">該当すると、対象になる可能性があります。</p>
             </div>
           )}
         </fieldset>
@@ -362,12 +357,11 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
           )}
           {field("principalMan", two ? "借入金額（合計）" : "借入金額", "万円", {
             step: STEP_MAN_LARGE,
-            hint: "例：4000万円 ＝ 40,000,000円",
           })}
           {two &&
-            field("shareAPercent", "あなたの負担割合（借入のうち、あなたの分）", "%", {
+            field("shareAPercent", "あなたの負担割合", "%", {
               step: STEP_PERCENT_WHOLE,
-              hint: "借入の負担割合は、住宅の持分割合と同じにする前提で計算します。違うと控除が減る場合があります。",
+              hint: "住宅の持分割合と同じ前提。異なると控除が減る場合があります",
               extra: shareOk ? (
                 <p className="info-msg" role="note">
                   {PERSON_LABEL.A}：{shareNum}%{split ? `（約${manOrYen(split.a)}）` : ""}　{PERSON_LABEL.B}：
@@ -375,14 +369,13 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
                 </p>
               ) : null,
             })}
-          {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。" })}
+          {field("rate", "金利（年率）", "%", { step: STEP_RATE })}
           {field("years", "返済期間", "年", {
             step: "1",
             inputMode: "numeric",
-            hint: "1〜50年の整数で入力できます。",
             extra: isUnderTenYears(form.years) ? (
               <p className="info-msg" role="note">
-                返済期間が10年未満のローンは、住宅ローン減税の対象外となる可能性があります。
+                10年未満のローンは対象外となる可能性があります。
               </p>
             ) : null,
           })}
@@ -413,16 +406,11 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
           <legend>収入</legend>
           {field("incomeMan", hasPartner ? `${PERSON_LABEL.A}の年収（額面）` : "年収（額面）", "万円", {
             step: STEP_MAN_LARGE,
-            hint: "税額の推計に使います。",
           })}
           {two &&
             field("partnerIncomeMan", `${PERSON_LABEL.B}の年収（額面）`, "万円", {
               step: STEP_MAN_LARGE,
-              hint: "税額の推計に使います。",
             })}
-          {guarantee && (
-            <p className="hint">保証人の収入は、住宅ローン控除の試算には使いません。</p>
-          )}
           <details className="advanced">
             <summary>詳細設定</summary>
             {field(
@@ -431,13 +419,12 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               "%",
               {
                 step: STEP_PERCENT,
-                hint: "実際の社会保険料率に近い値に変更できます。0〜30%で入力できます。",
+                hint: "仮置き。実際の料率に近い値に変更可",
               },
             )}
             {two &&
               field("partnerSocialInsuranceRate", `${PERSON_LABEL.B}の社会保険料率（年収に対する割合）`, "%", {
                 step: STEP_PERCENT,
-                hint: "0〜30%で入力できます。",
               })}
           </details>
         </fieldset>
@@ -465,9 +452,8 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
           <div className={stale ? "stale" : undefined}>
             <div className="ineligible" role="note">
               <p>
-                <strong>住宅ローン減税の対象外となる可能性があります</strong>
+                <strong>{ineligibleMessage(data.ineligibleReason)}</strong>
               </p>
-              <p>{ineligibleMessage(data.ineligibleReason)}</p>
             </div>
             {shownTwo && data.persons && (
               <div className="person-cards">
@@ -490,7 +476,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               <p className="hint">{shownTwo ? "世帯の控除額の合計の目安" : "控除額の合計の目安"}</p>
               <p className="big">約{manOrYen(data.totals.totalDeduction)}</p>
               <p className="hint">
-                控除期間は{data.rule.deductionYears}年です。所得税と住民税から差し引かれる額の、期間中の合計を推計しています。
+                所得税・住民税から差し引かれる額の、控除期間（{data.rule.deductionYears}年）中の合計
               </p>
             </div>
 
@@ -505,9 +491,9 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               </div>
             </dl>
             <p className="hint">
-              実質負担は、「控除期間の返済額の合計」から「控除額の合計」を引いた金額です。
+              実質負担＝返済額の合計 − 控除額の合計。
               {data.totals.totalUnclaimed > 0 &&
-                `この条件では、控除しきれない額が合計で約${manOrYen(data.totals.totalUnclaimed)}生じる推計です。`}
+                ` 控除しきれない額は合計で約${manOrYen(data.totals.totalUnclaimed)}の推計です。`}
             </p>
 
             {shownTwo && data.persons && (
@@ -526,7 +512,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
                 {shownTwo ? (
                   <>
                     控除率：<strong>{data.rule.ratePercent}%</strong>　控除期間：<strong>{data.rule.deductionYears}年</strong>
-                    （{PERSON_LABEL.A}の条件で表示しています。借入限度額は、お二人それぞれに当てはめています。）
+                    （{PERSON_LABEL.A}の条件で表示。借入限度額は二人それぞれに適用）
                   </>
                 ) : (
                   <>
@@ -578,7 +564,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               「控除枠」は、年末残高（借入限度額が上限）に{data.rule.ratePercent}%をかけた額です。住民税から控除する額は、翌年度の住民税から差し引かれます。
             </p>
 
-            <h3>控除額の内訳（グラフ）</h3>
+            <h3>控除額の内訳</h3>
             <TaxDeductionChart rows={data.years} />
 
             <div className="panel-block">
@@ -656,9 +642,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
               </ul>
             </div>
 
-            <p className="hint">
-              手続きは、1年目は確定申告で行います。会社員の方は、2年目以降は年末調整で手続きするのが一般的です。
-            </p>
+            <p className="hint">手続き：1年目は確定申告。会社員は2年目以降、年末調整が一般的です。</p>
 
             <p className="cta cta-row">
               <Link
@@ -672,7 +656,7 @@ export default function TaxDeduction({ initialValues }: { initialValues?: Partia
         )}
 
         <p className="disclaimer">
-          試算結果は目安です。実際の控除額は、住宅の要件、扶養親族や各種控除の状況、年末の借入残高などによって異なります。確定申告や年末調整の際は、税務署等でご確認ください。
+          目安です。実際の控除額は、住宅の要件・扶養親族や各種控除の状況・年末の借入残高などにより異なります。手続きの際は税務署等でご確認ください。
         </p>
       </section>
     </div>

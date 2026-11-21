@@ -9,7 +9,6 @@ import {
   type EligibilityResponse,
 } from "@/lib/api/eligibility";
 import {
-  eligibilityModeNote,
   eligibilityNoteTexts,
   manLabel,
   simulationHref,
@@ -41,6 +40,8 @@ const initial: EligibilityForm = {
   partnerOtherMan: "0",
   partnerCountPercent: "50",
 };
+
+const OTHER_HINT = "自動車・教育・カードローンなどの合計";
 
 type FieldKey = "incomeMan" | "otherMan" | "rate" | "years" | "screeningRate" | "partnerIncomeMan" | "partnerOtherMan" | "partnerCountPercent";
 
@@ -132,55 +133,50 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
   return (
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="借入可能額の条件">
-        <h2>ローンの借り方</h2>
         <BorrowerModeSelector name="el-mode" value={form.mode} onChange={(m) => set("mode", m)} />
 
-        <h2>{two ? `${PERSON_LABEL.A}の収入と他の借入` : "収入と他の借入"}</h2>
-        {field("incomeMan", two ? `${PERSON_LABEL.A}の年収（額面）` : "年収（額面）", "万円", {
-          step: STEP_MAN_LARGE,
-          hint: "税金などを引く前の金額です。例：500万円 ＝ 5,000,000円",
-        })}
-        {field("otherMan", two ? `${PERSON_LABEL.A}の他の借入の年間返済額` : "他の借入の年間返済額", "万円", {
-          step: STEP_MAN_LARGE,
-          hint: "自動車ローン・教育ローン・カードローンなどの年間返済額の合計です。なければ0のままで構いません。",
-        })}
+        {two ? (
+          <fieldset className="fs-group">
+            <legend>{PERSON_LABEL.A}</legend>
+            {field("incomeMan", "年収（額面）", "万円", { step: STEP_MAN_LARGE, hint: "税引前" })}
+            {field("otherMan", "他の借入の年間返済額", "万円", { step: STEP_MAN_LARGE, hint: OTHER_HINT })}
+          </fieldset>
+        ) : (
+          <>
+            <h2>収入と他の借入</h2>
+            {field("incomeMan", "年収（額面）", "万円", { step: STEP_MAN_LARGE, hint: "税引前" })}
+            {field("otherMan", "他の借入の年間返済額", "万円", { step: STEP_MAN_LARGE, hint: OTHER_HINT })}
+          </>
+        )}
 
         {two && (
-          <>
-            <h2>{PERSON_LABEL.B}の収入と他の借入</h2>
-            {field("partnerIncomeMan", `${PERSON_LABEL.B}の年収（額面）`, "万円", {
-              step: STEP_MAN_LARGE,
-              hint: "税金などを引く前の金額です。",
-            })}
-            {field("partnerOtherMan", `${PERSON_LABEL.B}の他の借入の年間返済額`, "万円", {
-              step: STEP_MAN_LARGE,
-              hint: "なければ0のままで構いません。",
-            })}
+          <fieldset className="fs-group">
+            <legend>{PERSON_LABEL.B}</legend>
+            {field("partnerIncomeMan", "年収（額面）", "万円", { step: STEP_MAN_LARGE, hint: "税引前" })}
+            {field("partnerOtherMan", "他の借入の年間返済額", "万円", { step: STEP_MAN_LARGE })}
             {form.mode === "JOINT_GUARANTEE" &&
               field("partnerCountPercent", "保証人の収入を審査で見る割合", "%", {
                 step: STEP_PERCENT_WHOLE,
                 inputMode: "numeric",
-                hint: "金融機関によって異なる仮の値です。0〜100%の整数で入力できます。",
+                hint: "仮の値（金融機関により異なる）",
               })}
-          </>
+          </fieldset>
         )}
 
         <h2>借入予定の条件</h2>
         {field("rate", "借入予定の金利（年率）", "%", {
           step: STEP_RATE,
-          hint: "0〜20%で入力できます。",
         })}
         {field("years", "返済期間", "年", {
           step: "1",
           inputMode: "numeric",
-          hint: "1〜50年の整数で入力できます。",
         })}
 
         <details className="advanced">
           <summary>詳細設定</summary>
           {field("screeningRate", "審査金利（年率）", "%", {
             step: STEP_RATE,
-            hint: "金融機関は、実際の金利より高い金利で返済能力を確認することが多いため、その想定の金利です。0〜20%で入力できます。",
+            hint: "実際の金利より高めに設定して返済能力を見る想定",
           })}
         </details>
         <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
@@ -208,8 +204,7 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
             {isTwoPerson(shownMode) && (
               <div className="note" role="note">
                 <p style={{ margin: 0 }}>
-                  {eligibilityModeNote(shownMode)}
-                  {shownMode === "PAIR_LOAN" ? "下の金額は、二人分の合計です。" : "下の金額は、二人の収入を合わせた結果です。"}
+                  {shownMode === "PAIR_LOAN" ? "下の金額は二人分の合計です。" : "下の金額は二人の収入を合わせた結果です。"}
                 </p>
                 {noteTexts.length > 0 && (
                   <ul style={{ margin: "6px 0 0", paddingLeft: "1.2em" }}>
@@ -234,7 +229,7 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
 
             {data.atScreeningRate.maxPrincipal === 0 && (
               <p className="note" role="note">
-                他の借入の年間返済額が大きいため、この条件では借入可能額の目安が0円になりました。他の借入の返済額や年収の入力内容を確認してください。
+                他の借入の返済額が大きく、借入可能額の目安は0円です。
               </p>
             )}
 
@@ -253,9 +248,6 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
                 </dd>
               </div>
             </dl>
-            <p className="hint">
-              実際の金利で計算した参考値です。金融機関の審査では、より高い審査金利が使われることがあります。
-            </p>
 
             {data.persons && data.persons.length > 0 && (
               <>
@@ -304,7 +296,7 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
               </div>
             </dl>
             <p className="hint">
-              返済負担率は、年収に占める年間返済額の割合です。この目安では、年収400万円未満は30%、400万円以上は35%を上限としています。年間返済可能額は、上限額から他の借入の年間返済額を引いた金額です。
+              返済負担率の上限は、年収400万円未満で30%、400万円以上で35%（仮置き）。年間返済可能額は、上限額から他の借入の返済額を引いた金額です。
             </p>
 
             {data.atScreeningRate.maxPrincipal > 0 && (
@@ -323,7 +315,7 @@ export default function Eligibility({ initialValues }: { initialValues?: Partial
         )}
 
         <p className="disclaimer">
-          本診断は目安であり、実際の審査結果・借入可能額を保証するものではありません。金融機関ごとに審査基準は異なります。
+          目安です。実際の審査結果・借入可能額を保証するものではありません。
         </p>
       </section>
     </div>

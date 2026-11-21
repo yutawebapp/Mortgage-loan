@@ -142,17 +142,3 @@ const ELIGIBILITY_NOTES: Record<string, string> = {
 export function eligibilityNoteTexts(codes: readonly string[] | null | undefined): string[] {
   return (codes ?? []).flatMap((c) => (ELIGIBILITY_NOTES[c] ? [ELIGIBILITY_NOTES[c]] : []));
 }
-
-/** 借り方ごとの説明（結果の上に出す）。SINGLE は null。 */
-export function eligibilityModeNote(mode: BorrowerMode): string | null {
-  switch (mode) {
-    case "PAIR_LOAN":
-      return "ペアローン：それぞれの収入で個別に審査し、合計する想定です。";
-    case "JOINT_DEBT":
-      return "収入合算（連帯債務）：二人の収入を合算して、1本のローンを審査する想定です。";
-    case "JOINT_GUARANTEE":
-      return "収入合算（連帯保証）：あなたの収入と、保証人の収入の一定割合を合算する仮の想定です。";
-    default:
-      return null;
-  }
-}

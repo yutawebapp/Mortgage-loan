@@ -138,7 +138,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
     {
       href: hrefWith("/rate-types", sharedNow),
       label: "金利タイプごとに比べる",
-      hint: "変動金利・固定期間選択型・全期間固定を、同じ借入条件で並べて比べられます。",
+      hint: "同じ条件で金利タイプを比較",
     },
   ];
 
@@ -146,9 +146,9 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="金利上昇シミュレーションの条件">
         <h2>ローンの条件</h2>
-        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
-        {field("rate", "当初金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。変動金利型の現在の金利を想定します。" })}
-        {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年の整数で入力できます。" })}
+        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE })}
+        {field("rate", "当初金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%。変動金利型の現在の金利を想定" })}
+        {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "2〜50年" })}
         <fieldset className="field">
           <legend>返済方式</legend>
           <label className="radio">
@@ -169,11 +169,6 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
             />
             元金均等返済
           </label>
-          <p className="hint">
-            {form.method === "EQUAL_PAYMENT"
-              ? "毎月の返済額がほぼ一定になる方式です。"
-              : "毎月返す元金が一定で、返済額は少しずつ減っていく方式です。"}
-          </p>
         </fieldset>
 
         <h2>金利が上昇する場合</h2>
@@ -181,7 +176,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
           step: "1",
           inputMode: "numeric",
           pre: "返済開始から",
-          hint: "1年以上、返済期間より前の整数で入力できます。この時期に一度だけ金利が上昇する想定です。",
+          hint: "1年以上・返済期間より前。一度だけ上昇する想定",
         })}
         <fieldset className="field" aria-describedby="rise-hint">
           <legend>金利の上昇幅（%ポイント）</legend>
@@ -215,7 +210,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
             </div>
           </div>
           <p className="hint" id="rise-hint">
-            1つ以上選んでください（最大5つ）。自分で指定する場合は、0より大きく10以下で入力できます。
+            1〜5つ選択。自分で指定する場合は0より大きく10以下。
           </p>
           {pointsErr && (
             <p className="field-error" id="rise-err">
@@ -229,7 +224,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
       <section className="results" aria-labelledby="result-h" aria-busy={loading}>
         <h2 id="result-h">試算結果</h2>
         <p className="note" role="note">
-          本試算は金利が一度だけ上昇する簡易モデルです。実際の変動金利型ローンには、返済額の見直し時期（5年ルール）や上昇幅の上限（125%ルール）などの仕組みがあり、本試算には反映していません。
+          金利が一度だけ上昇する簡易モデルです。5年ルール・125%ルールなどは反映していません。
         </p>
         <div aria-live="polite" role="status" className="status">
           {!request && "入力内容に誤りがあります。左（上）のエラーを確認してください。"}
@@ -248,9 +243,6 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
 
         {data && request && (
           <div className={stale ? "stale" : undefined}>
-            <p className="hint">
-              返済開始から{request.riseAfterYears}年後に金利が上昇し、その後は残りの期間で同じ返済方式のまま返済する場合の比較です。
-            </p>
             <div className="table-wrap plain" tabIndex={0} role="region" aria-label="金利上昇シナリオの比較表（横にスクロールできます）">
               <table className="compare">
                 <caption className="sr-only">金利上昇シナリオ別の返済額の比較</caption>
@@ -281,9 +273,9 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
               </table>
             </div>
             <p className="hint">
-              「毎月の増加額」「追加の利息」は、現在の金利のままの場合との差です。
+              増加額・追加の利息は、金利が変わらない場合との差です。
               {request.method === "EQUAL_PRINCIPAL" &&
-                "元金均等返済では毎月の返済額が少しずつ減るため、上昇後の金額が上昇前より小さく表示されることがあります。"}
+                "元金均等返済では、上昇後の金額が上昇前より小さく表示されることがあります。"}
             </p>
 
             <h3>毎月の返済額の推移</h3>
@@ -292,7 +284,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
               scenarios={data.scenarios}
               riseAfterYears={request.riseAfterYears}
             />
-            <p className="hint">点線の縦線は、金利が上昇する時期です。</p>
+            <p className="hint">点線は金利が上昇する時期。</p>
             <NextSteps items={nextSteps} />
           </div>
         )}
@@ -304,7 +296,7 @@ export default function RateScenario({ initialValues }: { initialValues?: Partia
         )}
 
         <p className="disclaimer">
-          試算結果は目安であり、将来の金利や返済額を予測・保証するものではありません。実際の条件は、お借入れの金融機関にご確認ください。
+          試算結果は目安です。将来の金利や返済額を予測・保証するものではありません。
         </p>
       </section>
     </div>

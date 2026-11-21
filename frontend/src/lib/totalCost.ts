@@ -120,15 +120,15 @@ export function sharePercent(part: number, whole: number): number {
 }
 
 const NOTE_TEXT: Record<string, string> = {
-  OWNERSHIP_COST_CONSTANT: "管理費・修繕積立金・税金・保険料は、入力した金額が毎年同じとして計算しています。将来の値上がりや税額の変動は含まれません。",
-  NO_RESALE_VALUE: "売却したときの価格や、住まいの資産価値は含まれません。",
-  COSTS_AFTER_LOAN_TERM_EXCLUDED: "ローンの返済が終わったあとにかかる保有コストは含まれません。",
-  TAX_DEDUCTION_NOT_INCLUDED: "住宅ローン控除による税の軽減は含まれません。",
+  OWNERSHIP_COST_CONSTANT: "保有コストは入力額が毎年同じとして計算し、将来の値上がりや税額の変動は含みません。",
+  NO_RESALE_VALUE: "売却価格・資産価値は含みません。",
+  COSTS_AFTER_LOAN_TERM_EXCLUDED: "ローン完済後の保有コストは含みません。",
+  TAX_DEDUCTION_NOT_INCLUDED: "住宅ローン控除による税の軽減は含みません（目安は住宅ローン控除の試算で確認）。",
 };
 
 const ASSUMPTION_TEXT: Record<string, string> = {
   CLOSING_COSTS_FINANCED_FROM_BUDGET:
-    "諸費用は、頭金と借入額を合わせた予算の中から支払う前提です。諸費用を現金で別に用意する場合は、頭金に含めて入力してください。",
+    "諸費用は頭金と借入額を合わせた予算の中から支払う前提です。現金で別に用意する場合は頭金に含めてください。",
 };
 
 const pick = (table: Record<string, string>, codes: readonly string[]) =>

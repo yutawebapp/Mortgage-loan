@@ -119,22 +119,21 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
         <h2>現在のローン</h2>
         {field("balanceMan", "現在の残債", "万円", form.balanceMan, (v) => set("balanceMan", v), {
           step: STEP_MAN_LARGE,
-          hint: "例：3000万円 ＝ 30,000,000円",
         })}
         {field("currentRate", "現在の金利（年率）", "%", form.currentRate, (v) => set("currentRate", v), {
           step: STEP_RATE,
-          hint: "0〜20%で入力できます。",
+          hint: "0〜20%",
         })}
         {field("remainingYears", "現在ローンの残り期間", "年", form.remainingYears, (v) => set("remainingYears", v), {
           step: "1",
           inputMode: "numeric",
-          hint: "1〜50年の整数で入力できます。",
+          hint: "1〜50年",
         })}
 
         <h2>借り換え後</h2>
         {field("newRate", "借り換え後の金利（年率）", "%", form.newRate, (v) => set("newRate", v), {
           step: STEP_RATE,
-          hint: "0〜20%で入力できます。",
+          hint: "0〜20%",
         })}
         {field(
           "newYears",
@@ -149,8 +148,8 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
             step: "1",
             inputMode: "numeric",
             hint: newYearsEdited
-              ? "1〜50年の整数で入力できます。"
-              : "入力するまでは、現在ローンの残り期間と同じになります。",
+              ? "1〜50年"
+              : "未入力の間は現在の残り期間と同じ",
           },
         )}
         <fieldset className="field">
@@ -173,15 +172,10 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
             />
             元金均等返済
           </label>
-          <p className="hint">
-            {form.method === "EQUAL_PAYMENT"
-              ? "毎月の返済額がほぼ一定になる方式です。"
-              : "毎月返す元金が一定で、返済額は少しずつ減っていく方式です。"}
-          </p>
         </fieldset>
         {field("costsMan", "借り換え諸費用", "万円", form.costsMan, (v) => set("costsMan", v), {
           step: STEP_MAN_LARGE,
-          hint: "初期値は借入額の2〜3%程度（約75万円）の目安です。金融機関により大きく異なります（事務手数料が借入額の2.2%の銀行、定額の手数料＋保証料の銀行など）。事務手数料・抵当権設定の登録免許税（借入額の0.4%）・司法書士報酬・印紙税・繰上返済手数料などが含まれることがあります。現在のローンの保証料が戻る場合があり、その分は差し引いて入力してください。わからない場合は0と入力しても試算できます。",
+          hint: "初期値は借入額の2〜3%程度（約75万円）の目安。金融機関で大きく異なります。事務手数料・登録免許税・司法書士報酬・印紙税などを含みます。現在のローンの保証料が戻る場合は差し引いて入力。不明なら0でも試算できます。",
         })}
       </form>
 
@@ -210,7 +204,7 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
                   ? "借り換えによる総支払額の差はない試算です"
                   : `借り換えにより総支払額が${diffPhrase(data.totalSaving)}試算です`}
               </p>
-              <p className="hint">借り換え諸費用を含めた、現在のまま返済する場合との差です。</p>
+              <p className="hint">諸費用を含む、現在のまま返済する場合との差</p>
             </div>
 
             <dl className="summary">
@@ -227,14 +221,11 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
                 </dd>
               </div>
             </dl>
-            <p className="hint">
-              損益分岐点は、借り換えによる支払いの減少分が諸費用を上回り始める時期の目安です。
-            </p>
+            <p className="hint">損益分岐点：支払いの減少分が諸費用を上回り始める時期の目安です。</p>
 
             {yearsDiffer && (
               <p className="note" role="note">
-                借り換え後の返済期間（{request.newYears}年）が、現在ローンの残り期間（{request.remainingYears}
-                年）と異なります。返済期間が違うと、総返済額や利息の合計は単純に比べられません。期間の違いを踏まえて見てください。
+                返済期間が異なります（現在の残り{request.remainingYears}年／借り換え後{request.newYears}年）。総返済額や利息は単純に比べられません。
               </p>
             )}
 
@@ -277,22 +268,18 @@ export default function Refinancer({ initialValues }: { initialValues?: Partial<
                 </tbody>
               </table>
             </div>
-            <p className="hint">
-              {form.method === "EQUAL_PRINCIPAL"
-                ? "元金均等返済では、毎月の返済額は返済開始時点の金額で、少しずつ減ります。"
-                : "金額の単位は円です。"}
-            </p>
+            {form.method === "EQUAL_PRINCIPAL" && (
+              <p className="hint">毎月の返済額は返済開始時点の金額です（以降は減ります）。</p>
+            )}
 
             <h3>累計の差額の推移</h3>
             <RefinanceChart points={data.cumulativeSaving} breakEvenMonth={data.breakEvenMonth} />
-            <p className="hint">
-              諸費用を含めた、現在のまま返済する場合との支払額の差の累計です。0円より上は借り換えの方が支払いが少なく、下は多い状態です。
-            </p>
+            <p className="hint">0円より上は借り換えの方が支払いが少ない状態です。</p>
           </div>
         )}
 
         <p className="disclaimer">
-          試算結果は目安であり、実際の借り換え可否・条件・諸費用を保証するものではありません。
+          試算結果は目安です。借り換えの可否・条件・諸費用を保証するものではありません。
         </p>
       </section>
     </div>

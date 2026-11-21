@@ -181,42 +181,39 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="ライフプランの条件">
         <p className="info-msg" role="note">
-          金額はすべて<strong>現在の価値</strong>で入力します。物価の上昇は考慮しません。
+          金額はすべて<strong>現在の価値</strong>で入力（物価上昇は考慮しません）
         </p>
 
         <fieldset className="fs-group">
           <legend>あなたと家計</legend>
-          {field("age", "あなたの年齢", "歳", { step: "1", inputMode: "numeric", hint: "18〜70歳の整数で入力できます。" })}
+          {field("age", "あなたの年齢", "歳", { step: "1", inputMode: "numeric" })}
           {field("takeHomeMan", "手取り年収", "万円", {
             step: STEP_MAN_LARGE,
-            hint: "税金や社会保険料を引いた後の、1年間の金額です。初期値の400万円は年収500万円の手取りの仮の目安です（公式の計算値ではありません）。例：400万円",
+            hint: "初期値400万円は年収500万円の手取りの仮の目安（公式の計算値ではありません）",
           })}
           {field("livingMan", "毎月の生活費（住居費を除く）", "万円", {
             step: STEP_MAN_MONTHLY,
-            hint: "食費・光熱費・通信費・保険料・レジャーなど、住居費以外の毎月の支出です。",
           })}
-          {field("savingsMan", "現在の貯蓄", "万円", { step: STEP_MAN_LARGE, hint: "預貯金など、すぐ使える金額の合計です。" })}
+          {field("savingsMan", "現在の貯蓄", "万円", { step: STEP_MAN_LARGE })}
         </fieldset>
 
         <fieldset className="fs-group">
           <legend>住宅ローン</legend>
           {field("loanMan", "借入額", "万円", {
             step: STEP_MAN_LARGE,
-            hint: "借入がない場合は0を入力してください。",
+            hint: "借入がなければ0",
           })}
           {hasLoan && (
             <>
-              {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。返済期間中は同じ金利として計算します。" })}
-              {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
+              {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "返済期間中は同じ金利として計算" })}
+              {field("years", "返済期間", "年", { step: "1", inputMode: "numeric" })}
             </>
           )}
         </fieldset>
 
         <fieldset className="fs-group">
           <legend>お子さん（教育費）</legend>
-          <p className="hint">
-            お子さんの年齢と進路を入力すると、教育費を試算に含めます。いなければ、そのままで構いません。公立・私立の費用は、全国平均の学習費に基づく目安です。
-          </p>
+          <p className="hint">教育費は全国平均の学習費に基づく目安です。</p>
           {form.children.map((c, i) => {
             const ce = childError(errors, i);
             const ageKey = `child-${i}-age`;
@@ -233,7 +230,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
                   onBlur={blur(ageKey)}
                   step="1"
                   inputMode="numeric"
-                  hint="その年度に通う学年に対応する年齢（4月1日時点の年齢）です。0〜21歳で入力できます。"
+                  hint="4月1日時点の年齢"
                   error={ageErr}
                 />
                 <div className="field">
@@ -284,35 +281,35 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
 
           <fieldset className="fs-group">
             <legend>退職と年金</legend>
-            {field("retireAge", "退職年齢", "歳", { step: "1", inputMode: "numeric", hint: "あなたの年齢より大きく、80歳以下の整数で入力できます。" })}
-            {field("pensionAge", "年金などを受け取り始める年齢", "歳", { step: "1", inputMode: "numeric", hint: "50〜80歳の整数で入力できます。" })}
+            {field("retireAge", "退職年齢", "歳", { step: "1", inputMode: "numeric" })}
+            {field("pensionAge", "年金などを受け取り始める年齢", "歳", { step: "1", inputMode: "numeric" })}
             {field("retireIncomeMan", "退職後の年間収入（年金など）", "万円", {
               step: STEP_MAN_LARGE,
-              hint: "年金などの、1年間の受け取り額です。ねんきん定期便などでご確認ください。入力例です。",
+              hint: "入力例です。ねんきん定期便などで確認できます",
             })}
-            {field("retireLivingMan", "退職後の毎月の生活費（住居費を除く）", "万円", { step: STEP_MAN_MONTHLY, hint: "入力例です。" })}
+            {field("retireLivingMan", "退職後の毎月の生活費（住居費を除く）", "万円", { step: STEP_MAN_MONTHLY, hint: "入力例です" })}
             {field("endAge", "想定する年齢の上限", "歳", {
               step: "1",
               inputMode: "numeric",
-              hint: "この年齢までの貯蓄の推移を計算します。退職年齢より大きく、100歳以下で入力できます。",
+              hint: "この年齢までの推移を計算",
             })}
           </fieldset>
 
           <fieldset className="fs-group">
             <legend>収入と貯蓄</legend>
-            {field("growth", "収入の年間上昇率", "%", { step: STEP_PERCENT, hint: "0なら、収入は変わらない想定です。0〜5%で入力できます。" })}
+            {field("growth", "収入の年間上昇率", "%", { step: STEP_PERCENT, hint: "0なら変わらない想定" })}
             {field("returnRate", "貯蓄の運用利回り", "%", {
               step: STEP_PERCENT,
-              hint: "0なら、貯蓄に利息はつかない想定です。0〜10%で入力できます。",
+              hint: "0なら利息なしの想定",
             })}
           </fieldset>
 
           <fieldset className="fs-group">
             <legend>住まいの費用</legend>
-            <p className="hint">住宅ローンの有無にかかわらず、ここで入力した住居費を、毎年の支出に加えます。</p>
+            <p className="hint">ここの住居費は、住宅ローンの有無にかかわらず毎年の支出に加えます。</p>
             {field("upfrontMan", "購入時に貯蓄から払う額（頭金・諸費用）", "万円", {
               step: STEP_MAN_LARGE,
-              hint: "住宅の購入時に、現在の貯蓄から支払う金額です。なければ0のままで構いません。",
+              
             })}
             <fieldset className="field">
               <legend>返済方式</legend>
@@ -338,12 +335,12 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
             {field("housingMonthly", "毎月の住居費（ローン以外）", "円", {
               step: STEP_YEN_MONTHLY,
               inputMode: "numeric",
-              hint: "賃貸の家賃、持ち家の管理費・修繕積立金など、住宅ローン以外に毎月かかる住居費です。住宅ローンがない場合も入力できます。入力例です。",
+              hint: "家賃、管理費・修繕積立金など。入力例です",
             })}
             {field("housingTaxYearly", "毎年の住居費（固定資産税・保険など）", "円", {
               step: STEP_YEN_YEARLY,
               inputMode: "numeric",
-              hint: "固定資産税・都市計画税・火災保険料、賃貸の更新料など、1年に1回などまとめてかかる住居費の、1年あたりの合計です。入力例です。",
+              hint: "固定資産税・火災保険料・更新料などの年間合計。入力例です",
             })}
           </fieldset>
         </details>
@@ -379,17 +376,17 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
               <section className="lp-card" aria-label="退職時の貯蓄">
                 <h3>退職時の貯蓄</h3>
                 <p className="lp-val">約{manApprox(s.savingsAtRetirement)}</p>
-                <p className="hint">{retireAge - 1}歳の年末の残高です。</p>
+                <p className="hint">{retireAge - 1}歳の年末</p>
               </section>
               <section className="lp-card" aria-label="最も貯蓄が少なくなる時点">
                 <h3>最も貯蓄が少なくなる時点</h3>
                 <p className="lp-val">約{manApprox(s.minSavings)}</p>
-                <p className="hint">{s.minSavingsAge}歳の年末です。</p>
+                <p className="hint">{s.minSavingsAge}歳の年末</p>
               </section>
               <section className="lp-card" aria-label="上限年齢の貯蓄">
                 <h3>{endAge}歳の時点の貯蓄</h3>
                 <p className="lp-val">約{manApprox(s.savingsAtEnd)}</p>
-                <p className="hint">想定する年齢の上限の年末です。</p>
+                
               </section>
               <section className="lp-card" aria-label="住宅ローン">
                 <h3>住宅ローンの完済</h3>
@@ -401,7 +398,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
                 <p className="hint">{loanSentence(s, endAge)}</p>
                 {s.totalLoanPayment > 0 ? (
                   <p className="hint">
-                    返済額の合計は約{manApprox(s.totalLoanPayment)}です（{endAge}歳までの期間内に支払う分だけを数えています）。
+                    返済額の合計は約{manApprox(s.totalLoanPayment)}（{endAge}歳までに支払う分のみ）。
                   </p>
                 ) : null}
               </section>
@@ -411,23 +408,23 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
                   <>
                     <p className="lp-val">合計 約{manApprox(s.totalEducationCost)}</p>
                     <p className="hint">
-                      最も多いのは、あなたが{s.peakEducationAge}歳のときで、1年あたり約{manApprox(s.peakEducationCost ?? 0)}です。
+                      最大は{s.peakEducationAge}歳のとき、年約{manApprox(s.peakEducationCost ?? 0)}。
                     </p>
                   </>
                 ) : (
                   <>
                     <p className="lp-val">―</p>
-                    <p className="hint">お子さんの入力がないか、期間内に教育費がかからない計算です。</p>
+                    <p className="hint">お子さんの入力がないか、期間内に教育費がかかりません。</p>
                   </>
                 )}
               </section>
             </div>
 
-            <h3>貯蓄の推移（グラフ）</h3>
+            <h3>貯蓄の推移</h3>
             <SavingsChart years={data.years} summary={s} />
-            <p className="hint">年末の貯蓄残高です。ゼロより下の部分は、斜線で示しています。</p>
+            <p className="hint">年末の貯蓄残高。ゼロ未満は斜線で示します。</p>
 
-            <h3>1年あたりの支出の内訳（グラフ）</h3>
+            <h3>1年あたりの支出の内訳</h3>
             <OutflowChart years={data.years} />
 
             <details className="advanced">
@@ -464,7 +461,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
                 </table>
               </div>
             </details>
-            <p className="hint">表の単位は円です。マイナスは「−」で示しています。</p>
+            <p className="hint">単位は円。マイナスは「−」。</p>
 
             <h3>前提と含まれないもの</h3>
             <ul className="tc-excluded">
@@ -472,7 +469,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
                 <li key={n}>{n}</li>
               ))}
               <li>
-                住宅ローン控除による税の軽減は含まれません。目安は<Link href="/tax-deduction">住宅ローン控除シミュレーター</Link>で調べられます。
+                住宅ローン控除による税の軽減は含みません（<Link href="/tax-deduction">住宅ローン控除の試算</Link>）。
               </li>
             </ul>
 
@@ -515,7 +512,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
         )}
 
         <p className="disclaimer">
-          試算結果は目安です。実際の収入・支出・教育費は、ご家庭の状況や将来の制度・物価によって異なります。
+          目安です。実際の収入・支出・教育費は、ご家庭の状況や将来の制度・物価により異なります。
         </p>
       </section>
     </div>

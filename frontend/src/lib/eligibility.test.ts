@@ -5,7 +5,6 @@ import {
   manLabel,
   simulationHref,
   validateEligibility,
-  eligibilityModeNote,
   eligibilityNoteTexts,
 } from "./eligibility";
 
@@ -181,7 +180,5 @@ describe("two-person modes (eligibility)", () => {
   it("note helpers map known codes, ignore unknown", () => {
     expect(eligibilityNoteTexts(["INCOME_COMBINED_PROVISIONAL", "X"])).toHaveLength(1);
     expect(eligibilityNoteTexts(null)).toEqual([]);
-    expect(eligibilityModeNote("SINGLE")).toBeNull();
-    expect(eligibilityModeNote("PAIR_LOAN")).toContain("個別に審査");
   });
 });

@@ -123,7 +123,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
     {
       href: hrefWith("/refinance", sharedNow),
       label: "借り換えと比べる",
-      hint: "繰上げ返済をする代わりに借り換えをした場合の、毎月の返済額や総支払額の目安と比べられます。",
+      hint: "返済額・総支払額の目安を比較",
     },
   ];
 
@@ -134,9 +134,9 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
     <div className="sim">
       <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="繰上げ返済の条件">
         <h2>現在のローン</h2>
-        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE, hint: "例：4000万円 ＝ 40,000,000円" })}
-        {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%で入力できます。繰上げ後も同じ金利で計算します。" })}
-        {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年の整数で入力できます。" })}
+        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE })}
+        {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%。繰上げ後も同じ金利で計算" })}
+        {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年" })}
         <fieldset className="field">
           <legend>返済方式</legend>
           <label className="radio">
@@ -157,11 +157,6 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
             />
             元金均等返済
           </label>
-          <p className="hint">
-            {form.method === "EQUAL_PAYMENT"
-              ? "毎月の返済額がほぼ一定になる方式です。"
-              : "毎月返す元金が一定で、返済額は少しずつ減っていく方式です。"}
-          </p>
         </fieldset>
 
         <h2>繰上げ返済</h2>
@@ -200,7 +195,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
             <span className="unit">か月後</span>
           </div>
           <p className="hint" id="timing-hint">
-            指定した回の支払いが終わった直後に繰上げ返済をする想定です。返済期間の範囲内で、1か月後以降を指定できます。
+            支払い直後に繰上げる想定。返済期間内の1か月後以降。
           </p>
           {timingError && (
             <p className="field-error" id={timingErrorId}>
@@ -210,7 +205,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
         </fieldset>
         {field("prepayMan", "繰上げ返済額", "万円", {
           step: STEP_MAN_LARGE,
-          hint: "その時点のローン残高を上回る場合は、残高の全額を繰上げ返済するものとして計算します。",
+          hint: "残高を上回る場合は全額繰上げとして計算",
         })}
         <fieldset className="field">
           <legend>繰上げ返済の種類</legend>
@@ -232,11 +227,6 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
             />
             返済額軽減型
           </label>
-          <p className="hint">
-            {form.type === "SHORTEN_TERM"
-              ? "毎月の返済額を変えずに、完済の時期を早める方法です。"
-              : "返済期間を変えずに、毎月の返済額を下げる方法です。"}
-          </p>
         </fieldset>
         <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
       </form>
@@ -263,7 +253,6 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
             <div className="verdict">
               <p className="hint">利息の軽減額（目安）</p>
               <p className="big">約{yen(data.interestSaving)}</p>
-              <p className="hint">繰上げ返済をしない場合と比べた、支払う利息の合計の差です。</p>
             </div>
 
             {data.appliedPrepayment < shown.prepaymentAmount && (
@@ -287,13 +276,9 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
                 </dd>
               </div>
             </dl>
-            <p className="hint">
-              {shown.prepaymentType === "SHORTEN_TERM"
-                ? "期間短縮型では、毎月の返済額は変わらず、完済の時期が早まります。"
-                : "返済額軽減型では、返済期間は変わらず、繰上げ返済の後の毎月の返済額が下がります。"}
-              {shown.method === "EQUAL_PRINCIPAL" &&
-                "元金均等返済では毎月の返済額が少しずつ減るため、表示の金額は1回分の目安です。"}
-            </p>
+            {shown.method === "EQUAL_PRINCIPAL" && (
+              <p className="hint">元金均等返済では毎月の返済額が変わるため、表示の金額は1回分の目安です。</p>
+            )}
 
             <div className="table-wrap plain" tabIndex={0} role="region" aria-label="繰上げ返済なしとありの比較表（横にスクロールできます）">
               <table className="compare">
@@ -337,7 +322,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
               </table>
             </div>
             <p className="hint">
-              「繰上げあり」の総返済額には、繰上げ返済額そのものは含まれません。繰上げ返済額は、表の最下行のとおり別に支払う金額です。
+              「繰上げあり」の総返済額に繰上げ返済額は含みません（最下行は別払い）。
             </p>
 
             <h3>繰上げ返済後のローン残高の推移</h3>
@@ -347,9 +332,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
               baselineMonths={data.baseline.months}
               prepaymentMonth={shown.prepaymentAfterMonth}
             />
-            <p className="hint">
-              繰上げ返済をした場合の残高です。横軸は繰上げ返済をしない場合の返済期間までで、点線は繰上げ返済をする時期を示します。
-            </p>
+            <p className="hint">横軸は繰上げなしの返済期間まで。点線は繰上げ時期。</p>
             <NextSteps items={nextSteps} />
           </div>
         )}
@@ -361,7 +344,7 @@ export default function Prepayer({ initialValues }: { initialValues?: Partial<Pr
         )}
 
         <p className="disclaimer">
-          試算結果は目安であり、金融機関の繰上げ返済手数料や取扱条件は含まれません。実際の条件は、お借入れの金融機関にご確認ください。
+          試算結果は目安です。繰上げ返済手数料や金融機関の取扱条件は含みません。
         </p>
       </section>
     </div>

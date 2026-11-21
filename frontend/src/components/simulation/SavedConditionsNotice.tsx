@@ -44,8 +44,8 @@ export default function SavedConditionsNotice({
     <div className="hint saved-conditions">
       <p>
         {restored.length > 0
-          ? `前回入力した${labels}を入れてあります（この端末のブラウザにだけ保存）`
-          : "入力した条件は、この端末のブラウザにだけ保存されます。"}
+          ? `前回の${labels}を入力済み（この端末にのみ保存）`
+          : "入力した条件は、この端末にのみ保存されます。"}
       </p>
       {hasSaved && (
         <button type="button" className="btn-sub" onClick={clear}>

@@ -8,11 +8,11 @@ export const PERSON_LABEL: Record<PersonRole, string> = {
   B: "配偶者・パートナー",
 };
 
-export const BORROWER_MODES: { value: BorrowerMode; label: string; desc: string }[] = [
-  { value: "SINGLE", label: "ひとりで借りる", desc: "あなたひとりの名義で、1本のローンを借ります。" },
-  { value: "PAIR_LOAN", label: "ペアローン", desc: "夫婦などが、それぞれ自分名義のローンを組みます（2本）。" },
-  { value: "JOINT_DEBT", label: "収入合算（連帯債務）", desc: "1本のローンを、二人で負担します。" },
-  { value: "JOINT_GUARANTEE", label: "収入合算（連帯保証）", desc: "1人が借り、もう1人は保証人になります。" },
+export const BORROWER_MODES: { value: BorrowerMode; label: string; desc?: string }[] = [
+  { value: "SINGLE", label: "ひとりで借りる" },
+  { value: "PAIR_LOAN", label: "ペアローン" },
+  { value: "JOINT_DEBT", label: "収入合算（連帯債務）", desc: "二人とも債務者" },
+  { value: "JOINT_GUARANTEE", label: "収入合算（連帯保証）", desc: "債務者は1人、もう1人は保証人" },
 ];
 
 export const isTwoPerson = (m: BorrowerMode) => m !== "SINGLE";

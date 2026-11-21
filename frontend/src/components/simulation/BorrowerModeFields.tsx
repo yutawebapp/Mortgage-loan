@@ -19,7 +19,7 @@ export function BorrowerModeSelector({
           <input type="radio" name={name} checked={value === m.value} onChange={() => onChange(m.value)} />
           <span>
             <span className="rb-label">{m.label}</span>
-            <span className="rb-desc">{m.desc}</span>
+            {m.desc && <span className="rb-desc">{m.desc}</span>}
           </span>
         </label>
       ))}
