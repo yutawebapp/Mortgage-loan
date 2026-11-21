@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  Current rate = the rate row with the latest effective_from <= #{today} per product.
+  ORDER BY is chosen by <choose> from a fixed whitelist. Never use ${} here.
+-->
+<mapper namespace="com.example.mortgage.product.ProductMapper">
+
+    <resultMap id="productSummaryMap" type="com.example.mortgage.product.ProductSummary">
+        <constructor>
+            <idArg column="id" javaType="java.lang.Long"/>
+            <arg column="institution_name" javaType="java.lang.String"/>
+            <arg column="product_name" javaType="java.lang.String"/>
+            <arg column="rate_type" javaType="com.example.mortgage.product.RateType"/>
+            <arg column="fixed_period_years" javaType="java.lang.Integer"/>
+            <arg column="annual_rate" javaType="java.math.BigDecimal"/>
+            <arg column="rate_effective_from" javaType="java.time.LocalDate"/>
+            <arg column="rate_source_url" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="productFeeMap" type="com.example.mortgage.product.ProductFee">
+        <constructor>
+            <arg column="fee_type" javaType="java.lang.String"/>
+            <arg column="label" javaType="java.lang.String"/>
+            <arg column="amount" javaType="java.math.BigDecimal"/>
+            <arg column="rate_percent" javaType="java.math.BigDecimal"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="rateHistoryMap" type="com.example.mortgage.product.RateHistoryEntry">
+        <constructor>
+            <arg column="annual_rate_percent" javaType="java.math.BigDecimal"/>
+            <arg column="effective_from" javaType="java.time.LocalDate"/>
+            <arg column="source_url" javaType="java.lang.String"/>
+        </constructor>
+    </resultMap>
+
+    <sql id="summaryColumns">
+        p.id,
+        i.name AS institution_name,
+        p.name AS product_name,
+        p.rate_type,
+        p.fixed_period_years,
+        cr.annual_rate,
+        cr.effective_from AS rate_effective_from,
+        cr.source_url AS rate_source_url
+    </sql>
+
+    <sql id="currentRateJoin">
+        FROM products p
+        JOIN institutions i ON i.id = p.institution_id
+        JOIN LATERAL (
+            SELECT r.annual_rate, r.effective_from, r.source_url
+            FROM rates r
+            WHERE r.product_id = p.id
+              AND r.effective_from &lt;= #{today}
+            ORDER BY r.effective_from DESC
+            LIMIT 1
+        ) cr ON TRUE
+    </sql>
+
+    <select id="countProducts" resultType="long">
+        SELECT COUNT(*)
+        <include refid="currentRateJoin"/>
+        <where>
+            <if test="rateType != null">
+                AND p.rate_type = #{rateType}
+            </if>
+        </where>
+    </select>
+
+    <select id="findProducts" resultMap="productSummaryMap">
+        SELECT
+        <include refid="summaryColumns"/>
+        <include refid="currentRateJoin"/>
+        <where>
+            <if test="rateType != null">
+                AND p.rate_type = #{rateType}
+            </if>
+        </where>
+        <choose>
+            <when test="sort == 'NAME_ASC'">
+                ORDER BY p.name ASC, p.id ASC
+            </when>
+            <when test="sort == 'RATE_DESC'">
+                ORDER BY cr.annual_rate DESC, p.id ASC
+            </when>
+            <otherwise>
+                ORDER BY cr.annual_rate ASC, p.id ASC
+            </otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findProductById" resultMap="productSummaryMap">
+        SELECT
+        <include refid="summaryColumns"/>
+        <include refid="currentRateJoin"/>
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="findFees" resultMap="productFeeMap">
+        SELECT fee_type, label, amount, rate_percent
+        FROM fees
+        WHERE product_id = #{productId}
+        ORDER BY id ASC
+    </select>
+
+    <select id="findRateHistory" resultMap="rateHistoryMap">
+        SELECT annual_rate AS annual_rate_percent, effective_from, source_url
+        FROM rates
+        WHERE product_id = #{productId}
+        ORDER BY effective_from DESC
+    </select>
+
+</mapper>

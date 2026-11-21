@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  Education and university cost rows (seeded by Flyway V6). Only the latest fiscal year is read.
+  No ${} anywhere.
+-->
+<mapper namespace="com.example.mortgage.lifeplan.LifePlanMapper">
+
+    <resultMap id="educationCostMap" type="com.example.mortgage.lifeplan.EducationCostRow">
+        <constructor>
+            <arg column="child_age" javaType="java.lang.Integer"/>
+            <arg column="school_type" javaType="java.lang.String"/>
+            <arg column="annual_amount" javaType="java.lang.Long"/>
+            <arg column="source_label" javaType="java.lang.String"/>
+            <arg column="source_url" javaType="java.lang.String"/>
+            <arg column="verified_on" javaType="java.time.LocalDate"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="universityCostMap" type="com.example.mortgage.lifeplan.UniversityCostRow">
+        <constructor>
+            <arg column="university_type" javaType="java.lang.String"/>
+            <arg column="first_year_amount" javaType="java.lang.Long"/>
+            <arg column="later_year_amount" javaType="java.lang.Long"/>
+            <arg column="source_label" javaType="java.lang.String"/>
+            <arg column="source_url" javaType="java.lang.String"/>
+            <arg column="verified_on" javaType="java.time.LocalDate"/>
+        </constructor>
+    </resultMap>
+
+    <select id="findEducationCosts" resultMap="educationCostMap">
+        SELECT child_age, school_type, annual_amount, source_label, source_url, verified_on
+        FROM education_costs
+        WHERE fiscal_year = (SELECT MAX(fiscal_year) FROM education_costs)
+        ORDER BY school_type ASC, child_age ASC
+    </select>
+
+    <select id="findUniversityCosts" resultMap="universityCostMap">
+        SELECT university_type, first_year_amount, later_year_amount, source_label, source_url, verified_on
+        FROM university_costs
+        WHERE fiscal_year = (SELECT MAX(fiscal_year) FROM university_costs)
+        ORDER BY university_type ASC
+    </select>
+
+</mapper>
