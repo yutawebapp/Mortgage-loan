@@ -10,11 +10,13 @@ import {
 } from "@/lib/api/totalCost";
 import {
   approxManLabel,
+  applyOwnershipPreset,
   assumptionMessages,
   noteMessages,
   sharePercent,
   validateTotalCost,
   type TotalCostForm,
+  type TotalCostPropertyType,
 } from "@/lib/totalCost";
 import { yen } from "@/lib/simulation";
 import { acceptFor, hrefWith, sanitizeShared, totalCostExtraFromQuery, type SharedConditions } from "@/lib/sharedConditions";
@@ -67,6 +69,7 @@ type FieldKey = keyof Omit<TotalCostForm, "method">;
 
 export default function TotalCost() {
   const [form, setForm] = useState<TotalCostForm>(initial);
+  const [propertyType, setPropertyType] = useState<TotalCostPropertyType>("house");
   // 共通条件は金利・返済期間のみ。このツールの principal は物件価格なので、借入額（principalMan）は受け取らない・渡さない。
   const sharedNow = sanitizeShared({ rate: form.rate, years: form.years });
   const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
@@ -218,18 +221,37 @@ export default function TotalCost() {
 
         <fieldset className="fs-group">
           <legend>住んでからかかる費用（保有コスト）</legend>
+          <fieldset className="field" aria-describedby="tc-preset-hint">
+            <legend>物件種別</legend>
+            <label className="radio">
+              <input type="radio" name="tc-property-type" checked={propertyType === "house"} onChange={() => {
+                setPropertyType("house");
+                setForm((f) => applyOwnershipPreset(f, "house"));
+              }} />
+              戸建て
+            </label>
+            <label className="radio">
+              <input type="radio" name="tc-property-type" checked={propertyType === "apartment"} onChange={() => {
+                setPropertyType("apartment");
+                setForm((f) => applyOwnershipPreset(f, "apartment"));
+              }} />
+              マンション
+            </label>
+            <p className="hint" id="tc-preset-hint">切り替えると、入力済みの管理費・修繕費・固定資産税等・保険料はすべて種別ごとの仮置き値に置き換わります。物件種別は共有リンクに含まれません。</p>
+          </fieldset>
+          <p className="hint">保有コストの初期値は目安です。物件や地域に合わせて変更してください。</p>
           {field("managementFee", "管理費（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
-            hint: "初期値は戸建ての目安。マンションは管理費・修繕積立金を入力",
           })}
-          {field("repairReserve", "修繕・メンテナンス費（月額）", "円", {
+          {field("repairReserve", propertyType === "house" ? "修繕・メンテナンス積立（月額）" : "修繕積立金（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
           })}
           {field("propertyTax", "固定資産税・都市計画税（年額）", "円", {
             step: STEP_YEN_YEARLY,
             inputMode: "numeric",
+            hint: "毎年同額として計算し、新築住宅の固定資産税の減額措置などによる変動は含みません。",
           })}
           {field("insurance", "火災・地震保険料（年額）", "円", {
             step: STEP_YEN_YEARLY,

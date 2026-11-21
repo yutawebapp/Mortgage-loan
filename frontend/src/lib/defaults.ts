@@ -41,7 +41,7 @@ export const DEFAULT_REFINANCE_COSTS_MAN = "75";
 export const DEFAULT_METHOD = "EQUAL_PAYMENT" as const;
 
 // 保有コストの初期値（円。すべて仮置きで、公式な計算値ではない）。戸建てを想定。
-// マンションなら管理費・修繕積立金を入力する（管理費は戸建てでは通常かからない）。
+// 管理費は戸建てでは通常かからない。
 // - 管理費 0円/月: 戸建ては管理組合がないため。
 // - 修繕・メンテナンス積立 17,000円/月: 戸建ての目安 15,000〜20,000円/月の中間。民間のメンテナンス試算
 //   （さくら事務所等の30年で約1,000〜1,200万円という試算）をもとにした目安で、公的機関の直接の基準ではない。
@@ -52,6 +52,22 @@ export const DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN = 0;
 export const DEFAULT_REPAIR_RESERVE_MONTHLY_YEN = 17_000;
 export const DEFAULT_PROPERTY_TAX_YEARLY_YEN = 200_000;
 export const DEFAULT_INSURANCE_YEARLY_YEN = 40_000;
+
+/** 住居費の総額ツール用の保有コストの仮置き値（円/月、円/年）。 */
+export const TOTAL_COST_OWNERSHIP_PRESETS = {
+  house: {
+    managementFee: DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN,
+    repairReserve: DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
+    propertyTax: DEFAULT_PROPERTY_TAX_YEARLY_YEN,
+    insurance: DEFAULT_INSURANCE_YEARLY_YEN,
+  },
+  apartment: {
+    managementFee: 12_000,
+    repairReserve: 18_000,
+    propertyTax: 150_000,
+    insurance: 20_000,
+  },
+} as const;
 
 /** ライフプランの「毎月の住居費（ローン以外）」の初期値（円/月）= 管理費 + 修繕・メンテナンス費。 */
 export const DEFAULT_HOUSING_MONTHLY_YEN = DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN + DEFAULT_REPAIR_RESERVE_MONTHLY_YEN;

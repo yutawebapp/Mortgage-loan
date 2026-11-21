@@ -1,5 +1,6 @@
 import type { TotalCostRequest } from "./api/totalCost";
 import type { RepaymentMethod } from "./api/simulation";
+import { TOTAL_COST_OWNERSHIP_PRESETS } from "./defaults";
 
 export type TotalCostForm = {
   priceMan: string;
@@ -15,6 +16,20 @@ export type TotalCostForm = {
 };
 
 export type TotalCostErrors = Partial<Record<Exclude<keyof TotalCostForm, "method">, string>>;
+
+export type TotalCostPropertyType = keyof typeof TOTAL_COST_OWNERSHIP_PRESETS;
+
+/** 保有コスト4項目だけを選択した種別の仮置き値に置き換える。 */
+export function applyOwnershipPreset(form: TotalCostForm, type: TotalCostPropertyType): TotalCostForm {
+  const preset = TOTAL_COST_OWNERSHIP_PRESETS[type];
+  return {
+    ...form,
+    managementFee: String(preset.managementFee),
+    repairReserve: String(preset.repairReserve),
+    propertyTax: String(preset.propertyTax),
+    insurance: String(preset.insurance),
+  };
+}
 
 const num = (s: string) => (s.trim() === "" ? NaN : Number(s));
 const toYen = (man: number) => Math.round(man * 10000);

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_HOUSING_MONTHLY_YEN,
+  DEFAULT_HOUSING_TAX_YEARLY_YEN,
+  TOTAL_COST_OWNERSHIP_PRESETS,
+} from "./defaults";
+import {
+  applyOwnershipPreset,
   type TotalCostForm,
   approxManLabel,
   assumptionMessages,
@@ -25,6 +31,27 @@ const base: TotalCostForm = {
   insurance: "40000",
 };
 const w = (o: Partial<TotalCostForm>): TotalCostForm => ({ ...base, ...o });
+
+describe("ownership cost presets", () => {
+  it("defines the unchanged house defaults and the apartment estimates in yen", () => {
+    expect(TOTAL_COST_OWNERSHIP_PRESETS.house).toEqual({
+      managementFee: 0, repairReserve: 17_000, propertyTax: 200_000, insurance: 40_000,
+    });
+    expect(TOTAL_COST_OWNERSHIP_PRESETS.apartment).toEqual({
+      managementFee: 12_000, repairReserve: 18_000, propertyTax: 150_000, insurance: 20_000,
+    });
+    expect(DEFAULT_HOUSING_MONTHLY_YEN).toBe(17_000);
+    expect(DEFAULT_HOUSING_TAX_YEARLY_YEN).toBe(240_000);
+  });
+
+  it("replaces all four edited fields in either direction without changing other conditions", () => {
+    const edited = w({ rate: "2.3", priceMan: "5000", managementFee: "9", repairReserve: "", propertyTax: "123", insurance: "456" });
+    const apartment = applyOwnershipPreset(edited, "apartment");
+    expect(apartment).toEqual({ ...edited, managementFee: "12000", repairReserve: "18000", propertyTax: "150000", insurance: "20000" });
+    expect(edited.managementFee).toBe("9");
+    expect(applyOwnershipPreset(apartment, "house")).toEqual({ ...edited, managementFee: "0", repairReserve: "17000", propertyTax: "200000", insurance: "40000" });
+  });
+});
 
 describe("validateTotalCost", () => {
   it("maps defaults to the request shape", () => {
