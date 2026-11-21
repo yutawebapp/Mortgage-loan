@@ -48,7 +48,7 @@ type Outcome = { key: string; data?: TaxDeductionResponse; request?: TaxDeductio
 
 const initial: TaxDeductionForm = {
   housingType: "NEW",
-  energyClass: "ENERGY_STANDARD",
+  energyClass: "CERTIFIED",
   moveInYear: "2026",
   moveInMonth: "4",
   childcare: false,

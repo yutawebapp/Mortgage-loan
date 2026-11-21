@@ -18,7 +18,7 @@ import {
 
 const base: TaxDeductionForm = {
   housingType: "NEW",
-  energyClass: "ENERGY_STANDARD",
+  energyClass: "CERTIFIED",
   moveInYear: "2026",
   moveInMonth: "4",
   childcare: false,
@@ -44,7 +44,7 @@ describe("validateTaxDeduction", () => {
     expect(errors).toEqual({});
     expect(request).toEqual({
       housingType: "NEW",
-      energyClass: "ENERGY_STANDARD",
+      energyClass: "CERTIFIED",
       moveInYear: 2026,
       moveInMonth: 4,
       childcareHousehold: false,
