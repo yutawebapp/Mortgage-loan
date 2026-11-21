@@ -26,9 +26,13 @@ import { NumberField } from "./NumberField";
 import {
   DEFAULT_CLOSING_RATE,
   DEFAULT_DOWN_MAN,
+  DEFAULT_INSURANCE_YEARLY_YEN,
+  DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN,
   DEFAULT_METHOD,
   DEFAULT_PRICE_MAN,
+  DEFAULT_PROPERTY_TAX_YEARLY_YEN,
   DEFAULT_RATE,
+  DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
   DEFAULT_YEARS,
 } from "@/lib/defaults";
 import ShareLinkButton from "./ShareLinkButton";
@@ -46,10 +50,10 @@ const initial: TotalCostForm = {
   rate: DEFAULT_RATE,
   years: DEFAULT_YEARS,
   method: DEFAULT_METHOD,
-  managementFee: "0",
-  repairReserve: "0",
-  propertyTax: "0",
-  insurance: "0",
+  managementFee: String(DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN),
+  repairReserve: String(DEFAULT_REPAIR_RESERVE_MONTHLY_YEN),
+  propertyTax: String(DEFAULT_PROPERTY_TAX_YEARLY_YEN),
+  insurance: String(DEFAULT_INSURANCE_YEARLY_YEN),
 };
 
 function errorMessage(e: unknown): string {
@@ -214,7 +218,11 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
 
         <fieldset className="fs-group">
           <legend>住んでからかかる費用（保有コスト）</legend>
-          {field("managementFee", "管理費（月額）", "円", { step: STEP_YEN_MONTHLY, inputMode: "numeric" })}
+          {field("managementFee", "管理費（月額）", "円", {
+            step: STEP_YEN_MONTHLY,
+            inputMode: "numeric",
+            hint: "初期値はマンションの目安。戸建ては0に",
+          })}
           {field("repairReserve", "修繕積立金（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",

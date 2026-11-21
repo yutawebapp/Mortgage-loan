@@ -34,7 +34,13 @@ import {
 import { acceptFor, sanitizeShared } from "@/lib/sharedConditions";
 import { useSharedConditions } from "@/lib/useSharedConditions";
 import { NumberField } from "./NumberField";
-import { DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
+import {
+  DEFAULT_HOUSING_MONTHLY_YEN,
+  DEFAULT_HOUSING_TAX_YEARLY_YEN,
+  DEFAULT_PRINCIPAL_MAN,
+  DEFAULT_RATE,
+  DEFAULT_YEARS,
+} from "@/lib/defaults";
 import { OutflowChart, SavingsChart } from "./LifePlanChart";
 import SavedConditionsNotice from "./SavedConditionsNotice";
 import { lifePlanInitialFromQuery } from "@/lib/lifePlan";
@@ -61,8 +67,8 @@ const initial: LifePlanForm = {
   endAge: "95",
   upfrontMan: "0",
   method: "EQUAL_PAYMENT",
-  housingMonthly: "25000",
-  housingTaxYearly: "120000",
+  housingMonthly: String(DEFAULT_HOUSING_MONTHLY_YEN),
+  housingTaxYearly: String(DEFAULT_HOUSING_TAX_YEARLY_YEN),
 };
 
 function errorMessage(e: unknown): string {
@@ -335,12 +341,12 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
             {field("housingMonthly", "毎月の住居費（ローン以外）", "円", {
               step: STEP_YEN_MONTHLY,
               inputMode: "numeric",
-              hint: "家賃、管理費・修繕積立金など。入力例です",
+              hint: "初期値はマンションの管理費・修繕積立金の目安（入力例）",
             })}
             {field("housingTaxYearly", "毎年の住居費（固定資産税・保険など）", "円", {
               step: STEP_YEN_YEARLY,
               inputMode: "numeric",
-              hint: "固定資産税・火災保険料・更新料などの年間合計。入力例です",
+              hint: "初期値はマンションの固定資産税等・保険の目安（入力例）",
             })}
           </fieldset>
         </details>

@@ -19,10 +19,10 @@ const base: TotalCostForm = {
   rate: "1.2",
   years: "35",
   method: "EQUAL_PAYMENT",
-  managementFee: "0",
-  repairReserve: "0",
-  propertyTax: "0",
-  insurance: "0",
+  managementFee: "12000",
+  repairReserve: "17000",
+  propertyTax: "200000",
+  insurance: "24000",
 };
 const w = (o: Partial<TotalCostForm>): TotalCostForm => ({ ...base, ...o });
 
@@ -38,10 +38,10 @@ describe("validateTotalCost", () => {
       annualRatePercent: 1.2,
       years: 35,
       method: "EQUAL_PAYMENT",
-      monthlyManagementFee: 0,
-      monthlyRepairReserve: 0,
-      annualPropertyTax: 0,
-      annualInsurance: 0,
+      monthlyManagementFee: 12_000,
+      monthlyRepairReserve: 17_000,
+      annualPropertyTax: 200_000,
+      annualInsurance: 24_000,
     });
   });
 

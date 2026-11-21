@@ -39,3 +39,21 @@ export const DEFAULT_MONTHLY_MAN = "11.7";
 export const DEFAULT_REFINANCE_COSTS_MAN = "75";
 /** 返済方式。 */
 export const DEFAULT_METHOD = "EQUAL_PAYMENT" as const;
+
+// 保有コストの初期値（円。すべて仮置きで、公式な計算値ではない）。
+// マンション（住戸面積 約70㎡）を想定した目安。戸建てでは管理費を0にし、修繕は別途見込む。
+// - 管理費 12,000円/月: 国土交通省「令和5年度マンション総合調査」の平均 約11,500円/月 を切り上げ。
+// - 修繕積立金 17,000円/月: 同調査の平均 約13,000円/月、および「修繕積立金ガイドライン」（令和6年6月改定）
+//   の平均 252円/㎡・月 × 約70㎡ ≈ 17,600円/月 の間。
+// - 固定資産税・都市計画税 200,000円/年: 標準税率（固定資産税 1.4% / 都市計画税 0.3%）と新築軽減の終了後を
+//   ふまえた大まかな平均。地域・特例で大きく変わる。
+// - 火災・地震保険料 24,000円/年: 損害保険料率算出機構などの目安。構造・地域で大きく変わる。
+export const DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN = 12_000;
+export const DEFAULT_REPAIR_RESERVE_MONTHLY_YEN = 17_000;
+export const DEFAULT_PROPERTY_TAX_YEARLY_YEN = 200_000;
+export const DEFAULT_INSURANCE_YEARLY_YEN = 24_000;
+
+/** ライフプランの「毎月の住居費（ローン以外）」の初期値（円/月）= 管理費 + 修繕積立金。 */
+export const DEFAULT_HOUSING_MONTHLY_YEN = DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN + DEFAULT_REPAIR_RESERVE_MONTHLY_YEN;
+/** ライフプランの「毎年の住居費（固定資産税・保険など）」の初期値（円/年）= 固定資産税等 + 保険料。 */
+export const DEFAULT_HOUSING_TAX_YEARLY_YEN = DEFAULT_PROPERTY_TAX_YEARLY_YEN + DEFAULT_INSURANCE_YEARLY_YEN;

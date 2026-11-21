@@ -36,9 +36,13 @@ import { NumberField } from "./NumberField";
 import {
   DEFAULT_CLOSING_RATE,
   DEFAULT_DOWN_MAN,
+  DEFAULT_INSURANCE_YEARLY_YEN,
+  DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN,
   DEFAULT_METHOD,
   DEFAULT_PRICE_MAN,
+  DEFAULT_PROPERTY_TAX_YEARLY_YEN,
   DEFAULT_RATE,
+  DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
   DEFAULT_YEARS,
 } from "@/lib/defaults";
 import RentVsBuyChart from "./RentVsBuyChart";
@@ -57,10 +61,10 @@ const initial: RentVsBuyForm = {
   rate: DEFAULT_RATE,
   years: DEFAULT_YEARS,
   method: DEFAULT_METHOD,
-  managementFee: "0",
-  repairReserve: "0",
-  propertyTax: "0",
-  insurance: "0",
+  managementFee: String(DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN),
+  repairReserve: String(DEFAULT_REPAIR_RESERVE_MONTHLY_YEN),
+  propertyTax: String(DEFAULT_PROPERTY_TAX_YEARLY_YEN),
+  insurance: String(DEFAULT_INSURANCE_YEARLY_YEN),
   rent: "130000",
   rentGrowth: "0",
   renewalMonths: "0",
@@ -212,6 +216,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
           {field("managementFee", "管理費（月額）", "円", {
             step: STEP_YEN_MONTHLY,
             inputMode: "numeric",
+            hint: "初期値はマンションの目安。戸建ては0に",
           })}
           {field("repairReserve", "修繕積立金（月額）", "円", {
             step: STEP_YEN_MONTHLY,

@@ -30,8 +30,8 @@ const base: LifePlanForm = {
   endAge: "95",
   upfrontMan: "0",
   method: "EQUAL_PAYMENT",
-  housingMonthly: "25000",
-  housingTaxYearly: "120000",
+  housingMonthly: "29000",
+  housingTaxYearly: "224000",
 };
 const w = (o: Partial<LifePlanForm>): LifePlanForm => ({ ...base, ...o });
 const errs = (o: Partial<LifePlanForm>) => validateLifePlan(w(o)).errors;
@@ -57,8 +57,8 @@ describe("validateLifePlan", () => {
       annualRatePercent: 1.2,
       years: 35,
       method: "EQUAL_PAYMENT",
-      monthlyHousingCost: 25_000,
-      annualHousingTax: 120_000,
+      monthlyHousingCost: 29_000,
+      annualHousingTax: 224_000,
     });
   });
 

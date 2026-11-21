@@ -2,10 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_CLOSING_RATE,
   DEFAULT_DOWN_MAN,
+  DEFAULT_HOUSING_MONTHLY_YEN,
+  DEFAULT_HOUSING_TAX_YEARLY_YEN,
+  DEFAULT_INSURANCE_YEARLY_YEN,
+  DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN,
   DEFAULT_MONTHLY_MAN,
   DEFAULT_PRICE_MAN,
   DEFAULT_PRINCIPAL_MAN,
+  DEFAULT_PROPERTY_TAX_YEARLY_YEN,
   DEFAULT_RATE,
+  DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
   DEFAULT_YEARS,
 } from "./defaults";
 
@@ -39,5 +45,19 @@ describe("unified default values", () => {
     expect(Math.abs(loan - principal * 10_000) / (principal * 10_000)).toBeLessThan(0.005); // 4,000万の±0.5%
     const price = (loan + Number(DEFAULT_DOWN_MAN) * 10_000) / (1 + Number(DEFAULT_CLOSING_RATE) / 100);
     expect(price).toBeCloseTo(40_099_443, -1);
+  });
+
+  it("ライフプランの住居費の初期値は、保有コストの各項目の合計と一致する（マンションの目安）", () => {
+    // 期待値は直接の数値（管理費12,000 + 修繕積立金17,000 = 29,000 / 固定資産税等200,000 + 保険24,000 = 224,000）
+    expect(DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN).toBe(12_000);
+    expect(DEFAULT_REPAIR_RESERVE_MONTHLY_YEN).toBe(17_000);
+    expect(DEFAULT_PROPERTY_TAX_YEARLY_YEN).toBe(200_000);
+    expect(DEFAULT_INSURANCE_YEARLY_YEN).toBe(24_000);
+    expect(DEFAULT_HOUSING_MONTHLY_YEN).toBe(
+      DEFAULT_MANAGEMENT_FEE_MONTHLY_YEN + DEFAULT_REPAIR_RESERVE_MONTHLY_YEN,
+    );
+    expect(DEFAULT_HOUSING_MONTHLY_YEN).toBe(29_000);
+    expect(DEFAULT_HOUSING_TAX_YEARLY_YEN).toBe(DEFAULT_PROPERTY_TAX_YEARLY_YEN + DEFAULT_INSURANCE_YEARLY_YEN);
+    expect(DEFAULT_HOUSING_TAX_YEARLY_YEN).toBe(224_000);
   });
 });
