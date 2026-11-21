@@ -16,7 +16,7 @@ import java.math.BigDecimal;
  * @param moveInYear                 入居年 (= 借入実行年)
  * @param moveInMonth                借入実行月 (1..12); first repayment is the following month
  * @param childcareHousehold         子育て世帯等 (上乗せ利用の希望)
- * @param floorAreaOver50            床面積50㎡以上
+ * @param floorAreaCategory          登記簿上の床面積区分
  */
 public record TaxDeductionInput(
         BigDecimal principal,
@@ -28,5 +28,5 @@ public record TaxDeductionInput(
         int moveInYear,
         int moveInMonth,
         boolean childcareHousehold,
-        boolean floorAreaOver50) {
+        FloorAreaCategory floorAreaCategory) {
 }

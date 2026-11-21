@@ -24,7 +24,7 @@ import java.util.TreeMap;
  *
  * <p>Two-person modes (PAIR_LOAN / JOINT_DEBT): the loan is split by shareAPercent (principal A = HALF_UP),
  * and the same calculator is run once per person with that person's income, social-insurance rate and
- * childcare flag. Household figures are sums over the eligible persons.
+ * childcare flag. Household repayments include all debtors; credits include eligible persons only.
  */
 @Service
 public class TaxDeductionService {
@@ -90,8 +90,13 @@ public class TaxDeductionService {
         TaxDeductionResponse.Person personB = toPerson(ROLE_B, principalB, resB);
 
         boolean eligible = resA.eligible() || resB.eligible();
+        int listedYears = Math.max(resA.years().size(), resB.years().size());
         List<TaxDeductionResponse.Year> years = eligible
-                ? mergeYears(List.of(personA.years(), personB.years()))
+                ? mergeYears(List.of(
+                    resA.eligible() ? personA.years() : repaymentOnly(request, principalA, request.annualIncome(),
+                            request.socialInsuranceRatePercent(), request.childcareHousehold(), listedYears),
+                    resB.eligible() ? personB.years() : repaymentOnly(request, principalB, request.partnerAnnualIncome(),
+                            request.partnerSocialInsuranceRatePercent(), request.partnerChildcareHousehold(), listedYears)))
                 : List.of();
         TaxDeductionResponse.Totals totals = eligible ? totalsOf(years) : null;
 
@@ -131,6 +136,12 @@ public class TaxDeductionService {
                 List.of(personA, personB));
     }
 
+    private static List<TaxDeductionResponse.Year> repaymentOnly(TaxDeductionRequest request, long principal,
+            long income, BigDecimal socialRate, boolean childcare, int listedYears) {
+        return TaxDeductionCalculator.repaymentOnlyRows(personInput(request, principal, income, socialRate, childcare),
+                listedYears).stream().map(TaxDeductionService::toYear).toList();
+    }
+
     private static TaxDeductionInput personInput(TaxDeductionRequest request, long principal, long annualIncome,
                                                  BigDecimal socialInsuranceRatePercent, boolean childcare) {
         return new TaxDeductionInput(
@@ -143,7 +154,7 @@ public class TaxDeductionService {
                 request.moveInYear(),
                 request.moveInMonth(),
                 childcare,
-                request.floorAreaOver50());
+                request.floorAreaCategory());
     }
 
     private static TaxDeductionResponse toResponse(TaxDeductionResult result, BorrowerMode mode,

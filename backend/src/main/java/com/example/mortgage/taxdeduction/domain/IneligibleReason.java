@@ -9,5 +9,7 @@ public enum IneligibleReason {
     /** Estimated 合計所得金額 above 20,000,000 yen. */
     INCOME_OVER_20M,
     /** Floor area below 50 sqm while estimated 合計所得金額 above 10,000,000 yen. */
-    AREA_40S_INCOME_OVER_LIMIT
+    AREA_40S_INCOME_OVER_LIMIT,
+    AREA_UNDER_40,
+    AREA_UNCONFIRMED
 }

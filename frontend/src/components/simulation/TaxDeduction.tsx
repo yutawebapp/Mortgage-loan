@@ -52,7 +52,7 @@ const initial: TaxDeductionForm = {
   moveInYear: "2026",
   moveInMonth: "4",
   childcare: false,
-  floorAreaOver50: true,
+  floorAreaCategory: "UNKNOWN",
   legacyException: false,
   principalMan: DEFAULT_PRINCIPAL_MAN,
   rate: DEFAULT_RATE,
@@ -194,6 +194,7 @@ export default function TaxDeduction() {
   const hasPartner = two || guarantee;
   const shownMode = data?.mode ?? "SINGLE";
   const shownTwo = hasTwoDebtors(shownMode) && !!data?.persons;
+  const assumptionIsPartner = shownTwo && data?.persons?.[0]?.eligible === false;
   const shareNum = Number(form.shareAPercent);
   const principalNum = Number(form.principalMan);
   const shareOk = form.shareAPercent.trim() !== "" && shareNum >= 1 && shareNum <= 99;
@@ -318,19 +319,19 @@ export default function TaxDeduction() {
           )}
 
           <div className="field">
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={form.floorAreaOver50}
-                onChange={(ev) => set("floorAreaOver50", ev.target.checked)}
-                aria-describedby="td-area-hint"
-              />
-              床面積が50㎡以上（約15.1坪以上）である
-            </label>
-            <p className="hint check-hint" id="td-area-hint">
+            <label htmlFor="td-area">登記簿上の床面積</label>
+            <select id="td-area" value={form.floorAreaCategory} onChange={(ev) => set("floorAreaCategory", ev.target.value as TaxDeductionForm["floorAreaCategory"])} aria-describedby="td-area-hint">
+              <option value="AT_LEAST_50">50㎡以上</option>
+              <option value="FROM_40_TO_UNDER_50">40㎡以上50㎡未満</option>
+              <option value="UNDER_40">40㎡未満</option>
+              <option value="UNKNOWN">未確認</option>
+            </select>
+            <p className="hint" id="td-area-hint">
               40㎡台（約12.1〜15.1坪）は子育て世帯等の上乗せの対象外。登記簿上の面積で判断されます。
+              40㎡台の新築住宅では、建築確認時期などの要件も税務署等でご確認ください。
             </p>
           </div>
+          <p className="hint">2028年以降入居の新築住宅は災害レッドゾーンにある場合、建替え等を除き対象外です。所在地や建築確認・居住等の要件を確認してください。</p>
 
           {legacyKind && (
             <div className="field">
@@ -473,6 +474,7 @@ export default function TaxDeduction() {
               </p>
             )}
             <div className="verdict">
+              <p className="hint">入力した条件での概算・要確認（未確認の適用要件があります）</p>
               <p className="hint">{shownTwo ? "世帯の控除額の合計の目安" : "控除額の合計の目安"}</p>
               <p className="big">約{manOrYen(data.totals.totalDeduction)}</p>
               <p className="hint">
@@ -576,17 +578,21 @@ export default function TaxDeduction() {
                     : "独身で、扶養親族はいない前提で税額を推計しています。"}
                 </li>
                 <li>
+                  {shownTwo && `${assumptionIsPartner ? PERSON_LABEL.B : PERSON_LABEL.A}は、`}
                   社会保険料率は年収の{data.assumptions.socialInsuranceRatePercent}%、年収は{yen(data.assumptions.annualIncome)}
                   で毎年同じ前提です。
-                  {hasTwoDebtors(shownMode) && shown.partnerAnnualIncome !== undefined && (
+                  {hasTwoDebtors(shownMode) && !assumptionIsPartner && shown.partnerAnnualIncome !== undefined && (
                     <>
                       （{PERSON_LABEL.B}は、年収{yen(shown.partnerAnnualIncome)}、社会保険料率
                       {shown.partnerSocialInsuranceRatePercent}%）
                     </>
                   )}
+                  {assumptionIsPartner && (
+                    <>（{PERSON_LABEL.A}は、年収{yen(shown.annualIncome)}、社会保険料率{shown.socialInsuranceRatePercent}%）</>
+                  )}
                 </li>
                 <li>
-                  給与所得控除は概算です（推計した給与所得：約{manOrYen(data.assumptions.estimatedTotalIncome)}、所得税の課税総所得金額等：約
+                  給与所得控除は概算です（推計した給与所得：約{manOrYen(data.assumptions.estimatedTotalIncome)}、控除前の所得税額（復興特別所得税を除く）：約
                   {manOrYen(data.assumptions.estimatedIncomeTaxBase)}）。
                 </li>
                 <li>令和8年分・令和9年分の所得税の制度が、その後も続く前提です。</li>

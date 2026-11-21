@@ -59,6 +59,8 @@ class TaxDeductionCalculatorTest {
                 bd(2_500),
                 new BigDecimal("5"),
                 bd(97_500),
+                bd(20_000_000),
+                bd(10_000_000),
                 VERIFIED,
                 List.of(MLIT_URL));
     }
@@ -93,7 +95,8 @@ class TaxDeductionCalculatorTest {
                                            long income, int moveInYear, int moveInMonth,
                                            boolean childcare, boolean area50) {
         return new TaxDeductionInput(bd(principal), new BigDecimal(rate), years, method, bd(income),
-                bd(15), moveInYear, moveInMonth, childcare, area50);
+                bd(15), moveInYear, moveInMonth, childcare,
+                area50 ? FloorAreaCategory.AT_LEAST_50 : FloorAreaCategory.FROM_40_TO_UNDER_50);
     }
 
     private static TaxDeductionResult run(TaxDeductionInput in, DeductionRule rule) {
@@ -197,6 +200,9 @@ class TaxDeductionCalculatorTest {
                 2026, 4, false, true), zehNew());
         assertRows(r, GoldenRows.S1B_ZEH_INCOME_5M);
         assertTotals(r, 2_184_400, 103_700, 13_301_672, 11_117_272, 13);
+        assertThat(r.taxEstimate().taxableIncomeTax()).isEqualByComparingTo("1770000");
+        assertThat(r.assumptions().estimatedIncomeTaxBase()).isEqualByComparingTo("88500");
+        assertThat(r.assumptions().residentCapPerYear()).isEqualByComparingTo("88500");
     }
 
     @Test
@@ -290,7 +296,32 @@ class TaxDeductionCalculatorTest {
         assertTotals(r, 2_288_100, 0, 13_301_672, 11_013_572, 13);
     }
 
+    @Test
+    void area40s_incomeLimitIsInclusive() {
+        // Salary 11,950,000 less 1,950,000 = 10,000,000; one yen more exceeds the limit.
+        TaxDeductionResult at = run(input(30_000_000, "1.2", 35, RepaymentMethod.EQUAL_PAYMENT,
+                11_950_000, 2026, 4, true, false), zehNew());
+        TaxDeductionResult over = run(input(30_000_000, "1.2", 35, RepaymentMethod.EQUAL_PAYMENT,
+                11_950_001, 2026, 4, true, false), zehNew());
+        assertThat(at.eligible()).isTrue();
+        assertThat(at.rule().childcareApplied()).isFalse();
+        assertThat(over.ineligibleReason()).isEqualTo(IneligibleReason.AREA_40S_INCOME_OVER_LIMIT);
+    }
+
     // ------------------------------------------------------------------ ineligible paths
+
+    @Test
+    void areaUnder40AndUnconfirmedAreNotTreatedAsArea40s() {
+        TaxDeductionInput base = input(30_000_000, "1.2", 35, RepaymentMethod.EQUAL_PAYMENT,
+                6_000_000, 2026, 4, false, false);
+        for (FloorAreaCategory area : List.of(FloorAreaCategory.UNDER_40, FloorAreaCategory.UNKNOWN)) {
+            TaxDeductionInput in = new TaxDeductionInput(base.principal(), base.annualRatePercent(), base.years(),
+                    base.method(), base.annualIncome(), base.socialInsuranceRatePercent(), base.moveInYear(),
+                    base.moveInMonth(), base.childcareHousehold(), area);
+            assertThat(run(in, zehNew()).ineligibleReason()).isEqualTo(area == FloorAreaCategory.UNDER_40
+                    ? IneligibleReason.AREA_UNDER_40 : IneligibleReason.AREA_UNCONFIRMED);
+        }
+    }
 
     @Test
     void noRule_isIneligibleWithoutDetails() {

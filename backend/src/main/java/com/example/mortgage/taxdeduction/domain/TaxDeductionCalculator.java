@@ -42,8 +42,6 @@ public final class TaxDeductionCalculator {
     private static final BigDecimal THOUSAND = BigDecimal.valueOf(1000);
     private static final int MIN_LOAN_YEARS = 10;
     private static final int MONTHS_PER_YEAR = 12;
-    private static final BigDecimal INCOME_LIMIT = BigDecimal.valueOf(20_000_000L);
-    private static final BigDecimal AREA_40S_INCOME_LIMIT = BigDecimal.valueOf(10_000_000L);
     /** Salary-deduction formula below this income is an approximation of 別表第五. */
     private static final BigDecimal SALARY_TABLE_EXACT_FROM = BigDecimal.valueOf(6_600_000L);
 
@@ -54,7 +52,7 @@ public final class TaxDeductionCalculator {
         if (rule == null) {
             return ineligible(IneligibleReason.NOT_ELIGIBLE_BY_RULE, null, null);
         }
-        boolean childcareApplied = in.childcareHousehold() && in.floorAreaOver50();
+        boolean childcareApplied = in.childcareHousehold() && in.floorAreaCategory() == FloorAreaCategory.AT_LEAST_50;
         BigDecimal limit = childcareApplied ? rule.limitAmountChildcare() : rule.limitAmount();
         AppliedRule applied = new AppliedRule(limit, rule.deductionYears(), rule.ratePercent(),
                 childcareApplied, rule.conditionCode(), rule.sourceUrl(), rule.verifiedOn());
@@ -63,11 +61,19 @@ public final class TaxDeductionCalculator {
             return ineligible(IneligibleReason.LOAN_TERM_UNDER_10Y, applied, null);
         }
 
+        if (in.floorAreaCategory() == FloorAreaCategory.UNDER_40) {
+            return ineligible(IneligibleReason.AREA_UNDER_40, applied, null);
+        }
+        if (in.floorAreaCategory() == null || in.floorAreaCategory() == FloorAreaCategory.UNKNOWN) {
+            return ineligible(IneligibleReason.AREA_UNCONFIRMED, applied, null);
+        }
+
         TaxEstimate est = estimateTax(in, params);
-        if (est.salaryIncome().compareTo(INCOME_LIMIT) > 0) {
+        if (est.salaryIncome().compareTo(params.incomeLimit()) > 0) {
             return ineligible(IneligibleReason.INCOME_OVER_20M, applied, est);
         }
-        if (!in.floorAreaOver50() && est.salaryIncome().compareTo(AREA_40S_INCOME_LIMIT) > 0) {
+        if (in.floorAreaCategory() == FloorAreaCategory.FROM_40_TO_UNDER_50
+                && est.salaryIncome().compareTo(params.area40sIncomeLimit()) > 0) {
             return ineligible(IneligibleReason.AREA_40S_INCOME_OVER_LIMIT, applied, est);
         }
 
@@ -81,18 +87,28 @@ public final class TaxDeductionCalculator {
 
     private static List<YearRow> yearRows(TaxDeductionInput in, DeductionRule rule, BigDecimal limit,
                                           TaxEstimate est, TaxParameters params) {
+        return yearRows(in, rule.deductionYears(), rule.ratePercent(), limit, est, params);
+    }
+
+    /** Repayment-only rows for an ineligible co-borrower, over the household's displayed period. */
+    public static List<YearRow> repaymentOnlyRows(TaxDeductionInput in, int listedYears) {
+        return yearRows(in, listedYears, BigDecimal.ZERO, BigDecimal.ZERO, null, null);
+    }
+
+    private static List<YearRow> yearRows(TaxDeductionInput in, int listedYears, BigDecimal rate, BigDecimal limit,
+                                          TaxEstimate est, TaxParameters params) {
         RepaymentResult loan = RepaymentCalculator.calculate(
                 in.principal(), in.annualRatePercent(), in.years(), in.method(), BigDecimal.ZERO);
         List<ScheduleRow> schedule = loan.schedule();
         int totalMonths = in.years() * MONTHS_PER_YEAR;
 
-        BigDecimal baseIncomeTax = est.incomeTaxBase();
-        BigDecimal residentTax = est.residentTax();
-        BigDecimal residentCap = est.residentCreditCap();
+        BigDecimal baseIncomeTax = est == null ? BigDecimal.ZERO : est.incomeTaxBase();
+        BigDecimal residentTax = est == null ? BigDecimal.ZERO : est.residentTax();
+        BigDecimal residentCap = est == null ? BigDecimal.ZERO : est.residentCreditCap();
 
         List<YearRow> rows = new ArrayList<>();
         int prevPaid = 0;
-        for (int k = 0; k < rule.deductionYears(); k++) {
+        for (int k = 0; k < listedYears; k++) {
             if (prevPaid >= totalMonths) {
                 break; // loan already fully repaid before this calendar year
             }
@@ -104,7 +120,7 @@ public final class TaxDeductionCalculator {
             }
 
             BigDecimal base = balance.min(limit);
-            BigDecimal cap = floorHundred(base.multiply(rule.ratePercent()).divide(HUNDRED));
+            BigDecimal cap = floorHundred(base.multiply(rate).divide(HUNDRED));
 
             BigDecimal incomeTaxCredit = cap.min(baseIncomeTax);
             BigDecimal remaining = cap.subtract(incomeTaxCredit);
@@ -119,8 +135,8 @@ public final class TaxDeductionCalculator {
                     yen(balance),
                     yen(base),
                     cap,
-                    incomeTaxWithReconstruction(baseIncomeTax, params),
-                    incomeTaxWithReconstruction(baseIncomeTax.subtract(incomeTaxCredit), params),
+                    params == null ? BigDecimal.ZERO : incomeTaxWithReconstruction(baseIncomeTax, params),
+                    params == null ? BigDecimal.ZERO : incomeTaxWithReconstruction(baseIncomeTax.subtract(incomeTaxCredit), params),
                     yen(residentTax),
                     yen(incomeTaxCredit),
                     yen(residentCredit),

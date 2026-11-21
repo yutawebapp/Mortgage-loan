@@ -14,6 +14,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
@@ -48,7 +50,7 @@ class TaxDeductionApiTest {
 
     /** NEW / ZEH, 2026-04, 30,000,000 / 1.2% / 35y EQUAL_PAYMENT, income 6,000,000 (socialInsurance default 15). */
     private static final String ZEH_INCOME_6M = """
-            {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
+            {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
              "principal": 30000000, "annualRatePercent": 1.2, "years": 35,
              "method": "EQUAL_PAYMENT", "annualIncome": 6000000}
             """;
@@ -121,6 +123,22 @@ class TaxDeductionApiTest {
     }
 
     @Test
+    void floorAreaMustBeExplicitAndDistinguishesBelow40From40s() throws Exception {
+        String under = ZEH_INCOME_6M.replace("AT_LEAST_50", "UNDER_40");
+        mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON).content(under))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.eligible").value(false))
+                .andExpect(jsonPath("$.ineligibleReason").value("AREA_UNDER_40"));
+        String forties = ZEH_INCOME_6M.replace("AT_LEAST_50", "FROM_40_TO_UNDER_50");
+        mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON).content(forties))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.eligible").value(true));
+        for (String unknown : List.of(ZEH_INCOME_6M.replace("\"floorAreaCategory\": \"AT_LEAST_50\", ", ""),
+                ZEH_INCOME_6M.replace("\"floorAreaCategory\": \"AT_LEAST_50\"", "\"floorAreaOver50\": false"))) {
+            mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON).content(unknown))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.ineligibleReason").value("AREA_UNCONFIRMED"));
+        }
+    }
+
+    @Test
     void income8M_capFullyUsed_withGoldenTaxFigures() throws Exception {
         String body = ZEH_INCOME_6M.replace("6000000", "8000000");
         mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON).content(body))
@@ -137,7 +155,7 @@ class TaxDeductionApiTest {
     @Test
     void childcareUplift_usesChildcareLimit() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "CERTIFIED", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "CERTIFIED", "moveInYear": 2026, "moveInMonth": 4,
                  "childcareHousehold": true, "floorAreaOver50": true,
                  "principal": 48000000, "annualRatePercent": 1.0, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 8000000}
@@ -153,7 +171,7 @@ class TaxDeductionApiTest {
     @Test
     void newOther_withoutLegacyException_isIneligibleByRule() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "OTHER", "moveInYear": 2026, "moveInMonth": 6,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "OTHER", "moveInYear": 2026, "moveInMonth": 6,
                  "principal": 25000000, "annualRatePercent": 1.5, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 5000000}
                 """;
@@ -170,7 +188,7 @@ class TaxDeductionApiTest {
     @Test
     void newOther_withLegacyException_usesExemptionRule() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "OTHER", "moveInYear": 2026, "moveInMonth": 6,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "OTHER", "moveInYear": 2026, "moveInMonth": 6,
                  "legacyException": true,
                  "principal": 25000000, "annualRatePercent": 1.5, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 5000000}
@@ -190,7 +208,7 @@ class TaxDeductionApiTest {
     @Test
     void usedResale_noExemptionRow_isIneligibleByRule() throws Exception {
         String body = """
-                {"housingType": "USED", "energyClass": "ZEH", "moveInYear": 2027, "moveInMonth": 2,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "USED", "energyClass": "ZEH", "moveInYear": 2027, "moveInMonth": 2,
                  "legacyException": true,
                  "principal": 25000000, "annualRatePercent": 1.0, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 5000000}
@@ -215,7 +233,7 @@ class TaxDeductionApiTest {
     @Test
     void omittedOptionalFields_useDefaults() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
                  "principal": 30000000, "annualRatePercent": 1.2, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 6000000}
                 """;
@@ -237,7 +255,7 @@ class TaxDeductionApiTest {
     /** NEW / ZEH, 2026-04, 40,000,000 / 1.2% / 35y EQUAL_PAYMENT; A 6,000,000, B 4,000,000 (50/50). */
     private static String zehPair(String mode) {
         return """
-                {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
                  "principal": 40000000, "annualRatePercent": 1.2, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 6000000,
                  "mode": "%s", "partnerAnnualIncome": 4000000}
@@ -320,7 +338,7 @@ class TaxDeductionApiTest {
     @Test
     void pairLoan_householdEqualsSumOfTwoSingleResults() throws Exception {
         String singleA = """
-                {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
                  "principal": 20000000, "annualRatePercent": 1.2, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 6000000}
                 """;
@@ -354,7 +372,7 @@ class TaxDeductionApiTest {
     @Test
     void pairLoan_uneven70_30_partnerTaxTooSmall_unclaimedOnPartnerOnly() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
                  "principal": 50000000, "annualRatePercent": 1.2, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 8000000,
                  "mode": "JOINT_DEBT", "partnerAnnualIncome": 2500000, "shareAPercent": 70}
@@ -379,8 +397,7 @@ class TaxDeductionApiTest {
     @Test
     void pairLoan_partnerIneligible_area40s_aloneEligible() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
-                 "floorAreaOver50": false,
+                {"floorAreaCategory": "FROM_40_TO_UNDER_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
                  "principal": 40000000, "annualRatePercent": 1.2, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 6000000,
                  "mode": "PAIR_LOAN", "partnerAnnualIncome": 12000000}
@@ -393,8 +410,14 @@ class TaxDeductionApiTest {
                 .andExpect(jsonPath("$.persons[1].ineligibleReason").value("AREA_40S_INCOME_OVER_LIMIT"))
                 .andExpect(jsonPath("$.persons[1].years.length()").value(0))
                 .andExpect(jsonPath("$.persons[1].totals").isEmpty())
-                .andExpect(jsonPath("$.totals.totalDeduction").value(1525100))
-                .andExpect(jsonPath("$.years.length()").value(13));
+                 .andExpect(jsonPath("$.totals.totalDeduction").value(1525100))
+                 // Independent reference: each 20M loan pays 466720 in year 1; residual 19692204.
+                 .andExpect(jsonPath("$.years[0].annualPayment").value(933440))
+                 .andExpect(jsonPath("$.years[0].yearEndBalance").value(39384408))
+                 .andExpect(jsonPath("$.years[0].totalDeduction").value(137800))
+                 .andExpect(jsonPath("$.totals.totalPayment").value(17735360))
+                 .andExpect(jsonPath("$.totals.netCost").value(16210260))
+                 .andExpect(jsonPath("$.years.length()").value(13));
     }
 
     @Test
@@ -406,7 +429,23 @@ class TaxDeductionApiTest {
                 .andExpect(jsonPath("$.eligible").value(true))
                 .andExpect(jsonPath("$.persons[1].eligible").value(false))
                 .andExpect(jsonPath("$.persons[1].ineligibleReason").value("INCOME_OVER_20M"))
-                .andExpect(jsonPath("$.totals.totalDeduction").value(1525100));
+                 .andExpect(jsonPath("$.totals.totalDeduction").value(1525100));
+    }
+
+    @Test
+    void pairLoan_firstPersonIneligible_householdIncludesBothLoans() throws Exception {
+        String body = zehPair("PAIR_LOAN").replace("AT_LEAST_50", "FROM_40_TO_UNDER_50")
+                .replace("\"annualIncome\": 6000000", "\"annualIncome\": 12000000")
+                .replace("\"partnerAnnualIncome\": 4000000", "\"partnerAnnualIncome\": 6000000");
+        mockMvc.perform(post(ENDPOINT).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.persons[0].eligible").value(false))
+                .andExpect(jsonPath("$.persons[1].eligible").value(true))
+                .andExpect(jsonPath("$.years[0].annualPayment").value(933440))
+                .andExpect(jsonPath("$.years[0].yearEndBalance").value(39384408))
+                .andExpect(jsonPath("$.years[0].totalDeduction").value(137800))
+                .andExpect(jsonPath("$.totals.totalPayment").value(17735360))
+                .andExpect(jsonPath("$.totals.netCost").value(16210260));
     }
 
     @Test
@@ -426,7 +465,7 @@ class TaxDeductionApiTest {
     @Test
     void pairLoan_childcareForPersonAOnly_limitDiffersPerPerson() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "CERTIFIED", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "CERTIFIED", "moveInYear": 2026, "moveInMonth": 4,
                  "childcareHousehold": true, "floorAreaOver50": true,
                  "principal": 120000000, "annualRatePercent": 1.0, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 8000000,
@@ -449,7 +488,7 @@ class TaxDeductionApiTest {
     @Test
     void pairLoan_oddPrincipal_roundsPersonAHalfUp() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
                  "principal": 30000001, "annualRatePercent": 1.2, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 6000000,
                  "mode": "PAIR_LOAN", "partnerAnnualIncome": 5000000}
@@ -494,7 +533,7 @@ class TaxDeductionApiTest {
     @Test
     void singleMode_echoesModeAndHasNoPersons_andNoNewNotes() throws Exception {
         String body = """
-                {"housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
+                {"floorAreaCategory": "AT_LEAST_50", "housingType": "NEW", "energyClass": "ZEH", "moveInYear": 2026, "moveInMonth": 4,
                  "principal": 30000000, "annualRatePercent": 1.2, "years": 35,
                  "method": "EQUAL_PAYMENT", "annualIncome": 6000000}
                 """;

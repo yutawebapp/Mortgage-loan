@@ -175,13 +175,17 @@ class TaxDeductionMapperTest {
         assertThat(p.residentAdjustmentDeduction()).isEqualByComparingTo("2500");
         assertThat(p.residentCreditRatePercent()).isEqualByComparingTo("5");
         assertThat(p.residentCreditCap()).isEqualByComparingTo("97500");
+        assertThat(p.incomeLimit()).isEqualByComparingTo("20000000");
+        assertThat(p.area40sIncomeLimit()).isEqualByComparingTo("10000000");
         assertThat(p.verifiedOn()).isEqualTo(LocalDate.of(2026, 11, 17));
         assertThat(p.sourceUrls()).containsExactlyInAnyOrder(
                 "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm",
                 "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1199.htm",
                 "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
                 "https://www.soumu.go.jp/main_content/001075462.pdf",
-                "https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/090929.html");
+                "https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/090929.html",
+                "https://www.mlit.go.jp/jutakukentiku/house/zeisei_index2.html",
+                "https://www.mlit.go.jp/jutakukentiku/house/jutakukentiku_house_tk2_000023.html");
     }
 
     @Test

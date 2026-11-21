@@ -5,6 +5,7 @@ export { ApiError };
 
 export type HousingType = "NEW" | "USED" | "RESALE";
 export type EnergyClass = "CERTIFIED" | "ZEH" | "ENERGY_STANDARD" | "OTHER";
+export type FloorAreaCategory = "UNDER_40" | "FROM_40_TO_UNDER_50" | "AT_LEAST_50" | "UNKNOWN";
 
 export type TaxDeductionRequest = {
   housingType: HousingType;
@@ -13,6 +14,7 @@ export type TaxDeductionRequest = {
   moveInMonth: number;
   childcareHousehold?: boolean;
   floorAreaOver50?: boolean;
+  floorAreaCategory?: FloorAreaCategory;
   legacyException?: boolean;
   principal: number;
   annualRatePercent: number;
@@ -89,7 +91,7 @@ export type TaxDeductionPerson = {
 
 export type TaxDeductionResponse = {
   mode?: BorrowerMode;
-  /** PAIR_LOAN / JOINT_DEBT のときだけ入る。上位の years / totals は対象者の合計。 */
+  /** 返済・残高は全債務者、控除は対象者のみの合計。 */
   persons?: TaxDeductionPerson[] | null;
   eligible: boolean;
   ineligibleReason: string | null;

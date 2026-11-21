@@ -1,4 +1,4 @@
-import type { EnergyClass, HousingType, TaxDeductionRequest } from "./api/taxDeduction";
+import type { EnergyClass, FloorAreaCategory, HousingType, TaxDeductionRequest } from "./api/taxDeduction";
 import type { RepaymentMethod } from "./api/simulation";
 import type { BorrowerMode } from "./borrowerMode";
 import { hrefWith } from "./sharedConditions";
@@ -9,7 +9,7 @@ export type TaxDeductionForm = {
   moveInYear: string;
   moveInMonth: string;
   childcare: boolean;
-  floorAreaOver50: boolean;
+  floorAreaCategory: FloorAreaCategory;
   legacyException: boolean;
   principalMan: string;
   rate: string;
@@ -117,7 +117,7 @@ export function validateTaxDeduction(v: TaxDeductionForm): {
     moveInYear: my,
     moveInMonth: mm,
     childcareHousehold: v.childcare,
-    floorAreaOver50: v.floorAreaOver50,
+    floorAreaCategory: v.floorAreaCategory,
     legacyException: legacyExceptionKind(v) !== null && v.legacyException,
     principal,
     annualRatePercent: rate,
@@ -169,6 +169,8 @@ const INELIGIBLE_MESSAGES: Record<string, string> = {
   TERM_UNDER_10_YEARS: "返済期間が10年未満のローンは、住宅ローン減税の対象外となる可能性があります。",
   AREA_40S_INCOME_OVER_LIMIT:
     "床面積が40㎡台（約12.1〜15.1坪）の住宅は、所得が一定額を超えると対象外となる可能性があり、入力の年収が該当する可能性があります。",
+  AREA_UNDER_40: "床面積が40㎡未満の住宅は住宅ローン減税の対象外です。",
+  AREA_UNCONFIRMED: "床面積を確認し、区分を選択してください。",
   INCOME_OVER_20M: "年収が2,000万円を超える場合は、住宅ローン減税の対象外となる可能性があります。",
 };
 

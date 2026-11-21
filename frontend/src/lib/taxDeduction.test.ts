@@ -22,7 +22,7 @@ const base: TaxDeductionForm = {
   moveInYear: "2026",
   moveInMonth: "4",
   childcare: false,
-  floorAreaOver50: true,
+  floorAreaCategory: "AT_LEAST_50",
   legacyException: false,
   principalMan: "3000",
   rate: "1.2",
@@ -48,7 +48,7 @@ describe("validateTaxDeduction", () => {
       moveInYear: 2026,
       moveInMonth: 4,
       childcareHousehold: false,
-      floorAreaOver50: true,
+      floorAreaCategory: "AT_LEAST_50",
       legacyException: false,
       principal: 30_000_000,
       annualRatePercent: 1.2,
@@ -58,6 +58,14 @@ describe("validateTaxDeduction", () => {
       socialInsuranceRatePercent: 15,
       mode: "SINGLE",
     });
+  });
+
+  it("preserves each floor-area category in the request", () => {
+    for (const floorAreaCategory of ["UNDER_40", "FROM_40_TO_UNDER_50", "AT_LEAST_50", "UNKNOWN"] as const) {
+      expect(validateTaxDeduction(w({ floorAreaCategory })).request?.floorAreaCategory).toBe(floorAreaCategory);
+    }
+    expect(ineligibleMessage("AREA_UNDER_40")).toContain("40㎡未満");
+    expect(ineligibleMessage("AREA_UNCONFIRMED")).toContain("確認");
   });
 
   it("principal and income: 1円..10億円, blank rejected", () => {

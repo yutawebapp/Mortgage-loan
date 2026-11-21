@@ -52,7 +52,7 @@ public class TaxParameterLoader {
         }
 
         LocalDate verifiedOn = verifiedDates(brackets, scalars).stream()
-                .max(LocalDate::compareTo)
+                .min(LocalDate::compareTo)
                 .orElseThrow(() -> new IllegalStateException("no tax parameter rows for tax year " + taxYear));
 
         Set<String> sources = new LinkedHashSet<>();
@@ -69,6 +69,8 @@ public class TaxParameterLoader {
                 required(values, RESIDENT_ADJUSTMENT, taxYear),
                 required(values, RESIDENT_CREDIT_RATE, taxYear),
                 required(values, RESIDENT_CREDIT_CAP, taxYear),
+                required(values, "DEDUCTION_INCOME_LIMIT", taxYear),
+                required(values, "DEDUCTION_AREA_40S_INCOME_LIMIT", taxYear),
                 verifiedOn,
                 List.copyOf(sources));
     }

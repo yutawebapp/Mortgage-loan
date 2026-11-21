@@ -5,6 +5,7 @@ import com.example.mortgage.common.RoundingPolicy;
 import com.example.mortgage.simulation.domain.RepaymentMethod;
 import com.example.mortgage.taxdeduction.domain.EnergyClass;
 import com.example.mortgage.taxdeduction.domain.HousingType;
+import com.example.mortgage.taxdeduction.domain.FloorAreaCategory;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -27,7 +28,8 @@ import java.math.BigDecimal;
  * @param moveInYear                 入居年 (= 借入実行年), 2026..2030
  * @param moveInMonth                借入実行月, 1..12 (first repayment is the following month)
  * @param childcareHousehold         子育て世帯等 for person A (null means false)
- * @param floorAreaOver50            床面積50㎡以上 (shared by both persons; null means true)
+ * @param floorAreaOver50            legacy field; false or omitted cannot establish that area is at least 40㎡
+ * @param floorAreaCategory          床面積区分 (shared by both persons; unspecified means unconfirmed)
  * @param legacyException            例外該当 (shared; null means false)
  * @param principal                  借入額 total (yen), 1..1,000,000,000
  * @param annualRatePercent          annual rate in percent, 0..20
@@ -102,7 +104,9 @@ public record TaxDeductionRequest(
         @DecimalMax("99")
         BigDecimal shareAPercent,
 
-        Boolean partnerChildcareHousehold) {
+        Boolean partnerChildcareHousehold,
+
+        FloorAreaCategory floorAreaCategory) {
 
     /** Default social insurance rate (仮置き) when omitted. */
     public static final BigDecimal DEFAULT_SOCIAL_INSURANCE_RATE_PERCENT = BigDecimal.valueOf(15);
@@ -113,8 +117,10 @@ public record TaxDeductionRequest(
         if (childcareHousehold == null) {
             childcareHousehold = false;
         }
-        if (floorAreaOver50 == null) {
-            floorAreaOver50 = true;
+        // The old false value conflated <40 and 40–<50; never assume the latter.
+        if (floorAreaCategory == null) {
+            floorAreaCategory = Boolean.TRUE.equals(floorAreaOver50)
+                    ? FloorAreaCategory.AT_LEAST_50 : FloorAreaCategory.UNKNOWN;
         }
         if (legacyException == null) {
             legacyException = false;

@@ -11,7 +11,7 @@ import java.util.List;
  * When eligible is false: years is empty and totals / assumptions are null. rule is null when no rule matched.
  *
  * <p>For PAIR_LOAN / JOINT_DEBT, years / totals / eligible / ineligibleReason / rule / assumptions are the
- * household view (sums over the eligible persons; rule and assumptions from person A, see service),
+ * household view (repayments for all debtors, credits for eligible persons; rule and assumptions from person A),
  * and {@code persons} holds the per-person results. For SINGLE / JOINT_GUARANTEE, persons is null.
  *
  * @param eligible         whether the deduction applies under the pre-checks
