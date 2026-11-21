@@ -191,7 +191,7 @@ export default function RentVsBuy({ initialValues }: { initialValues?: Partial<R
 
   return (
     <div className="sim">
-      <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="賃貸と購入の条件">
+      <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="マイホームと賃貸の条件">
         <fieldset className="fs-group">
           <legend>購入の条件</legend>
           {field("priceMan", "物件価格", "万円", { step: STEP_MAN_LARGE })}

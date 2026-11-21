@@ -214,7 +214,7 @@ const NOTE_TEXT: Record<string, string> = {
   NO_INVESTMENT_RETURN_ON_DIFFERENCE:
     "購入と賃貸の支出の差を運用した場合の収益や、頭金を運用した場合の収益は含まれません。",
   TAX_DEDUCTION_NOT_INCLUDED: "住宅ローン控除による税の軽減は含みません。",
-  SAME_HOME_CONDITIONS_NOT_ASSURED: "賃貸と購入で、広さ・立地・設備が同じとは限りません。",
+  SAME_HOME_CONDITIONS_NOT_ASSURED: "マイホームと賃貸で、広さ・立地・設備が同じとは限りません。",
   OWNERSHIP_COSTS_CONTINUE_AFTER_LOAN:
     "ローンの完済後も、管理費・修繕積立金・税金などは続く前提で計算しています。",
 };

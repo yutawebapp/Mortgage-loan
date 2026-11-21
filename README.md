@@ -15,7 +15,7 @@
 | 金利上昇シミュレーション | `/rate-scenario` | 変動金利が上昇した場合の返済額の推移(簡易モデル) |
 | 住宅ローン控除シミュレーター | `/tax-deduction` | 入居年・住宅の性能・年収から、控除額と実質負担の目安(ペアローン・連帯債務・連帯保証に対応) |
 | 住居費の総額シミュレーター | `/total-cost` | 頭金・諸費用・管理費・固定資産税などを含めた総額と月平均の目安 |
-| 賃貸と購入の比較 | `/rent-vs-buy` | 累計支出と実質負担を、仮定を置いて並べる(結論は示さない) |
+| マイホームと賃貸の比較 | `/rent-vs-buy` | 累計支出と実質負担を、仮定を置いて並べる(結論は示さない) |
 | ライフプラン | `/life-plan` | 収入・生活費・住宅ローン・教育費から貯蓄の推移の目安(教育費は文科省の全国平均) |
 | 金利タイプの比較 | `/rate-types` | 変動・固定期間選択型・全期間固定を、仮の金利で並べて比較(簡易モデル) |
 
@@ -65,7 +65,7 @@ DB を初期状態に戻す場合は `docker compose down -v` のあとに再起
 | POST | `/simulations/tax-deduction` | 住宅ローン控除 |
 | POST | `/simulations/total-cost` | 住居費の総額 |
 | POST | `/simulations/rate-types` | 金利タイプの比較 |
-| POST | `/simulations/rent-vs-buy` | 賃貸と購入の比較 |
+| POST | `/simulations/rent-vs-buy` | マイホームと賃貸の比較 |
 | POST | `/simulations/life-plan` | ライフプラン(家計の見通し・教育費・住宅ローン) |
 | GET | `/products`, `/products/{id}` | 商品一覧・詳細 |
 

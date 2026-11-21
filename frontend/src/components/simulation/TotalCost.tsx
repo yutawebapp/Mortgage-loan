@@ -130,7 +130,7 @@ export default function TotalCost({ initialValues }: { initialValues?: Partial<T
   if (priceManStr)
     nextSteps.push({
       href: hrefWith("/rent-vs-buy", sharedShown, { principal: priceManStr }),
-      label: "賃貸と購入の支出を比べる",
+      label: "マイホームと賃貸の支出を比べる",
       hint: "同じ物件価格での、賃貸の累計支出との推移",
     });
   if (loanManStr)

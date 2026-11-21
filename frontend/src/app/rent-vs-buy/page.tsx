@@ -4,9 +4,9 @@ import Breadcrumb from "@/components/layout/Breadcrumb";
 import JsonLd from "@/components/seo/JsonLd";
 import { HOME_CRUMB, pageMetadata, webApplicationJsonLd } from "@/lib/seo";
 
-const TITLE = "賃貸と購入の比較シミュレーター";
+const TITLE = "マイホームと賃貸の比較シミュレーター";
 const DESCRIPTION =
-  "物件価格・頭金・ローンの条件と、賃貸の家賃を入力して、賃貸と購入の累計の支出が年ごとにどう変わるかを調べられる簡易的な試算ツールです。どちらが良いかを示すものではなく、結果は入力した前提によって変わります。";
+  "物件価格・頭金・ローンの条件と、賃貸の家賃を入力して、マイホームと賃貸の累計の支出が年ごとにどう変わるかを調べられる簡易的な試算ツールです。どちらが良いかを示すものではなく、結果は入力した前提によって変わります。";
 
 export const metadata = pageMetadata({ title: TITLE, description: DESCRIPTION, path: "/rent-vs-buy" });
 

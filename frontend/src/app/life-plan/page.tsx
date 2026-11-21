@@ -75,7 +75,7 @@ export default function Page() {
         </div>
         <p>
           関連するツール：<Link href="/total-cost">住居費の総額シミュレーター</Link>、
-          <Link href="/rent-vs-buy">賃貸と購入の比較シミュレーター</Link>、<Link href="/simulation">返済シミュレーター</Link>
+          <Link href="/rent-vs-buy">マイホームと賃貸の比較シミュレーター</Link>、<Link href="/simulation">返済シミュレーター</Link>
         </p>
       </section>
     </main>

@@ -427,7 +427,7 @@ a.btn-link.secondary:hover { background: var(--brand-tint); }
 .person-card p { margin: 6px 0 0; font-size: 0.9rem; }
 @media (max-width: 480px) { .person-cards { grid-template-columns: 1fr; } }
 
-/* 賃貸と購入の比較 */
+/* マイホームと賃貸の比較 */
 .rvb-headline { margin: 6px 0; font-size: 1.1rem; font-weight: 700; line-height: 1.6; color: var(--brand-dark); }
 .rvb-headline.sub { font-size: 0.98rem; font-weight: 600; }
 .rvb-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0 12px; }

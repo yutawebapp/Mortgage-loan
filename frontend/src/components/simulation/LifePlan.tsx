@@ -508,7 +508,7 @@ export default function LifePlan({ initialValues }: { initialValues?: Partial<Li
                 住居費の総額を調べる
               </Link>
               <Link className="btn-link secondary" href="/rent-vs-buy">
-                賃貸と購入を比べる
+                マイホームと賃貸を比べる
               </Link>
               <Link className="btn-link secondary" href="/simulation">
                 返済額を試算する
