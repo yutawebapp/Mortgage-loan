@@ -10,6 +10,7 @@ import {
   isSharedKey,
   normalizeSharedValue,
   sanitizeShared,
+  sharedFromQuery,
   toSearchParams,
   simulationExtraFromQuery,
   totalCostExtraFromQuery,
@@ -272,4 +273,13 @@ describe("contract: every shared key a target reads round-trips through the targ
       }
     }
   }
+});
+
+describe("sharedFromQuery", () => {
+  it("URLのキー（principal など）から内部キーの共通条件を得る", () => {
+    expect(sharedFromQuery({ principal: "3000", rate: "1", years: "20" })).toEqual({ principalMan: "3000", rate: "1", years: "20" });
+  });
+  it("不正な値や配列は捨てる", () => {
+    expect(sharedFromQuery({ principal: ["1", "2"], rate: "abc", years: "20" })).toEqual({ years: "20" });
+  });
 });

@@ -3,9 +3,9 @@ import { normalizeNumericInput, parseNumericInput, stepNumericInput } from "./nu
 
 describe("normalizeNumericInput", () => {
   it("全角数字、記号、空白を変換する", () => {
-    expect(normalizeNumericInput("　０１２３４５６７８９．。、－ー−＋　")).toBe("0123456789...---+");
+    expect(normalizeNumericInput("　０１２３４５６７８９．。－ー−＋　")).toBe("0123456789..---+");
     expect(normalizeNumericInput("１２３．５")).toBe("123.5");
-    expect(normalizeNumericInput("－０、５")).toBe("-0.5");
+    expect(normalizeNumericInput("－０．５")).toBe("-0.5");
   });
   it("半角や変換できない文字をそのまま残す", () => {
     expect(normalizeNumericInput("+123.5-abc, あ")).toBe("+123.5-abc, あ");
@@ -14,6 +14,10 @@ describe("normalizeNumericInput", () => {
 });
 
 describe("parseNumericInput", () => {
+  it("全角読点の桁区切り「3、000」は数値として解釈しない", () => {
+    expect(normalizeNumericInput("3、000")).toBe("3、000");
+    expect(parseNumericInput(normalizeNumericInput("3、000"))).toBeNaN();
+  });
   it.each(["0x10", "0b10", "0o10", "1e3", "1E-3", "Infinity", "1.2.3", "--1", " ", "\t", "", ".", "+", "-", "1 ", " 1", "1,2"])("%j は数値として解釈しない", (value) => {
     expect(parseNumericInput(value)).toBeNaN();
   });

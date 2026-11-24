@@ -112,6 +112,13 @@ describe("validateLifePlan", () => {
     expect(errs({ pensionAge: "81" }).pensionAge).toBeDefined();
   });
 
+  it("upfrontMan / loanMan are capped at 10億円 (100000万円) like the backend", () => {
+    expect(errs({ upfrontMan: "100000" }).upfrontMan).toBeUndefined();
+    expect(errs({ upfrontMan: "100001" }).upfrontMan).toBeDefined();
+    expect(errs({ loanMan: "100000" }).loanMan).toBeUndefined();
+    expect(errs({ loanMan: "100001" }).loanMan).toBeDefined();
+  });
+
   it("money fields: blank rejected, negatives and over-limit rejected", () => {
     expect(errs({ takeHomeMan: "" }).takeHomeMan).toBeDefined();
     expect(errs({ takeHomeMan: "-1" }).takeHomeMan).toBeDefined();

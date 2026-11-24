@@ -164,7 +164,7 @@ describe("taxDeductionInitialFromQuery", () => {
 describe("ineligibleMessage", () => {
   it("maps known codes and falls back for unknown or missing ones", () => {
     expect(ineligibleMessage("NOT_ELIGIBLE_BY_RULE")).toContain("対象外となる可能性");
-    expect(ineligibleMessage("TERM_UNDER_10_YEARS")).toContain("10年未満");
+    expect(ineligibleMessage("LOAN_TERM_UNDER_10Y")).toContain("10年未満");
     expect(ineligibleMessage("AREA_40S_INCOME_OVER_LIMIT")).toContain("40㎡台");
     expect(ineligibleMessage("INCOME_OVER_20M")).toContain("2,000万円");
     const generic = ineligibleMessage("SOMETHING_NEW");

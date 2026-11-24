@@ -9,6 +9,7 @@ import {
   encodeStored,
   isSharedKey,
   sanitizeShared,
+  sharedFromQuery,
   type SharedConditions,
   type SharedKey,
 } from "./sharedConditions";
@@ -87,7 +88,7 @@ export function useSharedConditions({
   useEffect(() => {
     const stored = readStored();
     // URLの共通キーは、マウント時点の window.location から読む（描画中には読まない）
-    const url = sanitizeShared(queryRecordFromSearch(window.location.search));
+    const url = sharedFromQuery(queryRecordFromSearch(window.location.search));
     const patch: SharedConditions = {};
     for (const k of SHARED_KEYS) {
       if (stored[k] === undefined) continue;

@@ -72,6 +72,13 @@ export function sanitizeShared(raw: unknown): SharedConditions {
   return out;
 }
 
+/** URLクエリ（キーは QUERY_KEY）から、内部キー（principalMan など）の共通条件を取り出す。不正な値は捨てる。 */
+export function sharedFromQuery(q: Record<string, unknown>): SharedConditions {
+  const internal: Record<string, unknown> = {};
+  for (const k of SHARED_KEYS) internal[k] = q[QUERY_KEY[k]];
+  return sanitizeShared(internal);
+}
+
 /** 共通条件 → URLSearchParams（有効な値のみ）。 */
 export function toSearchParams(c: SharedConditions): URLSearchParams {
   const p = new URLSearchParams();

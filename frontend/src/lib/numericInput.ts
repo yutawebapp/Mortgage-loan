@@ -2,7 +2,7 @@
 export function normalizeNumericInput(value: string): string {
   return value
     .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 0xfee0))
-    .replace(/[．。、]/g, ".")
+    .replace(/[．。]/g, ".")
     .replace(/[－ー−]/g, "-")
     .replace(/＋/g, "+")
     .replace(/　/g, "");

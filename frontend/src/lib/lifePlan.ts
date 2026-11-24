@@ -136,8 +136,8 @@ export function validateLifePlan(v: LifePlanForm): { request: LifePlanRequest | 
   const savings = manField(v.savingsMan, MAX_SAVINGS, "現在の貯蓄", "savingsMan", errors);
   const retireIncome = manField(v.retireIncomeMan, MAX_YEN, "退職後の年間収入", "retireIncomeMan", errors);
   const retireLiving = manField(v.retireLivingMan, MAX_MONTHLY, "退職後の毎月の生活費", "retireLivingMan", errors);
-  const upfront = manField(v.upfrontMan, MAX_SAVINGS, "購入時に貯蓄から払う額", "upfrontMan", errors, false);
-  const loan = manField(v.loanMan, MAX_SAVINGS, "借入額", "loanMan", errors);
+  const upfront = manField(v.upfrontMan, MAX_YEN, "購入時に貯蓄から払う額", "upfrontMan", errors, false);
+  const loan = manField(v.loanMan, MAX_YEN, "借入額", "loanMan", errors);
 
   let rate = 0;
   let years = 0;
