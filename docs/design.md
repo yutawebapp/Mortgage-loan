@@ -40,16 +40,14 @@ backend は Actuator health で healthcheck、frontend/db に対し depends_on�
 
 ## 5. バックエンド方針
 - 依存方向: controller → service → domain / mapper。計算ロジック(domain)は Spring/DB 非依存の純Java。
-- 金額は BigDecimal。丸めは一元管理(仮置き: 円未満切捨て。要確定)。
+- 金額は BigDecimal。丸めは `common/RoundingPolicy` で一元管理(円未満四捨五入 HALF_UP。詳細は §7.1)。借入可能額など安全側に見積もる値のみ意図的に切り捨て。
 - MyBatis: SQL は XML Mapper。動的条件は `<where>/<if>`。並び替えカラムは `${}` を使わず enum ホワイトリスト。
   `map-underscore-to-camel-case=true`。
-- API: `/api/v1`、OpenAPI(springdoc)→ openapi-typescript で型生成。エラーは RFC 7807。入力値はログ出力しない。
-- テスト: JUnit5 + Testcontainers(Postgres)。計算ロジックは外部の返済表と突合。
+- API: `/api/v1`、OpenAPI(springdoc)を公開。フロントの API 型は `frontend/src/lib/api/*.ts` に手書きし、バックエンドのレコードと手動で同期する。エラーは RFC 7807。入力値はログ出力しない。
+- テスト: JUnit5 + Testcontainers(Postgres)。計算ロジックの期待値は、テスト対象コードとは独立に Python 等で算出した値と突合する。
 
-### API(案)
-- POST /simulations/repayment
-- POST /simulations/refinance
-- POST /simulations/eligibility
+### API
+- POST /simulations/{repayment,refinance,eligibility,budget,prepayment,rate-scenarios,tax-deduction,total-cost,rate-types,rent-vs-buy,life-plan}
 - GET /products?rateType=&sort=&page=
 - GET /products/{id}
 
@@ -127,7 +125,7 @@ backend は Actuator health で healthcheck、frontend/db に対し depends_on�
 - テスト: 国税庁の速算表・年末調整の表から手計算した期待値でゴールデンテストを作る(実装コードで期待値を作らない)。
 
 ### API(案) POST /api/v1/simulations/tax-deduction
-- 入力: 住宅(新築/中古/買取再販、省エネ区分、入居年・月、子育て世帯等、床面積50㎡以上か、例外該当)、借入(額・金利・期間・方式)、年収、社会保険料率(既定15%)
+- 入力: 住宅(新築/中古/買取再販、省エネ区分、入居年・月、子育て世帯等、床面積区分(`floorAreaCategory`)、例外該当)、借入(額・金利・期間・方式)、年収、社会保険料率(既定15%)
 - 出力: 適用可否と理由、適用ルール(限度額・期間・出典・確認日)、年別(年末残高、控除枠、所得税・住民税の推計と控除額、控除しきれない額)、控除額合計、控除期間の返済総額と実質負担、注意事項
 - DB: 入居年別の控除ルール表 + 課税年別の税パラメータ表(出典URL・確認日つき)。Flywayで管理。
 
