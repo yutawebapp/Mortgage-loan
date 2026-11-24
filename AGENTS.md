@@ -3,7 +3,7 @@
 住宅ローンWebアプリ(一般個人向け)。`backend/`(Spring Boot 3.5 / Java 21 / Maven / MyBatis / Flyway / PostgreSQL 16)と `frontend/`(Next.js 16 App Router)の2構成。設計の決定事項と仕様は `docs/design.md`。
 
 ## 作業範囲
-- `~/Documents/GitHub/Mortgage-loan` 以外のディレクトリ(`~/Documents/GitHub/` 配下の他プロジェクト、ホーム直下など)は参照・読み取り・編集しない。ファイルの探索・検索も、このリポジトリ内に限定する。
+- `~/Documents/GitHub/Mortgage-loan` 以外のディレクトリ(`~/Documents/GitHub/` 配下の他プロジェクト、ホーム直下など)は参照・読み取り・編集しない。ファイルの探索・検索も、このリポジトリ内に限定する。ただしユーザーが明示的に指示したときは、その指示の範囲に限って例外的にリポジトリ外を参照してよい(例: プラグインのキャッシュでバージョンを確認する)。
 - テスト用の一時ファイルなどもリポジトリの外に書かない(必要ならリポジトリ内の `tmp/`(gitignore 済み)を使う)。
 
 ## 利用モデル
