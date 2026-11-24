@@ -20,6 +20,7 @@ import java.util.List;
  * @param residentAdjustmentDeduction 調整控除 (fixed assumption)
  * @param residentCreditRatePercent   住宅ローン控除の住民税側上限の率 (×所得税の課税総所得金額)
  * @param residentCreditCap           住宅ローン控除の住民税側上限の最高額
+ * @param minLoanYears                返済期間の下限(年)
  * @param verifiedOn                  earliest verified_on among the loaded rows
  * @param sourceUrls                  distinct source URLs of the loaded rows
  */
@@ -35,6 +36,7 @@ public record TaxParameters(
         BigDecimal residentCreditCap,
         BigDecimal incomeLimit,
         BigDecimal area40sIncomeLimit,
+        int minLoanYears,
         LocalDate verifiedOn,
         List<String> sourceUrls) {
 

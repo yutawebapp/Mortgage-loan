@@ -40,7 +40,6 @@ public final class TaxDeductionCalculator {
 
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final BigDecimal THOUSAND = BigDecimal.valueOf(1000);
-    private static final int MIN_LOAN_YEARS = 10;
     private static final int MONTHS_PER_YEAR = 12;
     /** Salary-deduction formula below this income is an approximation of 別表第五. */
     private static final BigDecimal SALARY_TABLE_EXACT_FROM = BigDecimal.valueOf(6_600_000L);
@@ -57,7 +56,7 @@ public final class TaxDeductionCalculator {
         AppliedRule applied = new AppliedRule(limit, rule.deductionYears(), rule.ratePercent(),
                 childcareApplied, rule.conditionCode(), rule.sourceUrl(), rule.verifiedOn());
 
-        if (in.years() < MIN_LOAN_YEARS) {
+        if (in.years() < params.minLoanYears()) {
             return ineligible(IneligibleReason.LOAN_TERM_UNDER_10Y, applied, null);
         }
 

@@ -61,6 +61,7 @@ class TaxDeductionCalculatorTest {
                 bd(97_500),
                 bd(20_000_000),
                 bd(10_000_000),
+                10,
                 VERIFIED,
                 List.of(MLIT_URL));
     }
@@ -85,6 +86,28 @@ class TaxDeductionCalculatorTest {
 
     private static DeductionRule newEnergyExemption() {
         return rule(HousingType.NEW, EnergyClass.ENERGY_STANDARD, ConditionCode.EXEMPTION, 2028, 2030, 20_000_000, 20_000_000, 10);
+    }
+
+    @Test
+    void loanOfExactlyTenYears_isEligible() {
+        TaxDeductionResult r = run(input(30_000_000, "1.2", 10, RepaymentMethod.EQUAL_PAYMENT, 6_000_000,
+                2026, 4, false, true), zehNew());
+        assertThat(r.eligible()).isTrue();
+        assertThat(r.ineligibleReason()).isNull();
+        assertThat(r.years()).isNotEmpty();
+    }
+
+    @Test
+    void minLoanYears_comesFromParameters() {
+        TaxParameters p = fy2026();
+        TaxParameters strict = new TaxParameters(p.salaryDeduction(), p.basicDeduction(), p.incomeTax(),
+                p.reconstructionRatePercent(), p.residentTaxRatePercent(), p.residentBasicDeduction(),
+                p.residentAdjustmentDeduction(), p.residentCreditRatePercent(), p.residentCreditCap(),
+                p.incomeLimit(), p.area40sIncomeLimit(), 11, p.verifiedOn(), p.sourceUrls());
+        TaxDeductionResult r = TaxDeductionCalculator.calculate(
+                input(30_000_000, "1.2", 10, RepaymentMethod.EQUAL_PAYMENT, 6_000_000, 2026, 4, false, true),
+                zehNew(), strict);
+        assertThat(r.ineligibleReason()).isEqualTo(IneligibleReason.LOAN_TERM_UNDER_10Y);
     }
 
     private static DeductionRule usedOther() {

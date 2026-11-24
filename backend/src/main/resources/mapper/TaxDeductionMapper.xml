@@ -52,7 +52,7 @@
           AND condition_code = #{conditionCode}
           AND move_in_year_from &lt;= #{moveInYear}
           AND #{moveInYear} &lt;= move_in_year_to
-        ORDER BY id ASC
+        ORDER BY move_in_year_from DESC, id DESC
         LIMIT 1
     </select>
 
@@ -61,7 +61,7 @@
         FROM tax_brackets
         WHERE year_from &lt;= #{taxYear}
           AND #{taxYear} &lt;= year_to
-        ORDER BY table_code ASC, sort_order ASC
+        ORDER BY table_code ASC, sort_order ASC, year_from DESC
     </select>
 
     <select id="findTaxScalars" resultMap="taxScalarMap">
@@ -69,7 +69,7 @@
         FROM tax_scalar_parameters
         WHERE year_from &lt;= #{taxYear}
           AND #{taxYear} &lt;= year_to
-        ORDER BY param_key ASC
+        ORDER BY param_key ASC, year_from DESC
     </select>
 
 </mapper>

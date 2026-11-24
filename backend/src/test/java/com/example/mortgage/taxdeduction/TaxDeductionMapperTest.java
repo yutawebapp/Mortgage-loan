@@ -48,6 +48,9 @@ class TaxDeductionMapperTest {
     @Autowired
     private TaxParameterLoader loader;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
+
     /** Expected seed: limit, childcare limit, deduction years. Null = no rule row. */
     private record Expected(long limit, long limitChildcare, int deductionYears) {
     }
@@ -177,6 +180,7 @@ class TaxDeductionMapperTest {
         assertThat(p.residentCreditCap()).isEqualByComparingTo("97500");
         assertThat(p.incomeLimit()).isEqualByComparingTo("20000000");
         assertThat(p.area40sIncomeLimit()).isEqualByComparingTo("10000000");
+        assertThat(p.minLoanYears()).isEqualTo(10);
         assertThat(p.verifiedOn()).isEqualTo(LocalDate.of(2026, 11, 17));
         assertThat(p.sourceUrls()).containsExactlyInAnyOrder(
                 "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm",
@@ -184,6 +188,7 @@ class TaxDeductionMapperTest {
                 "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm",
                 "https://www.soumu.go.jp/main_content/001075462.pdf",
                 "https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/090929.html",
+                "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1211-1.htm",
                 "https://www.mlit.go.jp/jutakukentiku/house/zeisei_index2.html",
                 "https://www.mlit.go.jp/jutakukentiku/house/jutakukentiku_house_tk2_000023.html");
     }
@@ -201,6 +206,42 @@ class TaxDeductionMapperTest {
     void taxParameters_outsideSeededYears_failsLoudly() {
         assertThatThrownBy(() -> loader.load(2025)).isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> loader.load(2031)).isInstanceOf(IllegalStateException.class);
+    }
+
+    private static final String RULE_INSERT = "INSERT INTO housing_loan_deduction_rules (housing_type, energy_class,"
+            + " condition_code, move_in_year_from, move_in_year_to, limit_amount, limit_amount_childcare,"
+            + " deduction_years, rate_percent, source_url, verified_on)"
+            + " VALUES ('USED', 'OTHER', 'STANDARD', ?, ?, 20000000, 20000000, 10, 0.70, 'https://example.invalid', DATE '2026-01-01')";
+
+    @Test
+    void overlappingYearRanges_areRejectedByTheDatabase() {
+        // existing: USED/OTHER/STANDARD 2026-2030
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbc.update(RULE_INSERT, 2030, 2032))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbc.update(RULE_INSERT, 2027, 2028))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbc.update(
+                "INSERT INTO tax_scalar_parameters (param_key, year_from, year_to, param_value, source_url, verified_on)"
+                        + " VALUES ('RESIDENT_TAX_RATE_PERCENT', 2030, 2031, 10, 'https://example.invalid', DATE '2026-01-01')"))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbc.update(
+                "INSERT INTO tax_brackets (table_code, year_from, year_to, sort_order, upper_limit, rate_percent, amount,"
+                        + " source_url, verified_on) VALUES ('INCOME_TAX', 2029, 2035, 1, 1949000, 5, 0,"
+                        + " 'https://example.invalid', DATE '2026-01-01')"))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void adjacentYearRange_isAcceptedAndDifferentKeyIsIndependent() {
+        try {
+            assertThat(jdbc.update(RULE_INSERT, 2031, 2032)).isEqualTo(1);
+            assertThat(mapper.findDeductionRule(HousingType.USED, EnergyClass.OTHER, ConditionCode.STANDARD, 2031))
+                    .isNotNull();
+            assertThat(mapper.findDeductionRule(HousingType.USED, EnergyClass.OTHER, ConditionCode.STANDARD, 2030)
+                    .moveInYearTo()).isEqualTo(2030);
+        } finally {
+            jdbc.update("DELETE FROM housing_loan_deduction_rules WHERE source_url = 'https://example.invalid'");
+        }
     }
 
     private static Bracket br(Integer upper, String rate, long amount) {

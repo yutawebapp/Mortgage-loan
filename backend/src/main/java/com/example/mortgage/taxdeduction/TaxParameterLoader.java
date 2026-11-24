@@ -71,6 +71,7 @@ public class TaxParameterLoader {
                 required(values, RESIDENT_CREDIT_CAP, taxYear),
                 required(values, "DEDUCTION_INCOME_LIMIT", taxYear),
                 required(values, "DEDUCTION_AREA_40S_INCOME_LIMIT", taxYear),
+                required(values, "DEDUCTION_MIN_LOAN_YEARS", taxYear).intValueExact(),
                 verifiedOn,
                 List.copyOf(sources));
     }
