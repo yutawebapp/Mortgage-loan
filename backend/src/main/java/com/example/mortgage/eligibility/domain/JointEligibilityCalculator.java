@@ -4,7 +4,6 @@ import com.example.mortgage.common.BorrowerMode;
 import com.example.mortgage.eligibility.domain.EligibilityResult.Estimate;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 
@@ -96,7 +95,7 @@ public final class JointEligibilityCalculator {
             case JOINT_GUARANTEE -> {
                 BigDecimal countedPartnerIncome = partnerIncome
                         .multiply(BigDecimal.valueOf(partnerIncomeCountPercent))
-                        .divide(PERCENT, 0, RoundingMode.DOWN);
+                        .divide(PERCENT, 0, EligibilityCalculator.CONSERVATIVE_ROUNDING);
                 EligibilityResult r = EligibilityCalculator.calculate(
                         ownIncome.add(countedPartnerIncome),
                         ownOtherRepayments.add(partnerOtherRepayments),

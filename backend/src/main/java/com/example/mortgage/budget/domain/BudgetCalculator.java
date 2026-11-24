@@ -1,6 +1,7 @@
 package com.example.mortgage.budget.domain;
 
 import com.example.mortgage.common.RoundingPolicy;
+import com.example.mortgage.eligibility.domain.EligibilityCalculator;
 import com.example.mortgage.simulation.domain.RepaymentCalculator;
 import com.example.mortgage.simulation.domain.RepaymentMethod;
 
@@ -39,8 +40,6 @@ public final class BudgetCalculator {
     public static final long LOAN_UNIT = 10_000L;
     /** Maximum property price is rounded down to a multiple of this amount (yen). */
     public static final long PRICE_UNIT = 10_000L;
-    /** Rounding used for the maximum loan and maximum property price (conservative). */
-    public static final RoundingMode CONSERVATIVE_ROUNDING = RoundingMode.DOWN;
 
     private static final BigDecimal PERCENT = BigDecimal.valueOf(100);
     private static final int MONTHS_PER_YEAR = 12;
@@ -101,14 +100,14 @@ public final class BudgetCalculator {
             raw = monthlyPayment.multiply(growth.subtract(BigDecimal.ONE))
                     .divide(r.multiply(growth), MC);
         }
-        return raw.divide(LOAN_UNIT_BD, 0, CONSERVATIVE_ROUNDING).multiply(LOAN_UNIT_BD);
+        return raw.divide(LOAN_UNIT_BD, 0, EligibilityCalculator.CONSERVATIVE_ROUNDING).multiply(LOAN_UNIT_BD);
     }
 
     /** totalBudget / (1 + rate / 100), rounded down to PRICE_UNIT. */
     static BigDecimal maxPropertyPrice(BigDecimal totalBudget, BigDecimal closingCostRatePercent) {
         BigDecimal raw = totalBudget.multiply(PERCENT)
                 .divide(PERCENT.add(closingCostRatePercent), MC);
-        return raw.divide(PRICE_UNIT_BD, 0, CONSERVATIVE_ROUNDING).multiply(PRICE_UNIT_BD);
+        return raw.divide(PRICE_UNIT_BD, 0, EligibilityCalculator.CONSERVATIVE_ROUNDING).multiply(PRICE_UNIT_BD);
     }
 
     private static BigDecimal monthlyPaymentOf(BigDecimal loan, BigDecimal annualRatePercent, int years) {

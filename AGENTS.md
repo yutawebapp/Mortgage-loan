@@ -26,7 +26,7 @@
 
 ## Backend の規約
 - 計算ロジックは Spring/DB 非依存の純Java(`*.domain` パッケージ)。借り換え・繰上げ・金利上昇・住宅ローン控除などは `RepaymentCalculator`(`calculate` / `singleLoanSchedule`)を再利用する。償却計算を二重実装しない。
-- 金額は `BigDecimal`。丸めは `common/RoundingPolicy` の1か所(円未満四捨五入 HALF_UP)。借入可能額のみ意図的に切り捨て(`EligibilityCalculator` の定数に集約)。
+- 金額は `BigDecimal`。丸めは `common/RoundingPolicy` の1か所(円未満四捨五入 HALF_UP)。借入可能額・共同の借入可能額・購入予算(借入上限・物件価格)は安全側の切り捨て(定数 `CONSERVATIVE_ROUNDING` は `EligibilityCalculator` に集約)。
 - 計算APIは `/api/v1/simulations/{repayment,refinance,eligibility,budget,prepayment,rate-scenarios,tax-deduction,total-cost,rate-types,rent-vs-buy,life-plan}`、商品は `/api/v1/products`(一覧は README の表)。入力検証は Bean Validation、エラーは `GlobalExceptionHandler` で RFC 7807(ProblemDetail)。リクエストの入力値はログに出さない。
 - MyBatis の SQL は `src/main/resources/mapper/*.xml`。並び替えは enum ホワイトリスト + `<choose>`。ユーザー入力を `${}` に使わない。XML 内の `<=` は `&lt;=` にエスケープ。
 - Flyway: コミット済みの `V1`〜`V7`(V6 は教育費の出典、V7 は住宅ローン控除の適用要件パラメータ。docs からも参照) は編集せず、新しい `V<n>` を追加する(未コミットの migration は直してよい)。

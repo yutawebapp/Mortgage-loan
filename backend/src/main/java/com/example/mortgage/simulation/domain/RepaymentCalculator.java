@@ -156,22 +156,67 @@ public final class RepaymentCalculator {
         List<Loan> loans = new ArrayList<>(n);
         BigDecimal balance = principal;
         for (int k = 1; k <= n; k++) {
-            BigDecimal interest = RoundingPolicy.yen(balance.multiply(annualPercent).divide(divisor, MC));
-            BigDecimal principalPart;
-            if (k == n) {
-                // Final period pays off whatever is left (absorbs any rounding).
-                principalPart = balance;
-            } else if (method == RepaymentMethod.EQUAL_PAYMENT) {
-                // Principal = fixed payment - interest; clamp so principal is never negative.
-                principalPart = fixedPayment.subtract(interest).max(BigDecimal.ZERO).min(balance);
-            } else {
-                principalPart = k <= extraPeriods ? basePrincipal.add(BigDecimal.ONE) : basePrincipal;
-            }
-            balance = balance.subtract(principalPart);
-            BigDecimal payment = interest.add(principalPart);
-            loans.add(new Loan(payment, principalPart, interest, balance));
+            BigDecimal scheduled = k <= extraPeriods ? basePrincipal.add(BigDecimal.ONE) : basePrincipal;
+            Loan loan = step(balance, annualPercent, divisor, k == n, method, fixedPayment, scheduled);
+            balance = loan.balance();
+            loans.add(loan);
         }
         return loans;
+    }
+
+    /**
+     * One period shared by every schedule: interest = balance * annualPercent / divisor (rounded), then the
+     * principal part. The final period pays off whatever is left (absorbs any rounding). EQUAL_PAYMENT uses
+     * fixedPayment - interest (never negative); EQUAL_PRINCIPAL uses the scheduled principal. The principal
+     * part never exceeds the balance.
+     */
+    private static Loan step(BigDecimal balance, BigDecimal annualPercent, BigDecimal divisor, boolean last,
+                             RepaymentMethod method, BigDecimal fixedPayment, BigDecimal scheduledPrincipal) {
+        BigDecimal interest = RoundingPolicy.yen(balance.multiply(annualPercent).divide(divisor, MC));
+        BigDecimal principalPart;
+        if (last) {
+            principalPart = balance;
+        } else if (method == RepaymentMethod.EQUAL_PAYMENT) {
+            principalPart = fixedPayment.subtract(interest).max(BigDecimal.ZERO).min(balance);
+        } else {
+            principalPart = scheduledPrincipal.min(balance);
+        }
+        BigDecimal remaining = balance.subtract(principalPart);
+        return new Loan(interest.add(principalPart), principalPart, interest, remaining);
+    }
+
+    /**
+     * Runs a monthly loan with a fixed payment (EQUAL_PAYMENT) or fixed per-month principal (EQUAL_PRINCIPAL)
+     * until the balance is cleared. The month {@code lastMonth} (or any month reaching it) pays off the rest.
+     * Uses the same period logic as {@link #calculate}.
+     *
+     * @param balance            balance in yen (>= 1)
+     * @param annualPercent      annual rate in percent
+     * @param firstMonth         month number of the first row
+     * @param lastMonth          month at which the remaining balance is forced to zero
+     * @param method             repayment method
+     * @param fixedPayment       monthly payment for EQUAL_PAYMENT (ignored for EQUAL_PRINCIPAL)
+     * @param principalForMonth  scheduled principal for a given month for EQUAL_PRINCIPAL (ignored otherwise)
+     */
+    public static List<ScheduleRow> runOffMonthly(BigDecimal balance,
+                                                  BigDecimal annualPercent,
+                                                  int firstMonth,
+                                                  int lastMonth,
+                                                  RepaymentMethod method,
+                                                  BigDecimal fixedPayment,
+                                                  java.util.function.IntFunction<BigDecimal> principalForMonth) {
+        BigDecimal divisor = PERCENT.multiply(BigDecimal.valueOf(MONTHS_PER_YEAR));
+        List<ScheduleRow> rows = new ArrayList<>();
+        BigDecimal remaining = balance;
+        for (int m = firstMonth; remaining.signum() > 0; m++) {
+            BigDecimal scheduled = method == RepaymentMethod.EQUAL_PRINCIPAL
+                    ? principalForMonth.apply(m) : BigDecimal.ZERO;
+            Loan loan = step(remaining, annualPercent, divisor, m >= lastMonth, method, fixedPayment, scheduled);
+            remaining = loan.balance();
+            rows.add(new ScheduleRow(m, loan.payment(), BigDecimal.ZERO,
+                    loan.principal(), loan.interest(), loan.balance()));
+        }
+        return rows;
     }
 
     /** Level payment P*r*A/(A-1) with A=(1+r)^n; r=0 gives P/n. Not rounded. */

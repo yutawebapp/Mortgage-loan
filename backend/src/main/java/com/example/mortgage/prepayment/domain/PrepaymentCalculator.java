@@ -10,8 +10,6 @@ import com.example.mortgage.prepayment.domain.PrepaymentResult.Baseline;
 import com.example.mortgage.prepayment.domain.PrepaymentResult.Row;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,12 +25,10 @@ import java.util.List;
  *   <li>{@link PrepaymentType#REDUCE_PAYMENT}: the remaining number of months is kept and the payment is
  *       recomputed from the reduced balance.</li>
  * </ul>
- * Interest is balance * annualPercent / (100 * 12), rounded with {@link RoundingPolicy}.
+ * Amortization steps are delegated to {@link RepaymentCalculator}; rounding follows {@link RoundingPolicy}.
  */
 public final class PrepaymentCalculator {
 
-    private static final MathContext MC = new MathContext(60, RoundingMode.HALF_EVEN);
-    private static final BigDecimal PERCENT_MONTHLY = BigDecimal.valueOf(100 * 12);
     private static final int MONTHS_PER_YEAR = 12;
 
     private PrepaymentCalculator() {
@@ -121,21 +117,11 @@ public final class PrepaymentCalculator {
                                          int termMonths,
                                          RepaymentResult base,
                                          List<ScheduleRow> baseRows) {
-        List<Row> tail = new ArrayList<>();
-        BigDecimal levelPayment = base.monthlyPayment();
-        BigDecimal remaining = balance;
-        for (int m = afterMonth + 1; remaining.signum() > 0; m++) {
-            BigDecimal interest = interest(remaining, annualPercent);
-            BigDecimal principalPart;
-            if (m >= termMonths) {
-                principalPart = remaining;
-            } else if (method == RepaymentMethod.EQUAL_PAYMENT) {
-                principalPart = levelPayment.subtract(interest).max(BigDecimal.ZERO).min(remaining);
-            } else {
-                principalPart = baseRows.get(m - 1).principal().min(remaining);
-            }
-            remaining = remaining.subtract(principalPart);
-            tail.add(new Row(m, interest.add(principalPart), principalPart, interest, BigDecimal.ZERO, remaining));
+        List<ScheduleRow> rest = RepaymentCalculator.runOffMonthly(balance, annualPercent, afterMonth + 1,
+                termMonths, method, base.monthlyPayment(), m -> baseRows.get(m - 1).principal());
+        List<Row> tail = new ArrayList<>(rest.size());
+        for (ScheduleRow r : rest) {
+            tail.add(new Row(r.month(), r.payment(), r.principal(), r.interest(), BigDecimal.ZERO, r.balance()));
         }
         return tail;
     }
@@ -154,9 +140,5 @@ public final class PrepaymentCalculator {
                     BigDecimal.ZERO, r.balance()));
         }
         return tail;
-    }
-
-    private static BigDecimal interest(BigDecimal balance, BigDecimal annualPercent) {
-        return RoundingPolicy.yen(balance.multiply(annualPercent).divide(PERCENT_MONTHLY, MC));
     }
 }

@@ -40,7 +40,7 @@ backend は Actuator health で healthcheck、frontend/db に対し depends_on�
 
 ## 5. バックエンド方針
 - 依存方向: controller → service → domain / mapper。計算ロジック(domain)は Spring/DB 非依存の純Java。
-- 金額は BigDecimal。丸めは `common/RoundingPolicy` で一元管理(円未満四捨五入 HALF_UP。詳細は §7.1)。借入可能額など安全側に見積もる値のみ意図的に切り捨て。
+- 金額は BigDecimal。丸めは `common/RoundingPolicy` で一元管理(円未満四捨五入 HALF_UP。詳細は §7.1)。借入可能額・共同の借入可能額・購入予算(借入上限・物件価格)は安全側の切り捨て(定数は `EligibilityCalculator.CONSERVATIVE_ROUNDING` に集約)。
 - MyBatis: SQL は XML Mapper。動的条件は `<where>/<if>`。並び替えカラムは `${}` を使わず enum ホワイトリスト。
   `map-underscore-to-camel-case=true`。
 - API: `/api/v1`、OpenAPI(springdoc)を公開。フロントの API 型は `frontend/src/lib/api/*.ts` に手書きし、バックエンドのレコードと手動で同期する。エラーは RFC 7807。入力値はログ出力しない。
@@ -65,7 +65,7 @@ backend は Actuator health で healthcheck、frontend/db に対し depends_on�
 5. 借入可能額/審査目安
 
 ## 7.1 返済シミュレーター仕様(確定)
-- 丸め: 円未満四捨五入(HALF_UP)。`common` の1か所で定義し、変更は1行。最終回で残債を精算して端数を吸収。
+- 丸め: 円未満四捨五入(HALF_UP)。`common` の1か所で定義し、変更は1行。最終回で残債を精算して端数を吸収。借入可能額・共同の借入可能額・購入予算(借入上限・物件価格)は安全側の切り捨てで、定数は `EligibilityCalculator.CONSERVATIVE_ROUNDING` に集約。
 - ボーナス払い: 対応。`bonusAmount`(ボーナス返済分の借入額)を年2回(6, 12, 18…ヶ月目)で返済。
   通常分(月利=年利/12, 期間=年×12)とボーナス分(半年利=年利/2, 回数=年×2)を独立したローンとして計算し、ボーナス月は合算。
 - 方式: 元利均等 / 元金均等。金利0%は元本÷回数。
