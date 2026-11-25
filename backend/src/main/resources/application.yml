@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: mortgage
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mortgage}
+    username: ${DB_USER:mortgage}
+    password: ${DB_PASSWORD:}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+server:
+  port: 8080

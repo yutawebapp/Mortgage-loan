@@ -1,0 +1,350 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  ApiError,
+  calculatePrepayment,
+  type PrepaymentRequest,
+  type PrepaymentResponse,
+} from "@/lib/api/prepayment";
+import { monthSpanLabel, validatePrepayment, type PrepaymentForm } from "@/lib/prepayment";
+import { yen } from "@/lib/simulation";
+import { acceptFor, hrefWith, sanitizeShared, type SharedConditions } from "@/lib/sharedConditions";
+import { useSharedConditions } from "@/lib/useSharedConditions";
+import PrepaymentChart from "./PrepaymentChart";
+import ShareLinkButton from "./ShareLinkButton";
+import NextSteps, { type NextStep } from "./NextSteps";
+import SavedConditionsNotice from "./SavedConditionsNotice";
+import { STEP_MAN_LARGE, STEP_RATE } from "@/lib/inputSteps";
+import { NumberField } from "./NumberField";
+import { NumericInput } from "./NumericInput";
+import { DEFAULT_METHOD, DEFAULT_PRINCIPAL_MAN, DEFAULT_RATE, DEFAULT_YEARS } from "@/lib/defaults";
+import { prepaymentInitialFromQuery } from "@/lib/prepayment";
+import { useUrlInitialValues } from "@/lib/useUrlInitialValues";
+
+type Outcome = { key: string; data?: PrepaymentResponse; error?: string };
+
+const initial: PrepaymentForm = {
+  principalMan: DEFAULT_PRINCIPAL_MAN,
+  rate: DEFAULT_RATE,
+  years: DEFAULT_YEARS,
+  method: DEFAULT_METHOD,
+  afterYears: "5",
+  afterMonths: "0",
+  prepayMan: "300",
+  type: "SHORTEN_TERM",
+};
+
+function errorMessage(e: unknown): string {
+  if (e instanceof ApiError) {
+    if (e.status === 400)
+      return `入力内容を確認してください。${e.message ? `（${e.message}）` : ""}`;
+    return "計算サーバーでエラーが発生しました。時間をおいて再度お試しください。";
+  }
+  return "通信に失敗しました。ネットワークの状態を確認して再度お試しください。";
+}
+
+/** 繰上げなし − 繰上げあり。正なら「少ない」。 */
+function diffCell(n: number): string {
+  if (n === 0) return "差なし";
+  return `${Math.abs(n).toLocaleString("ja-JP")}円${n > 0 ? "少ない" : "多い"}`;
+}
+
+export default function Prepayer() {
+  const [form, setForm] = useState<PrepaymentForm>(initial);
+  // 共通条件: URLクエリ > 保存値（マウント後に適用） > 既定値
+  const sharedNow: SharedConditions = sanitizeShared(form);
+  const { markEdited, clearSaved, restored, hasSaved } = useSharedConditions({
+    current: sharedNow,
+    apply: (patch) => setForm((f) => ({ ...f, ...patch })),
+    accept: (c) => acceptFor("/prepayment", c),
+  });
+  // URLクエリの値はマウント後に一度だけ適用する（URL > 保存値 > 既定値）
+  useUrlInitialValues(prepaymentInitialFromQuery, (patch) => setForm((f) => ({ ...f, ...patch })));
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [retry, setRetry] = useState(0);
+
+  const { request, errors } = useMemo(() => validatePrepayment(form), [form]);
+  const key = request ? JSON.stringify(request) + retry : null;
+
+  useEffect(() => {
+    if (!request || !key) return;
+    const ctrl = new AbortController();
+    const body: PrepaymentRequest = request;
+    const timer = setTimeout(() => {
+      calculatePrepayment(body, ctrl.signal)
+        .then((data) => setOutcome({ key, data }))
+        .catch((e: unknown) => {
+          if (ctrl.signal.aborted) return;
+          setOutcome({ key, error: errorMessage(e) });
+        });
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+    // request is fully captured by key
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  const set = <K extends keyof PrepaymentForm>(k: K, v: PrepaymentForm[K]) => {
+    markEdited(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
+  const blur = (k: string) => () => setTouched((t) => ({ ...t, [k]: true }));
+  const err = (k: keyof typeof errors) => (touched[k] || outcome ? errors[k] : undefined);
+
+  const current = outcome && outcome.key === key ? outcome : null;
+  const loading = !!request && !current;
+  const data = current?.data;
+  // Results belong to the request they were computed for, not to the form as currently edited.
+  const shown = data && request ? request : null;
+
+  type NumKey = "principalMan" | "rate" | "years" | "prepayMan";
+  function field(id: NumKey, label: string, unit: string, opts: { step: string; hint?: string; inputMode?: "numeric" | "decimal" }) {
+    return (
+      <NumberField
+        id={id}
+        label={label}
+        unit={unit}
+        value={form[id]}
+        onChange={(v) => set(id, v)}
+        onBlur={blur(id)}
+        step={opts.step}
+        hint={opts.hint}
+        error={err(id)}
+        inputMode={opts.inputMode}
+      />
+    );
+  }
+
+  const nextSteps: NextStep[] = current?.data && request && sharedNow.rate ? [
+    {
+      href: hrefWith("/refinance", {}, { currentRate: sharedNow.rate, method: request.method }),
+      label: "借り換えと比べる",
+      hint: "現在の金利・返済方式を引き継ぎます。現在の残債・残り期間は別途入力してください。",
+    },
+  ] : [];
+
+  const timingError = err("afterYears") ?? err("afterMonths");
+  const timingErrorId = err("afterYears") ? "afterYears-err" : "afterMonths-err";
+
+  return (
+    <div className="sim">
+      <form className="panel" onSubmit={(e) => e.preventDefault()} noValidate aria-label="繰上げ返済の条件">
+        <h2>現在のローン</h2>
+        {field("principalMan", "借入金額", "万円", { step: STEP_MAN_LARGE })}
+        {field("rate", "金利（年率）", "%", { step: STEP_RATE, hint: "0〜20%。繰上げ後も同じ金利で計算" })}
+        {field("years", "返済期間", "年", { step: "1", inputMode: "numeric", hint: "1〜50年" })}
+        <fieldset className="field">
+          <legend>返済方式</legend>
+          <label className="radio">
+            <input
+              type="radio"
+              name="pp-method"
+              checked={form.method === "EQUAL_PAYMENT"}
+              onChange={() => set("method", "EQUAL_PAYMENT")}
+            />
+            元利均等返済
+          </label>
+          <label className="radio">
+            <input
+              type="radio"
+              name="pp-method"
+              checked={form.method === "EQUAL_PRINCIPAL"}
+              onChange={() => set("method", "EQUAL_PRINCIPAL")}
+            />
+            元金均等返済
+          </label>
+        </fieldset>
+
+        <h2>繰上げ返済</h2>
+        <fieldset className="field" aria-describedby="timing-hint">
+          <legend>繰上げ返済をする時期</legend>
+          <div className="input-row timing-row">
+            <span className="unit-pre">返済開始から</span>
+            <NumericInput
+              id="afterYears"
+              inputMode="numeric"
+              step={1}
+              min={0}
+              aria-label="繰上げ返済をする時期（年）"
+              value={form.afterYears}
+              onChange={(value) => set("afterYears", value)}
+              onBlur={blur("afterYears")}
+              aria-invalid={errors.afterYears && (touched.afterYears || outcome) ? true : undefined}
+              aria-describedby={timingError ? timingErrorId : undefined}
+            />
+            <span className="unit">年</span>
+            <NumericInput
+              id="afterMonths"
+              inputMode="numeric"
+              step={1}
+              min={0}
+              max={11}
+              aria-label="繰上げ返済をする時期（か月）"
+              value={form.afterMonths}
+              onChange={(value) => set("afterMonths", value)}
+              onBlur={blur("afterMonths")}
+              aria-invalid={errors.afterMonths && (touched.afterMonths || outcome) ? true : undefined}
+              aria-describedby={timingError ? timingErrorId : undefined}
+            />
+            <span className="unit">か月後</span>
+          </div>
+          <p className="hint" id="timing-hint">
+            支払い直後に繰上げる想定。返済期間内の1か月後以降。
+          </p>
+          {timingError && (
+            <p className="field-error" id={timingErrorId}>
+              {timingError}
+            </p>
+          )}
+        </fieldset>
+        {field("prepayMan", "繰上げ返済額", "万円", {
+          step: STEP_MAN_LARGE,
+          hint: "残高を上回る場合は全額繰上げとして計算",
+        })}
+        <fieldset className="field">
+          <legend>繰上げ返済の種類</legend>
+          <label className="radio">
+            <input
+              type="radio"
+              name="pp-type"
+              checked={form.type === "SHORTEN_TERM"}
+              onChange={() => set("type", "SHORTEN_TERM")}
+            />
+            期間短縮型
+          </label>
+          <label className="radio">
+            <input
+              type="radio"
+              name="pp-type"
+              checked={form.type === "REDUCE_PAYMENT"}
+              onChange={() => set("type", "REDUCE_PAYMENT")}
+            />
+            返済額軽減型
+          </label>
+        </fieldset>
+        <SavedConditionsNotice restored={restored} hasSaved={hasSaved} onClear={clearSaved} />
+      </form>
+
+      <section className="results" aria-labelledby="result-h" aria-busy={loading}>
+        <h2 id="result-h">試算結果</h2>
+        <div aria-live="polite" role="status" className="status">
+          {!request && "入力内容に誤りがあります。左（上）のエラーを確認してください。"}
+          {request && loading && "計算しています…"}
+          {request && !loading && current?.data && "計算結果を更新しました。"}
+        </div>
+
+        {current?.error && (
+          <div className="alert" role="alert">
+            <p>{current.error}</p>
+            <button type="button" onClick={() => setRetry((r) => r + 1)}>
+              再計算する
+            </button>
+          </div>
+        )}
+
+        {data && shown && (
+          <div>
+            <div className="verdict">
+              <p className="hint">利息の軽減額（目安）</p>
+              <p className="big">約{yen(data.interestSaving)}</p>
+            </div>
+
+            {data.appliedPrepayment < shown.prepaymentAmount && (
+              <p className="note" role="note">
+                残高を上回るため、全額繰上げ返済として計算しています（繰上げ返済額：{yen(data.appliedPrepayment)}）。
+              </p>
+            )}
+
+            <dl className="summary">
+              <div>
+                <dt>短縮される期間</dt>
+                <dd className="big">
+                  {monthSpanLabel(data.monthsShortened)}
+                </dd>
+              </div>
+              <div>
+                <dt>毎月の返済額（繰上げ前 → 繰上げ後）</dt>
+                <dd className="big">
+                  {data.afterPrepayment.monthlyPaymentBefore.toLocaleString("ja-JP")}円 →{" "}
+                  {data.afterPrepayment.monthlyPaymentAfter.toLocaleString("ja-JP")}円
+                </dd>
+              </div>
+            </dl>
+            {shown.method === "EQUAL_PRINCIPAL" && (
+              <p className="hint">元金均等返済では毎月の返済額が変わるため、表示の金額は1回分の目安です。</p>
+            )}
+
+            <div className="table-wrap plain" tabIndex={0} role="region" aria-label="繰上げ返済なしとありの比較表（横にスクロールできます）">
+              <table className="compare">
+                <caption className="sr-only">繰上げ返済なしとありの比較</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">項目</th>
+                    <th scope="col">繰上げなし</th>
+                    <th scope="col">繰上げあり</th>
+                    <th scope="col">差（なし − あり）</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">返済期間</th>
+                    <td>{monthSpanLabel(data.baseline.months)}</td>
+                    <td>{monthSpanLabel(data.afterPrepayment.months)}</td>
+                    <td className="diff">
+                      {data.monthsShortened === 0 ? "差なし" : `${monthSpanLabel(data.monthsShortened)}短い`}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">総返済額（繰上げ返済額を除く）</th>
+                    <td>{yen(data.baseline.totalPayment)}</td>
+                    <td>{yen(data.afterPrepayment.totalPayment)}</td>
+                    <td className="diff">{diffCell(data.baseline.totalPayment - data.afterPrepayment.totalPayment)}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">うち利息の合計</th>
+                    <td>{yen(data.baseline.totalInterest)}</td>
+                    <td>{yen(data.afterPrepayment.totalInterest)}</td>
+                    <td className="diff">{diffCell(data.baseline.totalInterest - data.afterPrepayment.totalInterest)}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">繰上げ返済額（別に支払う金額）</th>
+                    <td>―</td>
+                    <td>{yen(data.appliedPrepayment)}</td>
+                    <td>―</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="hint">
+              「繰上げあり」の総返済額に繰上げ返済額は含みません（最下行は別払い）。
+            </p>
+
+            <h3>繰上げ返済後のローン残高の推移</h3>
+            <PrepaymentChart
+              schedule={data.schedule}
+              principal={shown.principal}
+              baselineMonths={data.baseline.months}
+              prepaymentMonth={shown.prepaymentAfterMonth}
+            />
+            <p className="hint">横軸は繰上げなしの返済期間まで。点線は繰上げ時期。</p>
+            <NextSteps items={nextSteps} />
+          </div>
+        )}
+
+        {data && shown && (
+          <div className="result-actions">
+            <ShareLinkButton conditions={sharedNow} />
+          </div>
+        )}
+
+        <p className="disclaimer">
+          試算結果は目安です。繰上げ返済手数料や金融機関の取扱条件は含みません。
+        </p>
+      </section>
+    </div>
+  );
+}
